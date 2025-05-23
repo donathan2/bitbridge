@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User } from 'lucide-react';
+import { Home, User, Settings } from 'lucide-react';
 
 const NavBar = () => {
   const location = useLocation();
@@ -43,6 +43,17 @@ const NavBar = () => {
             >
               <User className="h-5 w-5 mr-1" />
               <span>Profile</span>
+            </Link>
+            <Link 
+              to="/settings" 
+              className={`px-4 py-2 rounded-md flex items-center ${
+                location.pathname === '/settings' 
+                  ? 'bg-slate-700 text-cyan-400' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+              }`}
+            >
+              <Settings className="h-5 w-5 mr-1" />
+              <span>Settings</span>
             </Link>
           </div>
         </div>

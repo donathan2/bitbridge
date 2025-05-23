@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/SignUp";
 import FindProject from "./pages/FindProject";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/find-project" element={<FindProject />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

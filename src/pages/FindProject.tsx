@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Search, 
   Filter, 
@@ -51,7 +52,7 @@ const FindProject = () => {
       skills: ["React Native", "JavaScript", "Redux", "API Integration"],
       rolesNeeded: ["Frontend Developer", "UI/UX Designer", "Tester"],
       rolesFilled: {
-        "Frontend Developer": "Alex Chen", 
+        "Frontend Developer": {name: "alexcodes", avatar: "/placeholder.svg"}, 
         "UI/UX Designer": null, 
         "Tester": null
       },
@@ -70,7 +71,7 @@ const FindProject = () => {
       rolesNeeded: ["Backend Developer", "Database Designer", "API Tester"],
       rolesFilled: {
         "Backend Developer": null, 
-        "Database Designer": "Emily Wilson", 
+        "Database Designer": {name: "emily42", avatar: "/placeholder.svg"}, 
         "API Tester": null
       },
       postedDate: "2024-05-15",
@@ -87,7 +88,7 @@ const FindProject = () => {
       skills: ["React", "Node.js", "WebRTC", "AWS", "Redis"],
       rolesNeeded: ["Full-stack Developer", "DevOps Engineer", "QA Engineer"],
       rolesFilled: {
-        "Full-stack Developer": "David Lee", 
+        "Full-stack Developer": {name: "devdavid", avatar: "/placeholder.svg"}, 
         "DevOps Engineer": null, 
         "QA Engineer": null
       },
@@ -107,7 +108,7 @@ const FindProject = () => {
       rolesFilled: {
         "Frontend Developer": null, 
         "UI Designer": null, 
-        "Tester": "Michael Chang"
+        "Tester": {name: "miketester", avatar: "/placeholder.svg"}
       },
       postedDate: "2024-05-22",
       estimatedCompletion: "2 weeks",
@@ -315,12 +316,17 @@ const FindProject = () => {
                               }
                               {role}
                             </span>
-                            {project.rolesFilled[role] && (
-                              <span className="text-green-500 text-xs">
-                                {project.rolesFilled[role]}
+                            {project.rolesFilled[role] ? (
+                              <span className="flex items-center text-green-500 text-xs">
+                                <Avatar className="h-4 w-4 mr-1">
+                                  <AvatarImage src={project.rolesFilled[role].avatar} />
+                                  <AvatarFallback className="text-[8px] bg-slate-600">
+                                    {project.rolesFilled[role].name.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {project.rolesFilled[role].name}
                               </span>
-                            )}
-                            {!project.rolesFilled[role] && (
+                            ) : (
                               <span className="text-cyan-400 text-xs">
                                 Available
                               </span>
