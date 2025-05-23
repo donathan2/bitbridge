@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import SignUp from "./pages/SignUp";
 import FindProject from "./pages/FindProject";
 import NotFound from "./pages/NotFound";
+import NavBar from "./components/NavBar";
 
 const queryClient = new QueryClient();
 
@@ -18,14 +19,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/find-project" element={<FindProject />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="min-h-screen bg-slate-900">
+          <NavBar />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/find-project" element={<FindProject />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

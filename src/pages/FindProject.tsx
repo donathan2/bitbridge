@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -13,7 +13,8 @@ import {
   Calendar, 
   Users, 
   Clock,
-  CheckCircle
+  CheckCircle,
+  UserCheck
 } from 'lucide-react';
 import {
   Select,
@@ -22,12 +23,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FindProject = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>("any");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("any");
   const [skillFilter, setSkillFilter] = useState<string>("any");
+  const [selectedRoles, setSelectedRoles] = useState<{[key: number]: string}>({});
   
   // Mock project data
   const projects = [
@@ -39,6 +50,11 @@ const FindProject = () => {
       xpReward: 1200,
       skills: ["React Native", "JavaScript", "Redux", "API Integration"],
       rolesNeeded: ["Frontend Developer", "UI/UX Designer", "Tester"],
+      rolesFilled: {
+        "Frontend Developer": "Alex Chen", 
+        "UI/UX Designer": null, 
+        "Tester": null
+      },
       postedDate: "2024-05-18",
       estimatedCompletion: "4 weeks",
       ownerName: "Sarah Johnson",
@@ -52,6 +68,11 @@ const FindProject = () => {
       xpReward: 850,
       skills: ["Node.js", "Express", "MongoDB", "Authentication"],
       rolesNeeded: ["Backend Developer", "Database Designer", "API Tester"],
+      rolesFilled: {
+        "Backend Developer": null, 
+        "Database Designer": "Emily Wilson", 
+        "API Tester": null
+      },
       postedDate: "2024-05-15",
       estimatedCompletion: "3 weeks",
       ownerName: "Michael Chang",
@@ -65,6 +86,11 @@ const FindProject = () => {
       xpReward: 1500,
       skills: ["React", "Node.js", "WebRTC", "AWS", "Redis"],
       rolesNeeded: ["Full-stack Developer", "DevOps Engineer", "QA Engineer"],
+      rolesFilled: {
+        "Full-stack Developer": "David Lee", 
+        "DevOps Engineer": null, 
+        "QA Engineer": null
+      },
       postedDate: "2024-05-20",
       estimatedCompletion: "8 weeks",
       ownerName: "Emily Wilson",
@@ -78,6 +104,11 @@ const FindProject = () => {
       xpReward: 600,
       skills: ["HTML", "CSS", "JavaScript", "Chart.js"],
       rolesNeeded: ["Frontend Developer", "UI Designer", "Tester"],
+      rolesFilled: {
+        "Frontend Developer": null, 
+        "UI Designer": null, 
+        "Tester": "Michael Chang"
+      },
       postedDate: "2024-05-22",
       estimatedCompletion: "2 weeks",
       ownerName: "David Lee",
@@ -91,6 +122,11 @@ const FindProject = () => {
       xpReward: 750,
       skills: ["React", "TypeScript", "API Integration", "D3.js"],
       rolesNeeded: ["Frontend Developer", "API Specialist", "UI Designer"],
+      rolesFilled: {
+        "Frontend Developer": null, 
+        "API Specialist": null, 
+        "UI Designer": null
+      },
       postedDate: "2024-05-19",
       estimatedCompletion: "3 weeks",
       ownerName: "Julia Parker",
@@ -136,12 +172,23 @@ const FindProject = () => {
     new Set(projects.flatMap(project => project.rolesNeeded))
   ).sort();
 
+  const handleRoleSelect = (projectId: number, role: string) => {
+    setSelectedRoles({
+      ...selectedRoles,
+      [projectId]: role
+    });
+  };
+
+  const getAvailableRoles = (project: any) => {
+    return project.rolesNeeded.filter((role: string) => !project.rolesFilled[role]);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-900 p-8">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-cyan-400 mb-3 font-sans">Find a Project</h1>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Find a Project</h1>
           <p className="text-lg text-slate-300 font-light">
             Join exciting projects, gain experience, and earn XP
           </p>
@@ -149,10 +196,10 @@ const FindProject = () => {
 
         {/* Search and Filters */}
         <Card className="bg-slate-800 border-slate-700 shadow-lg">
-          <CardContent className="p-6">
-            <div className="space-y-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col lg:flex-row gap-4 items-end">
               {/* Search Bar */}
-              <div className="relative">
+              <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Search projects or users..."
@@ -162,60 +209,51 @@ const FindProject = () => {
                 />
               </div>
               
-              {/* Filter Section */}
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Role</label>
-                  <Select onValueChange={setRoleFilter} value={roleFilter}>
-                    <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectValue placeholder="Any Role" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectItem value="any">Any Role</SelectItem>
-                      {allRoles.map(role => (
-                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Filter Section - Now on the same line */}
+              <div className="flex gap-2 flex-wrap lg:flex-nowrap">
+                <Select onValueChange={setRoleFilter} value={roleFilter}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectItem value="any">Any Role</SelectItem>
+                    {allRoles.map(role => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                <div className="flex-1 space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Difficulty</label>
-                  <Select onValueChange={setDifficultyFilter} value={difficultyFilter}>
-                    <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectValue placeholder="Any Difficulty" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectItem value="any">Any Difficulty</SelectItem>
-                      <SelectItem value="Beginner">Beginner</SelectItem>
-                      <SelectItem value="Intermediate">Intermediate</SelectItem>
-                      <SelectItem value="Advanced">Advanced</SelectItem>
-                      <SelectItem value="Expert">Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select onValueChange={setDifficultyFilter} value={difficultyFilter}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
+                    <SelectValue placeholder="Difficulty" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectItem value="any">Any Difficulty</SelectItem>
+                    <SelectItem value="Beginner">Beginner</SelectItem>
+                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                    <SelectItem value="Advanced">Advanced</SelectItem>
+                    <SelectItem value="Expert">Expert</SelectItem>
+                  </SelectContent>
+                </Select>
                 
-                <div className="flex-1 space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Skill</label>
-                  <Select onValueChange={setSkillFilter} value={skillFilter}>
-                    <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectValue placeholder="Any Skill" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectItem value="any">Any Skill</SelectItem>
-                      {allSkills.map(skill => (
-                        <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select onValueChange={setSkillFilter} value={skillFilter}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
+                    <SelectValue placeholder="Skill" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectItem value="any">Any Skill</SelectItem>
+                    {allSkills.map(skill => (
+                      <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Project Results */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">
               {filteredProjects.length} {filteredProjects.length === 1 ? 'Project' : 'Projects'} Found
@@ -227,95 +265,126 @@ const FindProject = () => {
           </div>
 
           {filteredProjects.length > 0 ? (
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredProjects.map(project => (
-                <Card key={project.id} className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex-1 space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-bold text-white mb-1">{project.title}</h3>
-                            <div className="flex items-center text-sm text-slate-400">
-                              <Calendar className="mr-1 h-4 w-4" />
-                              Posted {new Date(project.postedDate).toLocaleDateString()} by {project.ownerName}
-                            </div>
-                          </div>
-                          <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-glow`}>
-                            {project.difficulty}
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-slate-300">{project.description}</p>
-                        
-                        {/* Skills */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-slate-300">Required Skills</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {project.skills.map((skill, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* Roles Needed */}
-                          <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-slate-300">Roles Needed</h4>
-                            <ul className="space-y-1">
-                              {project.rolesNeeded.map((role, idx) => (
-                                <li key={idx} className="flex items-center text-sm text-slate-300">
-                                  <CheckCircle className="mr-1 h-4 w-4 text-cyan-400" />
-                                  {role}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          
-                          {/* Project Details */}
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-300">Progress</span>
-                              <span className="text-sm text-slate-300">{project.progress}%</span>
-                            </div>
-                            <Progress value={project.progress} className="h-2 bg-slate-700" />
-                            
-                            <div className="flex items-center justify-between text-sm">
-                              <div className="flex items-center text-slate-300">
-                                <Clock className="mr-1 h-4 w-4" />
-                                {project.estimatedCompletion}
-                              </div>
-                              <div className="flex items-center font-medium text-cyan-400">
-                                <Star className="mr-1 h-4 w-4" />
-                                +{project.xpReward} XP
-                              </div>
-                            </div>
-                          </div>
+                <Card key={project.id} className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 flex flex-col h-full">
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">{project.title}</h3>
+                        <div className="text-xs text-slate-400">
+                          <span className="flex items-center">
+                            <Calendar className="mr-1 h-3 w-3" />
+                            Posted {new Date(project.postedDate).toLocaleDateString()} by {project.ownerName}
+                          </span>
                         </div>
                       </div>
-                      
-                      {/* Action Button (Desktop) */}
-                      <div className="hidden md:flex items-center md:self-center">
-                        <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg hover:shadow-cyan-500/20 transition-all px-8 whitespace-nowrap">
-                          Join Project
-                        </Button>
+                      <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-glow`}>
+                        {project.difficulty}
+                      </Badge>
+                    </div>
+                    
+                    <p className="text-slate-300 text-sm mb-3 line-clamp-2">{project.description}</p>
+                    
+                    {/* Skills */}
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-1">
+                        {project.skills.slice(0, 3).map((skill, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                            {skill}
+                          </Badge>
+                        ))}
+                        {project.skills.length > 3 && (
+                          <Badge variant="outline" className="text-xs text-slate-300 border-slate-600">
+                            +{project.skills.length - 3} more
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
-                    {/* Action Button (Mobile) */}
-                    <div className="md:hidden mt-4">
-                      <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg hover:shadow-cyan-500/20 transition-all">
-                        Join Project
-                      </Button>
+                    {/* Project Roles */}
+                    <div className="space-y-2 mb-3 flex-grow">
+                      <h4 className="text-sm font-medium text-slate-300 mb-1">Team Roles</h4>
+                      <ul className="space-y-1">
+                        {project.rolesNeeded.map((role, idx) => (
+                          <li key={idx} className="flex items-center justify-between text-xs text-slate-300">
+                            <span className="flex items-center">
+                              {project.rolesFilled[role] ? 
+                                <UserCheck className="mr-1 h-3 w-3 text-green-500" /> : 
+                                <CheckCircle className="mr-1 h-3 w-3 text-cyan-400" />
+                              }
+                              {role}
+                            </span>
+                            {project.rolesFilled[role] && (
+                              <span className="text-green-500 text-xs">
+                                {project.rolesFilled[role]}
+                              </span>
+                            )}
+                            {!project.rolesFilled[role] && (
+                              <span className="text-cyan-400 text-xs">
+                                Available
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="space-y-2 mb-3">
+                      <div className="flex justify-between text-xs font-medium text-slate-300">
+                        <span>Progress</span>
+                        <span>{project.progress}%</span>
+                      </div>
+                      <Progress value={project.progress} className="h-1.5 bg-slate-700" />
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <div className="flex items-center text-slate-300">
+                        <Clock className="mr-1 h-3 w-3" />
+                        {project.estimatedCompletion}
+                      </div>
+                      <div className="flex items-center font-medium text-cyan-400">
+                        <Star className="mr-1 h-3 w-3" />
+                        +{project.xpReward} XP
+                      </div>
+                    </div>
+                    
+                    {/* Role Selection and Join Button */}
+                    <div className="flex items-center gap-2 mt-auto">
+                      {getAvailableRoles(project).length > 0 ? (
+                        <>
+                          <Select 
+                            value={selectedRoles[project.id] || ""} 
+                            onValueChange={(value) => handleRoleSelect(project.id, value)}
+                          >
+                            <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 flex-grow">
+                              <SelectValue placeholder="Select Role" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                              {getAvailableRoles(project).map((role: string) => (
+                                <SelectItem key={role} value={role}>{role}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                            disabled={!selectedRoles[project.id]}
+                          >
+                            Join
+                          </Button>
+                        </>
+                      ) : (
+                        <Button className="w-full bg-slate-700 text-slate-300" disabled>
+                          No Roles Available
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <Card className="bg-slate-800 border-slate-700 p-8 text-center">
+            <Card className="bg-slate-800 border-slate-700 p-6 text-center">
               <p className="text-slate-300">No projects match your search criteria.</p>
               <p className="text-slate-400 mt-2">Try adjusting your filters or search term.</p>
             </Card>

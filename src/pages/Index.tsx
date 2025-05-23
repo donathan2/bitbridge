@@ -7,8 +7,8 @@ import { User, Trophy, Code, Star, Search } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-slate-900">
-      <div className="container mx-auto px-6 py-16">
+    <div className="p-6">
+      <div className="container mx-auto px-6 py-10">
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-6xl font-bold text-cyan-400 mb-6 font-sans">

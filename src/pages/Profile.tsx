@@ -100,11 +100,11 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-8">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-10">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-cyan-400 mb-3 font-sans">BitBridge Profile</h1>
+        {/* Header Section - Remove since we now have NavBar */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">BitBridge Profile</h1>
           <p className="text-lg text-slate-300 font-light">Track your coding journey and achievements</p>
         </div>
 
