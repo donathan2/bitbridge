@@ -1,11 +1,59 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Trophy, Code, Star, Search } from 'lucide-react';
+import { User, Trophy, Code, Star, Search, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const createProjectSchema = z.object({
+  name: z.string().min(2, "Project name must be at least 2 characters"),
+  description: z.string().min(10, "Please provide a more detailed description"),
+  roles: z.string().min(3, "Please specify required roles"),
+  githubRepo: z.string().url("Must be a valid URL"),
+  endDate: z.string().refine(date => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    return selectedDate > today;
+  }, "End date must be in the future")
+});
 
 const Index = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const form = useForm<z.infer<typeof createProjectSchema>>({
+    resolver: zodResolver(createProjectSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      roles: "",
+      githubRepo: "",
+      endDate: ""
+    }
+  });
+
+  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
+    // Here you would normally save this data to your backend
+    console.log("Project data:", data);
+    
+    // Show success notification
+    toast.success("Project created successfully!", {
+      description: `${data.name} has been created.`
+    });
+    
+    // Close the dialog and reset form
+    setIsDialogOpen(false);
+    form.reset();
+  };
+  
   return (
     <div className="p-6">
       <div className="container mx-auto px-6 py-10">
@@ -24,6 +72,14 @@ const Index = () => {
                 View Profile
               </Button>
             </Link>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 border-0"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Project
+            </Button>
             <Link to="/find-project">
               <Button size="lg" className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 border-0">
                 <Search className="w-5 h-5 mr-2" />
@@ -105,6 +161,128 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Project Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-slate-800 text-white border-slate-700 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-cyan-400">Create New Project</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Project Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Smart AI Assistant" className="bg-slate-700 border-slate-600" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="An AI assistant that helps users with daily tasks..." 
+                        className="bg-slate-700 border-slate-600 min-h-24" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="roles"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Required Roles</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Frontend Developer, Backend Engineer, UI/UX Designer..." 
+                        className="bg-slate-700 border-slate-600"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription className="text-slate-400 text-xs">
+                      List the roles needed for this project, separated by commas
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="githubRepo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">GitHub Repository</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://github.com/username/repo" 
+                        className="bg-slate-700 border-slate-600"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Goal End Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        className="bg-slate-700 border-slate-600"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="sm:justify-between gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    form.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+                >
+                  Create Project
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
