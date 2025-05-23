@@ -10,7 +10,6 @@ import SignUp from "./pages/SignUp";
 import FindProject from "./pages/FindProject";
 import Settings from "./pages/Settings";
 import Friends from "./pages/Friends";
-import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ProjectWorkspace from "./pages/ProjectWorkspace";
@@ -32,7 +31,6 @@ const App = () => (
             <Route path="/find-project" element={<FindProject />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/friends" element={<Friends />} />
-            <Route path="/chat" element={<Chat />} />
             <Route path="/project/:projectId" element={<ProjectWorkspace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
