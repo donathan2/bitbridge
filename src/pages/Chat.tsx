@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Send, Users, Github, ExternalLink } from 'lucide-react';
+import { Search, Send, Users, Github, ExternalLink, MessageSquare } from 'lucide-react';
 
 const Chat = () => {
   const [activeConversation, setActiveConversation] = useState<'project' | 'personal' | null>(null);
