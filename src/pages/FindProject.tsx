@@ -15,7 +15,8 @@ import {
   Users, 
   Clock,
   CheckCircle,
-  UserCheck
+  UserCheck,
+  Plus
 } from 'lucide-react';
 import {
   Select,
@@ -25,14 +26,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const createProjectSchema = z.object({
+  name: z.string().min(2, "Project name must be at least 2 characters"),
+  description: z.string().min(10, "Please provide a more detailed description"),
+  roles: z.string().min(3, "Please specify required roles"),
+  githubRepo: z.string().url("Must be a valid URL"),
+  endDate: z.string().refine(date => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    return selectedDate > today;
+  }, "End date must be in the future")
+});
 
 const FindProject = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,6 +66,32 @@ const FindProject = () => {
   const [difficultyFilter, setDifficultyFilter] = useState<string>("any");
   const [skillFilter, setSkillFilter] = useState<string>("any");
   const [selectedRoles, setSelectedRoles] = useState<{[key: number]: string}>({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const form = useForm<z.infer<typeof createProjectSchema>>({
+    resolver: zodResolver(createProjectSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      roles: "",
+      githubRepo: "",
+      endDate: ""
+    }
+  });
+
+  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
+    // Here you would normally save this data to your backend
+    console.log("Project data:", data);
+    
+    // Show success notification
+    toast.success("Project created successfully!", {
+      description: `${data.name} has been created.`
+    });
+    
+    // Close the dialog and reset form
+    setIsDialogOpen(false);
+    form.reset();
+  };
   
   // Mock project data
   const projects = [
@@ -187,12 +239,21 @@ const FindProject = () => {
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Find a Project</h1>
-          <p className="text-lg text-slate-300 font-light">
-            Join exciting projects, gain experience, and earn XP
-          </p>
+        {/* Header with Create Project Button */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Find a Project</h1>
+            <p className="text-lg text-slate-300 font-light">
+              Join exciting projects, gain experience, and earn XP
+            </p>
+          </div>
+          <Button 
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-2 mt-4 md:mt-0 text-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 border-0"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create Project
+          </Button>
         </div>
 
         {/* Search and Filters */}
@@ -397,6 +458,128 @@ const FindProject = () => {
           )}
         </div>
       </div>
+
+      {/* Create Project Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-slate-800 text-white border-slate-700 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-cyan-400">Create New Project</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Project Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Smart AI Assistant" className="bg-slate-700 border-slate-600" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="An AI assistant that helps users with daily tasks..." 
+                        className="bg-slate-700 border-slate-600 min-h-24" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="roles"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Required Roles</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Frontend Developer, Backend Engineer, UI/UX Designer..." 
+                        className="bg-slate-700 border-slate-600"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription className="text-slate-400 text-xs">
+                      List the roles needed for this project, separated by commas
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="githubRepo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">GitHub Repository</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://github.com/username/repo" 
+                        className="bg-slate-700 border-slate-600"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-200">Goal End Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        className="bg-slate-700 border-slate-600"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="sm:justify-between gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    form.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+                >
+                  Create Project
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

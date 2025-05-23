@@ -1,59 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Trophy, Code, Star, Search, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-const createProjectSchema = z.object({
-  name: z.string().min(2, "Project name must be at least 2 characters"),
-  description: z.string().min(10, "Please provide a more detailed description"),
-  roles: z.string().min(3, "Please specify required roles"),
-  githubRepo: z.string().url("Must be a valid URL"),
-  endDate: z.string().refine(date => {
-    const selectedDate = new Date(date);
-    const today = new Date();
-    return selectedDate > today;
-  }, "End date must be in the future")
-});
+import { User, Trophy, Code, Star, Search, Zap, BarChart, Users, Rocket } from 'lucide-react';
 
 const Index = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const form = useForm<z.infer<typeof createProjectSchema>>({
-    resolver: zodResolver(createProjectSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      roles: "",
-      githubRepo: "",
-      endDate: ""
-    }
-  });
-
-  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
-    // Here you would normally save this data to your backend
-    console.log("Project data:", data);
-    
-    // Show success notification
-    toast.success("Project created successfully!", {
-      description: `${data.name} has been created.`
-    });
-    
-    // Close the dialog and reset form
-    setIsDialogOpen(false);
-    form.reset();
-  };
-  
   return (
     <div className="p-6">
       <div className="container mx-auto px-6 py-10">
@@ -65,32 +17,22 @@ const Index = () => {
           <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
             Track your coding journey, showcase your projects, and level up your development skills
           </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/profile">
-              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
-                <User className="w-5 h-5 mr-2" />
-                View Profile
-              </Button>
-            </Link>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 border-0"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create Project
-            </Button>
-            <Link to="/find-project">
-              <Button size="lg" className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 border-0">
-                <Search className="w-5 h-5 mr-2" />
-                Find Project
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button size="lg" variant="outline" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 px-8 py-3 text-lg transition-all duration-300">
-                Sign Up Now
-              </Button>
-            </Link>
+          <div className="max-w-xl mx-auto">
+            <p className="text-lg text-cyan-300 font-medium">Your path to becoming a better developer starts here</p>
+            <div className="mt-6 flex flex-col md:flex-row gap-4 justify-center items-center">
+              <div className="flex items-center gap-3 text-slate-300">
+                <div className="bg-cyan-500/20 p-2 rounded-full">
+                  <Zap className="h-5 w-5 text-cyan-400" />
+                </div>
+                <span>Gain XP from completing projects</span>
+              </div>
+              <div className="flex items-center gap-3 text-slate-300">
+                <div className="bg-cyan-500/20 p-2 rounded-full">
+                  <Users className="h-5 w-5 text-cyan-400" />
+                </div>
+                <span>Collaborate with others</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -139,6 +81,80 @@ const Index = () => {
           </Card>
         </div>
 
+        {/* Statistics Section */}
+        <div className="mb-20">
+          <h2 className="text-3xl font-bold text-cyan-400 text-center mb-10">Progress Metrics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-6 text-center">
+                <BarChart className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
+                <h3 className="text-4xl font-bold text-white mb-2">125+</h3>
+                <p className="text-slate-400">Projects Completed</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-6 text-center">
+                <Users className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
+                <h3 className="text-4xl font-bold text-white mb-2">500+</h3>
+                <p className="text-slate-400">Active Developers</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-6 text-center">
+                <Code className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
+                <h3 className="text-4xl font-bold text-white mb-2">25K+</h3>
+                <p className="text-slate-400">Lines of Code</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-6 text-center">
+                <Rocket className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
+                <h3 className="text-4xl font-bold text-white mb-2">80+</h3>
+                <p className="text-slate-400">Technologies Used</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* How It Works Section */}
+        <div className="mb-20">
+          <h2 className="text-3xl font-bold text-cyan-400 text-center mb-10">How BitBridge Works</h2>
+          <div className="grid md:grid-cols-3 gap-10">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mb-6">
+                <Search className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Find Projects</h3>
+              <p className="text-slate-300">
+                Browse available projects or create your own to practice new skills and technologies
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Collaborate</h3>
+              <p className="text-slate-300">
+                Work with other developers, receive feedback, and improve your teamwork skills
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mb-6">
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Level Up</h3>
+              <p className="text-slate-300">
+                Earn XP, unlock achievements, and build a portfolio that showcases your growth
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Call to Action */}
         <div className="text-center">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-10 shadow-lg max-w-2xl mx-auto">
@@ -147,142 +163,16 @@ const Index = () => {
               Create your developer profile and start tracking your progress today
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
-                  Get Started
-                </Button>
-              </Link>
               <Link to="/find-project">
-                <Button size="lg" variant="outline" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 px-8 py-3 text-lg transition-all duration-300">
-                  Browse Projects
+                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
+                  <Search className="w-5 h-5 mr-2" />
+                  Explore Projects
                 </Button>
               </Link>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Create Project Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-slate-800 text-white border-slate-700 sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-cyan-400">Create New Project</DialogTitle>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Project Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Smart AI Assistant" className="bg-slate-700 border-slate-600" {...field} />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="An AI assistant that helps users with daily tasks..." 
-                        className="bg-slate-700 border-slate-600 min-h-24" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="roles"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Required Roles</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Frontend Developer, Backend Engineer, UI/UX Designer..." 
-                        className="bg-slate-700 border-slate-600"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription className="text-slate-400 text-xs">
-                      List the roles needed for this project, separated by commas
-                    </FormDescription>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="githubRepo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">GitHub Repository</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://github.com/username/repo" 
-                        className="bg-slate-700 border-slate-600"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Goal End Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date" 
-                        className="bg-slate-700 border-slate-600"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter className="sm:justify-between gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    form.reset();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-                >
-                  Create Project
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
