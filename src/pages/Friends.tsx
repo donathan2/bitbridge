@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, UserPlus, X, MessageSquare, Check } from 'lucide-react';
+import { Search, UserPlus, X, Check } from 'lucide-react';
 
 const Friends = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,26 +82,6 @@ const Friends = () => {
     }
   ];
 
-  // Mock recent messages
-  const recentMessages = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      username: "@sarahj",
-      avatar: "/placeholder.svg",
-      lastMessage: "Hey, did you check out that new React library?",
-      time: "10:25 AM"
-    },
-    {
-      id: 2,
-      name: "Michael Wong",
-      username: "@mwong",
-      avatar: "/placeholder.svg", 
-      lastMessage: "I'm starting a new project, want to join?",
-      time: "Yesterday"
-    }
-  ];
-
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -151,9 +131,6 @@ const Friends = () => {
             <TabsTrigger value="suggestions" className="data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-400">
               Suggestions
             </TabsTrigger>
-            <TabsTrigger value="messages" className="data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-400">
-              Messages
-            </TabsTrigger>
           </TabsList>
 
           {/* Friends list */}
@@ -179,9 +156,8 @@ const Friends = () => {
                         <p className="text-sm text-slate-400">{friend.username}</p>
                         <p className="text-xs text-slate-500 mt-1">Active: {friend.lastActive}</p>
                         <div className="flex gap-2 mt-3">
-                          <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            Message
+                          <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white" asChild>
+                            <Link to="/chat">Message</Link>
                           </Button>
                           <Button size="sm" variant="outline" className="text-slate-300 border-slate-600 hover:bg-slate-700">
                             View Profile
@@ -256,34 +232,6 @@ const Friends = () => {
                             View Profile
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Messages */}
-          <TabsContent value="messages">
-            <div className="grid md:grid-cols-1 gap-4">
-              {recentMessages.map((message) => (
-                <Card key={message.id} className="bg-slate-800 border-slate-700 hover:shadow-md transition-all cursor-pointer">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12 border-2 border-slate-700">
-                        <AvatarImage src={message.avatar} alt={message.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                          {message.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-semibold text-white">{message.name}</h3>
-                          <span className="text-xs text-slate-500">{message.time}</span>
-                        </div>
-                        <p className="text-sm text-slate-400">{message.username}</p>
-                        <p className="text-sm text-slate-300 mt-1 line-clamp-1">{message.lastMessage}</p>
                       </div>
                     </div>
                   </CardContent>
