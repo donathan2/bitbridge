@@ -13,6 +13,7 @@ import Friends from "./pages/Friends";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
+import ProjectWorkspace from "./pages/ProjectWorkspace";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/project/:projectId" element={<ProjectWorkspace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

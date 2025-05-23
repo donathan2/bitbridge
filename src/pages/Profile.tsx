@@ -158,6 +158,11 @@ const Profile = () => {
     navigate('/chat', { state: { projectId } });
   };
 
+  const navigateToWorkspace = (projectId: number) => {
+    setSelectedProject(null);
+    navigate(`/project/${projectId}`);
+  };
+
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-10">
@@ -416,18 +421,18 @@ const Profile = () => {
                   </a>
                 </div>
                 
-                {/* Chat button - replacing Team Chat section for ongoing projects */}
+                {/* Project workspace button - replacing the chat button */}
                 {selectedProject.progress !== undefined && selectedProject.messages && (
                   <div className="mt-4">
                     <Button 
                       className="w-full bg-cyan-600 hover:bg-cyan-700 text-white flex items-center justify-center gap-2"
-                      onClick={() => navigateToChat(selectedProject.id)}
+                      onClick={() => navigateToWorkspace(selectedProject.id)}
                     >
-                      <MessageSquare className="h-5 w-5" />
-                      Open Team Chat
+                      <Code className="h-5 w-5" />
+                      Open Project Workspace
                     </Button>
                     <p className="text-center text-sm text-slate-400 mt-2">
-                      Chat with team members in the dedicated Chat tab
+                      Access tasks, files, and team communication in the project workspace
                     </p>
                   </div>
                 )}
