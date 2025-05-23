@@ -25,9 +25,9 @@ import {
 
 const FindProject = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string | undefined>();
-  const [difficultyFilter, setDifficultyFilter] = useState<string | undefined>();
-  const [skillFilter, setSkillFilter] = useState<string | undefined>();
+  const [roleFilter, setRoleFilter] = useState<string>("any");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("any");
+  const [skillFilter, setSkillFilter] = useState<string>("any");
   
   // Mock project data
   const projects = [
@@ -116,13 +116,13 @@ const FindProject = () => {
       project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.ownerName.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRole = !roleFilter || 
+    const matchesRole = roleFilter === "any" || 
       project.rolesNeeded.some(role => role.toLowerCase().includes(roleFilter.toLowerCase()));
     
-    const matchesDifficulty = !difficultyFilter || 
+    const matchesDifficulty = difficultyFilter === "any" || 
       project.difficulty === difficultyFilter;
     
-    const matchesSkill = !skillFilter || 
+    const matchesSkill = skillFilter === "any" || 
       project.skills.some(skill => skill.toLowerCase().includes(skillFilter.toLowerCase()));
     
     return matchesSearch && matchesRole && matchesDifficulty && matchesSkill;
@@ -171,7 +171,7 @@ const FindProject = () => {
                       <SelectValue placeholder="Any Role" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectItem value="">Any Role</SelectItem>
+                      <SelectItem value="any">Any Role</SelectItem>
                       {allRoles.map(role => (
                         <SelectItem key={role} value={role}>{role}</SelectItem>
                       ))}
@@ -186,7 +186,7 @@ const FindProject = () => {
                       <SelectValue placeholder="Any Difficulty" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectItem value="">Any Difficulty</SelectItem>
+                      <SelectItem value="any">Any Difficulty</SelectItem>
                       <SelectItem value="Beginner">Beginner</SelectItem>
                       <SelectItem value="Intermediate">Intermediate</SelectItem>
                       <SelectItem value="Advanced">Advanced</SelectItem>
@@ -202,7 +202,7 @@ const FindProject = () => {
                       <SelectValue placeholder="Any Skill" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectItem value="">Any Skill</SelectItem>
+                      <SelectItem value="any">Any Skill</SelectItem>
                       {allSkills.map(skill => (
                         <SelectItem key={skill} value={skill}>{skill}</SelectItem>
                       ))}
