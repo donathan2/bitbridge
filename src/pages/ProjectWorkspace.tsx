@@ -341,7 +341,13 @@ const ProjectWorkspace = () => {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-xl text-white">Recent Tasks</CardTitle>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="#tasks" onClick={() => document.querySelector('[data-value="tasks"]')?.click()}>
+                    <Link to="#tasks" onClick={() => {
+                      // Fixed: Use querySelector with type assertion to handle click
+                      const element = document.querySelector('[data-value="tasks"]') as HTMLElement;
+                      if (element) {
+                        element.click();
+                      }
+                    }}>
                       View All
                     </Link>
                   </Button>
