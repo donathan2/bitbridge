@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -10,9 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const navigate = useNavigate();
   
   // Mock user data
   const user = {
@@ -150,6 +151,11 @@ const Profile = () => {
       case 'Expert': return 'bg-violet-700';
       default: return 'bg-teal-500';
     }
+  };
+
+  const navigateToChat = (projectId: number) => {
+    setSelectedProject(null);
+    navigate('/chat', { state: { projectId } });
   };
 
   return (
@@ -410,56 +416,24 @@ const Profile = () => {
                   </a>
                 </div>
                 
-                {/* Team Chat */}
-                {selectedProject.messages && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
+                {/* Chat button - replacing Team Chat section for ongoing projects */}
+                {selectedProject.progress !== undefined && selectedProject.messages && (
+                  <div className="mt-4">
+                    <Button 
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 text-white flex items-center justify-center gap-2"
+                      onClick={() => navigateToChat(selectedProject.id)}
+                    >
                       <MessageSquare className="h-5 w-5" />
-                      Team Chat
-                    </h3>
-                    <div className="bg-slate-700 rounded-lg p-4 max-h-64 overflow-y-auto">
-                      <div className="space-y-4">
-                        {selectedProject.messages.map((message: any, index: number) => (
-                          <div key={index} className="flex gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={message.avatar} />
-                              <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                                {message.username.substring(1, 3).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-cyan-300 text-sm">{message.username}</span>
-                                <span className="text-slate-400 text-xs">{message.timestamp}</span>
-                              </div>
-                              <p className="text-slate-200 text-sm mt-1">{message.text}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Message Input */}
-                    <div className="mt-3 flex gap-2">
-                      <Textarea 
-                        placeholder="Type a message..." 
-                        className="bg-slate-700 border-slate-600 resize-none"
-                      />
-                      <Button className="bg-cyan-600 hover:bg-cyan-700 text-white self-end">
-                        Send
-                      </Button>
-                    </div>
+                      Open Team Chat
+                    </Button>
+                    <p className="text-center text-sm text-slate-400 mt-2">
+                      Chat with team members in the dedicated Chat tab
+                    </p>
                   </div>
                 )}
                 
                 {/* Project Actions */}
                 <div className="flex justify-end gap-3 mt-4">
-                  {selectedProject.progress !== undefined && (
-                    <Button className="bg-cyan-600 hover:bg-cyan-700">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Team Chat
-                    </Button>
-                  )}
                   <Button variant="outline" className="border-slate-600 text-slate-300" onClick={() => setSelectedProject(null)}>
                     Close
                   </Button>
