@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Trophy, Code, Star } from 'lucide-react';
+import { User, Trophy, Code, Star, Search } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -22,6 +22,12 @@ const Index = () => {
               <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
                 <User className="w-5 h-5 mr-2" />
                 View Profile
+              </Button>
+            </Link>
+            <Link to="/find-project">
+              <Button size="lg" className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 border-0">
+                <Search className="w-5 h-5 mr-2" />
+                Find Project
               </Button>
             </Link>
             <Link to="/signup">
@@ -84,11 +90,18 @@ const Index = () => {
             <p className="text-slate-300 mb-8">
               Create your developer profile and start tracking your progress today
             </p>
-            <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
-                Get Started
-              </Button>
-            </Link>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/signup">
+                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
+                  Get Started
+                </Button>
+              </Link>
+              <Link to="/find-project">
+                <Button size="lg" variant="outline" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 px-8 py-3 text-lg transition-all duration-300">
+                  Browse Projects
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
