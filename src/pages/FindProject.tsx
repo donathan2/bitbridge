@@ -100,11 +100,11 @@ const FindProject = () => {
       );
     }
 
-    if (difficultyFilter) {
+    if (difficultyFilter && difficultyFilter !== 'all') {
       filtered = filtered.filter(project => project.difficulty === difficultyFilter);
     }
 
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== 'all') {
       filtered = filtered.filter(project => project.categories.includes(categoryFilter));
     }
 
@@ -127,14 +127,7 @@ const FindProject = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('projects')
-        .select(`
-          *,
-          profiles!projects_creator_id_fkey (
-            full_name,
-            username,
-            avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -142,26 +135,40 @@ const FindProject = () => {
         return;
       }
 
-      const transformedProjects = data?.map(project => ({
-        id: project.id,
-        title: project.title,
-        description: project.description,
-        categories: project.categories,
-        rolesNeeded: project.roles_needed,
-        githubUrl: project.github_url,
-        endDate: project.end_date,
-        difficulty: project.difficulty,
-        xpReward: project.xp_reward,
-        bitsReward: project.bits_reward,
-        bytesReward: project.bytes_reward,
-        creatorId: project.creator_id,
-        createdAt: project.created_at,
-        creator: {
-          name: project.profiles?.full_name || 'Unknown User',
-          username: project.profiles?.username || 'unknown',
-          avatar: project.profiles?.avatar_url || '/placeholder.svg'
-        }
-      })) || [];
+      // Fetch creator profiles separately
+      const creatorIds = data?.map(project => project.creator_id) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url')
+        .in('id', creatorIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      const transformedProjects = data?.map(project => {
+        const creatorProfile = profiles?.find(p => p.id === project.creator_id);
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          categories: project.categories,
+          rolesNeeded: project.roles_needed,
+          githubUrl: project.github_url,
+          endDate: project.end_date,
+          difficulty: project.difficulty,
+          xpReward: project.xp_reward,
+          bitsReward: project.bits_reward,
+          bytesReward: project.bytes_reward,
+          creatorId: project.creator_id,
+          createdAt: project.created_at,
+          creator: {
+            name: creatorProfile?.full_name || 'Unknown User',
+            username: creatorProfile?.username || 'unknown',
+            avatar: creatorProfile?.avatar_url || '/placeholder.svg'
+          }
+        };
+      }) || [];
 
       setProjects(transformedProjects);
       setFilteredProjects(transformedProjects);
@@ -321,7 +328,7 @@ const FindProject = () => {
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
               <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                <SelectItem value="">All Difficulties</SelectItem>
+                <SelectItem value="all">All Difficulties</SelectItem>
                 <SelectItem value="Beginner">Beginner</SelectItem>
                 <SelectItem value="Intermediate">Intermediate</SelectItem>
                 <SelectItem value="Advanced">Advanced</SelectItem>
@@ -334,7 +341,7 @@ const FindProject = () => {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Web Development">Web Development</SelectItem>
                 <SelectItem value="Mobile Development">Mobile Development</SelectItem>
                 <SelectItem value="AI/ML">AI/ML</SelectItem>

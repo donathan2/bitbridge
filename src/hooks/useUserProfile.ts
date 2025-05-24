@@ -128,44 +128,57 @@ export const useUserProfile = () => {
         console.log('Combined achievements:', combinedAchievements);
         setAchievements(combinedAchievements);
 
-        // Fetch user's projects (both created and joined)
-        const { data: projectsData, error: projectsError } = await supabase
-          .from('projects')
-          .select(`
-            *,
-            project_members!inner (
-              role,
-              user_id,
-              joined_at
-            )
-          `)
-          .eq('project_members.user_id', user.id);
+        // Fetch user's joined projects
+        const { data: membershipData, error: membershipError } = await supabase
+          .from('project_members')
+          .select('project_id, role, joined_at')
+          .eq('user_id', user.id);
 
-        if (projectsError) {
-          console.error('Projects error:', projectsError);
-          throw projectsError;
+        if (membershipError) {
+          console.error('Membership error:', membershipError);
+          throw membershipError;
         }
 
-        // Transform projects data to match expected format
-        const transformedProjects = projectsData?.map(project => ({
-          id: project.id,
-          title: project.title,
-          description: project.description,
-          status: 'ongoing' as const, // All joined projects are ongoing for now
-          difficulty: project.difficulty,
-          technologies: project.categories, // Using categories as technologies
-          progress: 50, // Default progress for now
-          xp_reward: project.xp_reward,
-          github_url: project.github_url,
-          started_date: project.project_members[0]?.joined_at || project.created_at,
-          members: project.project_members.map((member: any) => ({
-            role: member.role,
-            user_id: member.user_id
-          }))
-        })) || [];
+        if (membershipData && membershipData.length > 0) {
+          const projectIds = membershipData.map(m => m.project_id);
+          
+          // Fetch the actual project details
+          const { data: projectsData, error: projectsError } = await supabase
+            .from('projects')
+            .select('*')
+            .in('id', projectIds);
 
-        console.log('Transformed projects:', transformedProjects);
-        setProjects(transformedProjects);
+          if (projectsError) {
+            console.error('Projects error:', projectsError);
+            throw projectsError;
+          }
+
+          // Transform projects data to match expected format
+          const transformedProjects = projectsData?.map(project => {
+            const membership = membershipData.find(m => m.project_id === project.id);
+            return {
+              id: project.id,
+              title: project.title,
+              description: project.description,
+              status: 'ongoing' as const,
+              difficulty: project.difficulty,
+              technologies: project.categories || [],
+              progress: 50, // Default progress for now
+              xp_reward: project.xp_reward,
+              github_url: project.github_url,
+              started_date: membership?.joined_at || project.created_at,
+              members: [{
+                role: membership?.role || 'Developer',
+                user_id: user.id
+              }]
+            };
+          }) || [];
+
+          console.log('Transformed projects:', transformedProjects);
+          setProjects(transformedProjects);
+        } else {
+          setProjects([]);
+        }
 
       } catch (err) {
         console.error('Error fetching user data:', err);
