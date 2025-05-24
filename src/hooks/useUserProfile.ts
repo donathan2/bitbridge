@@ -60,6 +60,7 @@ export const useUserProfile = () => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
+        console.log('Fetching user data for:', user.id);
         
         // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
@@ -69,9 +70,11 @@ export const useUserProfile = () => {
           .single();
 
         if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Profile error:', profileError);
           throw profileError;
         }
 
+        console.log('Profile data:', profileData);
         setProfile(profileData);
 
         // Fetch user achievements with achievement details
@@ -93,14 +96,20 @@ export const useUserProfile = () => {
           `)
           .eq('user_id', user.id);
 
-        if (achievementsError) throw achievementsError;
+        if (achievementsError) {
+          console.error('Achievements error:', achievementsError);
+          throw achievementsError;
+        }
 
         // Also fetch available achievements that user hasn't earned
         const { data: allAchievements, error: allAchievementsError } = await supabase
           .from('achievements')
           .select('*');
 
-        if (allAchievementsError) throw allAchievementsError;
+        if (allAchievementsError) {
+          console.error('All achievements error:', allAchievementsError);
+          throw allAchievementsError;
+        }
 
         // Combine earned and unearned achievements
         const earnedAchievementIds = achievementsData?.map(ua => ua.achievements?.id) || [];
@@ -116,38 +125,13 @@ export const useUserProfile = () => {
           ...unearnedAchievements
         ];
 
+        console.log('Combined achievements:', combinedAchievements);
         setAchievements(combinedAchievements);
 
-        // Fetch user projects
-        const { data: projectsData, error: projectsError } = await supabase
-          .from('project_members')
-          .select(`
-            role,
-            projects (
-              id,
-              title,
-              description,
-              status,
-              difficulty,
-              technologies,
-              progress,
-              xp_reward,
-              github_url,
-              started_date,
-              completed_date
-            )
-          `)
-          .eq('user_id', user.id);
-
-        if (projectsError) throw projectsError;
-
-        // Transform the data to include member info
-        const transformedProjects = projectsData?.map(pm => ({
-          ...pm.projects,
-          members: [{ role: pm.role, user_id: user.id }]
-        })) || [];
-
-        setProjects(transformedProjects);
+        // For now, let's skip the projects query since it's causing the infinite recursion
+        // We'll set empty projects array until we fix the RLS policy
+        console.log('Skipping projects query due to RLS issue');
+        setProjects([]);
 
       } catch (err) {
         console.error('Error fetching user data:', err);
