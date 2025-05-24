@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,8 @@ const FindProject = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      console.log('Fetching projects from database...');
+      
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -132,11 +135,22 @@ const FindProject = () => {
 
       if (error) {
         console.error('Error fetching projects:', error);
+        setProjects([]);
+        setFilteredProjects([]);
+        return;
+      }
+
+      console.log('Raw projects data:', data);
+
+      if (!data || data.length === 0) {
+        console.log('No projects found in database');
+        setProjects([]);
+        setFilteredProjects([]);
         return;
       }
 
       // Fetch creator profiles separately
-      const creatorIds = data?.map(project => project.creator_id) || [];
+      const creatorIds = data.map(project => project.creator_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, username, avatar_url')
@@ -146,20 +160,20 @@ const FindProject = () => {
         console.error('Error fetching profiles:', profilesError);
       }
 
-      const transformedProjects = data?.map(project => {
+      const transformedProjects = data.map(project => {
         const creatorProfile = profiles?.find(p => p.id === project.creator_id);
         return {
           id: project.id,
           title: project.title,
           description: project.description,
-          categories: project.categories,
-          rolesNeeded: project.roles_needed,
+          categories: project.categories || [],
+          rolesNeeded: project.roles_needed || [],
           githubUrl: project.github_url,
           endDate: project.end_date,
           difficulty: project.difficulty,
-          xpReward: project.xp_reward,
-          bitsReward: project.bits_reward,
-          bytesReward: project.bytes_reward,
+          xpReward: project.xp_reward || 0,
+          bitsReward: project.bits_reward || 0,
+          bytesReward: project.bytes_reward || 0,
           creatorId: project.creator_id,
           createdAt: project.created_at,
           creator: {
@@ -168,12 +182,15 @@ const FindProject = () => {
             avatar: creatorProfile?.avatar_url || '/placeholder.svg'
           }
         };
-      }) || [];
+      });
 
+      console.log('Transformed projects:', transformedProjects);
       setProjects(transformedProjects);
       setFilteredProjects(transformedProjects);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      setProjects([]);
+      setFilteredProjects([]);
     } finally {
       setLoading(false);
     }
@@ -232,7 +249,7 @@ const FindProject = () => {
         return;
       }
 
-      console.log('Creating project...');
+      console.log('Creating project with data:', createProjectForm);
 
       // Insert the new project into the database
       const { data: projectData, error: projectError } = await supabase
@@ -243,13 +260,10 @@ const FindProject = () => {
             description,
             categories,
             roles_needed: rolesNeeded,
-            github_url: githubUrl,
-            end_date: endDate,
+            github_url: githubUrl || null,
+            end_date: endDate || null,
             difficulty,
             creator_id: user.id,
-            xp_reward: 100,
-            bits_reward: 50,
-            bytes_reward: 10,
           },
         ])
         .select()
@@ -278,7 +292,6 @@ const FindProject = () => {
 
       if (memberError) {
         console.error('Error adding creator as member:', memberError);
-        // Don't fail the entire operation, just log the error
         toast({
           title: "Warning",
           description: "Project created but failed to add you as a member. You can join manually.",
@@ -418,36 +431,38 @@ const FindProject = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="title" className="text-right">
-                    Title
+                    Title *
                   </Label>
                   <Input
                     id="title"
                     value={createProjectForm.title}
                     onChange={(e) => setCreateProjectForm({ ...createProjectForm, title: e.target.value })}
                     className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                    placeholder="Enter project title"
                   />
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="description" className="text-right">
-                    Description
+                    Description *
                   </Label>
                   <Textarea
                     id="description"
                     value={createProjectForm.description}
                     onChange={(e) => setCreateProjectForm({ ...createProjectForm, description: e.target.value })}
                     className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                    placeholder="Describe your project"
                   />
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="categories" className="text-right">
-                    Categories
+                    Categories *
                   </Label>
                   <Input
                     id="categories"
                     value={createProjectForm.categories.join(', ')}
-                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, categories: e.target.value.split(',').map(s => s.trim()) })}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, categories: e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0) })}
                     className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
                     placeholder="e.g., Web Development, AI/ML"
                   />
@@ -455,12 +470,12 @@ const FindProject = () => {
 
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="rolesNeeded" className="text-right">
-                    Roles Needed
+                    Roles Needed *
                   </Label>
                   <Input
                     id="rolesNeeded"
                     value={createProjectForm.rolesNeeded.join(', ')}
-                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, rolesNeeded: e.target.value.split(',').map(s => s.trim()) })}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, rolesNeeded: e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0) })}
                     className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
                     placeholder="e.g., Frontend Developer, Backend Developer"
                   />
@@ -475,6 +490,7 @@ const FindProject = () => {
                     value={createProjectForm.githubUrl}
                     onChange={(e) => setCreateProjectForm({ ...createProjectForm, githubUrl: e.target.value })}
                     className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                    placeholder="https://github.com/username/repo"
                   />
                 </div>
 
@@ -493,9 +509,12 @@ const FindProject = () => {
 
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="difficulty" className="text-right">
-                    Difficulty
+                    Difficulty *
                   </Label>
-                  <Select onValueChange={(value) => setCreateProjectForm({ ...createProjectForm, difficulty: value })}>
+                  <Select 
+                    value={createProjectForm.difficulty}
+                    onValueChange={(value) => setCreateProjectForm({ ...createProjectForm, difficulty: value })}
+                  >
                     <SelectTrigger className="col-span-3 bg-slate-700 border-slate-600 text-slate-200">
                       <SelectValue placeholder="Select difficulty" />
                     </SelectTrigger>
@@ -509,8 +528,19 @@ const FindProject = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button type="submit" onClick={handleCreateProject} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  className="border-slate-600 text-slate-300"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  onClick={handleCreateProject} 
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                >
                   Create Project
                 </Button>
               </div>
@@ -527,8 +557,25 @@ const FindProject = () => {
             </div>
           ) : filteredProjects.length === 0 ? (
             <div className="col-span-full text-center text-slate-400 py-8">
-              <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No projects found</p>
+              <div className="bg-slate-800 border border-slate-700 rounded-lg p-8">
+                <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-medium mb-2">No projects found</h3>
+                <p className="text-slate-500 mb-4">
+                  {projects.length === 0 
+                    ? "Be the first to create a project!" 
+                    : "Try adjusting your search or filters."
+                  }
+                </p>
+                {projects.length === 0 && (
+                  <Button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create First Project
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             filteredProjects.map((project) => (
@@ -586,7 +633,7 @@ const FindProject = () => {
                       </div>
                     </div>
 
-                    {/* Join Button - Now based purely on membership status */}
+                    {/* Join Button */}
                     <div className="pt-2">
                       {isUserMember(project.id) ? (
                         <Button disabled className="w-full bg-green-600 text-white">
@@ -690,7 +737,7 @@ const FindProject = () => {
                   </div>
                 )}
                 
-                {/* Project Actions - Now based purely on membership status */}
+                {/* Project Actions */}
                 <div className="flex justify-end gap-3 mt-4">
                   {isUserMember(selectedProject.id) ? (
                     <Button disabled className="bg-green-600 text-white">
