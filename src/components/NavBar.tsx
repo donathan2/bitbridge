@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault, Compass } from 'lucide-react';
+import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const NavBar = () => {
@@ -68,28 +67,6 @@ const NavBar = () => {
           {/* Navigation tabs */}
           <div className="flex items-center space-x-1">
             <Link 
-              to="/profile" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/profile' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Home className="h-4 w-4 mr-1" />
-              <span>Home</span>
-            </Link>
-            <Link 
-              to="/" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Compass className="h-4 w-4 mr-1" />
-              <span>Explore</span>
-            </Link>
-            <Link 
               to="/find-project" 
               className={`px-3 py-2 rounded-md flex items-center text-sm ${
                 location.pathname === '/find-project' 
@@ -97,8 +74,8 @@ const NavBar = () => {
                   : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
               }`}
             >
-              <User className="h-4 w-4 mr-1" />
-              <span>Projects</span>
+              <Home className="h-4 w-4 mr-1" />
+              <span>Home</span>
             </Link>
             <Link 
               to="/bitvault" 
@@ -121,6 +98,17 @@ const NavBar = () => {
             >
               <Users className="h-4 w-4 mr-1" />
               <span>Friends</span>
+            </Link>
+            <Link 
+              to="/profile" 
+              className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                location.pathname === '/profile' 
+                  ? 'bg-slate-700 text-cyan-400' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+              }`}
+            >
+              <User className="h-4 w-4 mr-1" />
+              <span>Profile</span>
             </Link>
             <Link 
               to="/settings" 
