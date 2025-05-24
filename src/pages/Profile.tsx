@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign } from 'lucide-react';
+import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign, Award, Target, Users, GitBranch, Lightbulb, Shield } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const navigate = useNavigate();
   
-  // Mock user data with currency
+  // Mock user data with currency and achievements
   const user = {
     name: "Alex Chen",
     username: "@alexchen",
@@ -38,6 +38,99 @@ const Profile = () => {
       totalXP: 7500
     }
   };
+
+  // Mock achievements data
+  const achievements = [
+    {
+      id: 1,
+      title: "First Steps",
+      description: "Complete your first project",
+      icon: Target,
+      category: "Milestones",
+      earned: true,
+      earnedDate: "2024-03-15",
+      xpReward: 100,
+      rarity: "Common"
+    },
+    {
+      id: 2,
+      title: "Team Player",
+      description: "Collaborate on 5 different projects",
+      icon: Users,
+      category: "Collaboration",
+      earned: true,
+      earnedDate: "2024-04-20",
+      xpReward: 250,
+      rarity: "Uncommon"
+    },
+    {
+      id: 3,
+      title: "Code Master",
+      description: "Complete 10 projects",
+      icon: Code,
+      category: "Milestones",
+      earned: true,
+      earnedDate: "2024-05-10",
+      xpReward: 500,
+      rarity: "Rare"
+    },
+    {
+      id: 4,
+      title: "Innovation Expert",
+      description: "Use 15 different technologies across projects",
+      icon: Lightbulb,
+      category: "Skills",
+      earned: true,
+      earnedDate: "2024-05-18",
+      xpReward: 300,
+      rarity: "Uncommon"
+    },
+    {
+      id: 5,
+      title: "Git Guardian",
+      description: "Make 100 commits across all projects",
+      icon: GitBranch,
+      category: "Development",
+      earned: true,
+      earnedDate: "2024-05-20",
+      xpReward: 200,
+      rarity: "Common"
+    },
+    {
+      id: 6,
+      title: "Mentor",
+      description: "Help 10 other developers in their projects",
+      icon: Award,
+      category: "Collaboration",
+      earned: false,
+      progress: 7,
+      total: 10,
+      xpReward: 750,
+      rarity: "Epic"
+    },
+    {
+      id: 7,
+      title: "Speed Demon",
+      description: "Complete a project in under 24 hours",
+      icon: Zap,
+      category: "Performance",
+      earned: false,
+      xpReward: 400,
+      rarity: "Rare"
+    },
+    {
+      id: 8,
+      title: "Perfectionist",
+      description: "Complete 5 projects with 100% test coverage",
+      icon: Shield,
+      category: "Quality",
+      earned: false,
+      progress: 2,
+      total: 5,
+      xpReward: 600,
+      rarity: "Epic"
+    }
+  ];
 
   const completedProjects = [
     {
@@ -157,6 +250,17 @@ const Profile = () => {
     }
   };
 
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'Common': return 'bg-slate-500';
+      case 'Uncommon': return 'bg-green-500';
+      case 'Rare': return 'bg-blue-500';
+      case 'Epic': return 'bg-purple-500';
+      case 'Legendary': return 'bg-yellow-500';
+      default: return 'bg-slate-500';
+    }
+  };
+
   const navigateToChat = (projectId: number) => {
     setSelectedProject(null);
     navigate('/chat', { state: { projectId } });
@@ -166,6 +270,9 @@ const Profile = () => {
     setSelectedProject(null);
     navigate(`/project/${projectId}`);
   };
+
+  const earnedAchievements = achievements.filter(a => a.earned);
+  const unlockedAchievements = achievements.filter(a => !a.earned);
 
   return (
     <div className="p-6">
@@ -255,109 +362,241 @@ const Profile = () => {
                   <p className="text-sm text-slate-300 font-light">Total XP</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
-                  <Zap className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.totalProjects}</p>
-                  <p className="text-sm text-slate-300 font-light">Total Projects</p>
+                  <Award className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-white">{earnedAchievements.length}</p>
+                  <p className="text-sm text-slate-300 font-light">Achievements</p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Completed Projects */}
-          <Card className="bg-slate-800 border-slate-700 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
-              <CardTitle className="flex items-center gap-2 font-sans">
-                <Trophy className="w-6 h-6" />
-                Completed Projects ({completedProjects.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="space-y-6 max-h-96 overflow-y-auto">
-                {completedProjects.map((project) => (
-                  <div 
-                    key={project.id} 
-                    className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold text-lg text-white">{project.title}</h3>
-                      <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
-                        {project.difficulty}
-                      </Badge>
-                    </div>
-                    <p className="text-slate-300 mb-4 font-light">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.tech.map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(project.completedDate).toLocaleDateString()}
-                      </div>
-                      <div className="flex items-center gap-1 text-cyan-400 font-medium">
-                        <Star className="w-4 h-4" />
-                        +{project.xp} XP
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="projects" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800 border-slate-700">
+            <TabsTrigger value="projects" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+              Projects
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+              Achievements
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Ongoing Projects */}
-          <Card className="bg-slate-800 border-slate-700 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
-              <CardTitle className="flex items-center gap-2 font-sans">
-                <Code className="w-6 h-6" />
-                Ongoing Projects ({ongoingProjects.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="space-y-6 max-h-96 overflow-y-auto">
-                {ongoingProjects.map((project) => (
-                  <div 
-                    key={project.id} 
-                    className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold text-lg text-white">{project.title}</h3>
-                      <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
-                        {project.difficulty}
-                      </Badge>
-                    </div>
-                    <p className="text-slate-300 mb-4 font-light">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.tech.map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm font-medium text-slate-300">
-                        <span>Progress</span>
-                        <span>{project.progress}%</span>
+          <TabsContent value="projects" className="mt-6">
+            <div className="grid lg:grid-cols-2 gap-10">
+              {/* Completed Projects */}
+              <Card className="bg-slate-800 border-slate-700 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
+                  <CardTitle className="flex items-center gap-2 font-sans">
+                    <Trophy className="w-6 h-6" />
+                    Completed Projects ({completedProjects.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="space-y-6 max-h-96 overflow-y-auto">
+                    {completedProjects.map((project) => (
+                      <div 
+                        key={project.id} 
+                        className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
+                        onClick={() => setSelectedProject(project)}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-lg text-white">{project.title}</h3>
+                          <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
+                            {project.difficulty}
+                          </Badge>
+                        </div>
+                        <p className="text-slate-300 mb-4 font-light">{project.description}</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {project.tech.map((tech) => (
+                            <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                              {tech}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center text-sm text-slate-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(project.completedDate).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center gap-1 text-cyan-400 font-medium">
+                            <Star className="w-4 h-4" />
+                            +{project.xp} XP
+                          </div>
+                        </div>
                       </div>
-                      <Progress value={project.progress} className="h-2 bg-slate-700" />
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-slate-400">
-                      <Clock className="w-4 h-4" />
-                      Started {new Date(project.startDate).toLocaleDateString()}
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </CardContent>
+              </Card>
+
+              {/* Ongoing Projects */}
+              <Card className="bg-slate-800 border-slate-700 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
+                  <CardTitle className="flex items-center gap-2 font-sans">
+                    <Code className="w-6 h-6" />
+                    Ongoing Projects ({ongoingProjects.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="space-y-6 max-h-96 overflow-y-auto">
+                    {ongoingProjects.map((project) => (
+                      <div 
+                        key={project.id} 
+                        className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
+                        onClick={() => setSelectedProject(project)}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-lg text-white">{project.title}</h3>
+                          <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
+                            {project.difficulty}
+                          </Badge>
+                        </div>
+                        <p className="text-slate-300 mb-4 font-light">{project.description}</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {project.tech.map((tech) => (
+                            <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                              {tech}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between text-sm font-medium text-slate-300">
+                            <span>Progress</span>
+                            <span>{project.progress}%</span>
+                          </div>
+                          <Progress value={project.progress} className="h-2 bg-slate-700" />
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-slate-400">
+                          <Clock className="w-4 h-4" />
+                          Started {new Date(project.startDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="achievements" className="mt-6">
+            <div className="space-y-8">
+              {/* Achievements Summary */}
+              <div className="grid md:grid-cols-3 gap-6">
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardContent className="p-6 text-center">
+                    <Award className="h-12 w-12 text-cyan-400 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-white mb-2">{earnedAchievements.length}</h3>
+                    <p className="text-slate-400">Achievements Earned</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardContent className="p-6 text-center">
+                    <Target className="h-12 w-12 text-cyan-400 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-white mb-2">{unlockedAchievements.length}</h3>
+                    <p className="text-slate-400">In Progress</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardContent className="p-6 text-center">
+                    <Star className="h-12 w-12 text-cyan-400 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      {earnedAchievements.reduce((total, achievement) => total + achievement.xpReward, 0)}
+                    </h3>
+                    <p className="text-slate-400">XP from Achievements</p>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+
+              {/* Earned Achievements */}
+              <div>
+                <h2 className="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+                  <Trophy className="h-6 w-6" />
+                  Earned Achievements
+                </h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {earnedAchievements.map((achievement) => {
+                    const IconComponent = achievement.icon;
+                    return (
+                      <Card key={achievement.id} className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-lg">
+                              <IconComponent className="h-6 w-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-semibold text-white">{achievement.title}</h3>
+                                <Badge className={`${getRarityColor(achievement.rarity)} text-white text-xs`}>
+                                  {achievement.rarity}
+                                </Badge>
+                              </div>
+                              <p className="text-slate-300 text-sm mb-3">{achievement.description}</p>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-400">
+                                  Earned {new Date(achievement.earnedDate!).toLocaleDateString()}
+                                </span>
+                                <span className="text-cyan-400 font-medium">+{achievement.xpReward} XP</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* In Progress Achievements */}
+              <div>
+                <h2 className="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+                  <Target className="h-6 w-6" />
+                  In Progress
+                </h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {unlockedAchievements.map((achievement) => {
+                    const IconComponent = achievement.icon;
+                    const hasProgress = achievement.progress !== undefined && achievement.total !== undefined;
+                    const progressPercentage = hasProgress ? (achievement.progress! / achievement.total!) * 100 : 0;
+                    
+                    return (
+                      <Card key={achievement.id} className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all opacity-75">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="bg-slate-700 p-3 rounded-lg">
+                              <IconComponent className="h-6 w-6 text-slate-400" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-semibold text-slate-300">{achievement.title}</h3>
+                                <Badge className={`${getRarityColor(achievement.rarity)} text-white text-xs opacity-75`}>
+                                  {achievement.rarity}
+                                </Badge>
+                              </div>
+                              <p className="text-slate-400 text-sm mb-3">{achievement.description}</p>
+                              {hasProgress && (
+                                <div className="mb-3">
+                                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Progress</span>
+                                    <span>{achievement.progress}/{achievement.total}</span>
+                                  </div>
+                                  <Progress value={progressPercentage} className="h-2 bg-slate-700" />
+                                </div>
+                              )}
+                              <div className="text-sm text-slate-400">
+                                Reward: <span className="text-cyan-400 font-medium">+{achievement.xpReward} XP</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Project Details Dialog */}
         <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
