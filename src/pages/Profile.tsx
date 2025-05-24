@@ -170,7 +170,7 @@ const Profile = () => {
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-10">
-        {/* Header Section - Remove since we now have NavBar */}
+        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">BitBridge Profile</h1>
           <p className="text-lg text-slate-300 font-light">Track your coding journey and achievements</p>
@@ -208,20 +208,36 @@ const Profile = () => {
                   </p>
                 </div>
                 
-                {/* Experience Bar */}
-                <div className="space-y-2 max-w-md">
-                  <div className="flex justify-between text-sm font-medium text-slate-300">
-                    <span>Level {user.experience.level}</span>
-                    <span>{user.experience.current} / {user.experience.nextLevel} XP</span>
+                {/* Experience Bar and Currency - Combined */}
+                <div className="space-y-4 max-w-lg">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm font-medium text-slate-300">
+                      <span>Level {user.experience.level}</span>
+                      <span>{user.experience.current} / {user.experience.nextLevel} XP</span>
+                    </div>
+                    <Progress value={experiencePercentage} className="h-3 bg-slate-700" />
+                    <p className="text-sm text-slate-400 font-light">
+                      {user.experience.nextLevel - user.experience.current} XP to next level
+                    </p>
                   </div>
-                  <Progress value={experiencePercentage} className="h-3 bg-slate-700" />
-                  <p className="text-sm text-slate-400 font-light">
-                    {user.experience.nextLevel - user.experience.current} XP to next level
-                  </p>
+                  
+                  {/* Compact Currency Display */}
+                  <div className="flex gap-4 justify-center md:justify-start">
+                    <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
+                      <Bitcoin className="w-5 h-5 text-yellow-400" />
+                      <span className="text-yellow-400 font-bold">{user.currency.bits.toLocaleString()}</span>
+                      <span className="text-slate-300 text-sm">Bits</span>
+                    </div>
+                    <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-purple-400" />
+                      <span className="text-purple-400 font-bold">{user.currency.bytes}</span>
+                      <span className="text-slate-300 text-sm">Bytes</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Updated Stats Grid with Currency */}
+              {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-5 text-center">
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Trophy className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
@@ -243,32 +259,6 @@ const Profile = () => {
                   <p className="text-2xl font-bold text-white">{user.stats.totalProjects}</p>
                   <p className="text-sm text-slate-300 font-light">Total Projects</p>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Currency Section */}
-        <Card className="bg-slate-800 border-slate-700 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-yellow-600 to-purple-600 text-white p-6">
-            <CardTitle className="flex items-center gap-2 font-sans">
-              <Bitcoin className="w-6 h-6" />
-              Currency Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-slate-700 p-6 rounded-xl text-center hover:shadow-lg hover:shadow-yellow-500/10 transition-all">
-                <Bitcoin className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-                <p className="text-3xl font-bold text-yellow-400 mb-2">{user.currency.bits.toLocaleString()}</p>
-                <p className="text-slate-300 font-light">Bits</p>
-                <p className="text-xs text-slate-400 mt-1">Common currency earned from projects</p>
-              </div>
-              <div className="bg-slate-700 p-6 rounded-xl text-center hover:shadow-lg hover:shadow-purple-500/10 transition-all">
-                <DollarSign className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                <p className="text-3xl font-bold text-purple-400 mb-2">{user.currency.bytes}</p>
-                <p className="text-slate-300 font-light">Bytes</p>
-                <p className="text-xs text-slate-400 mt-1">Rare currency for special achievements</p>
               </div>
             </div>
           </CardContent>
