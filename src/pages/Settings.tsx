@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,13 +60,39 @@ const Settings = () => {
 
   // Initialize form data when data loads
   React.useEffect(() => {
-    if (user && profile) {
-      setProfileData({
-        name: user.user_metadata?.full_name || '',
-        username: user.user_metadata?.user_name || '',
-        email: user.email || '',
-        bio: profile.bio || '',
-      });
+    if (user) {
+      const fetchUserProfile = async () => {
+        try {
+          // Fetch the user's profile data including username
+          const { data: profilesData, error } = await supabase
+            .from('profiles')
+            .select('username, full_name')
+            .eq('id', user.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching profiles:', error);
+          }
+
+          setProfileData({
+            name: profilesData?.full_name || user.user_metadata?.full_name || '',
+            username: profilesData?.username || user.user_metadata?.user_name || '',
+            email: user.email || '',
+            bio: profile?.bio || '',
+          });
+        } catch (err) {
+          console.error('Error in fetchUserProfile:', err);
+          // Fallback to user metadata if profiles query fails
+          setProfileData({
+            name: user.user_metadata?.full_name || '',
+            username: user.user_metadata?.user_name || '',
+            email: user.email || '',
+            bio: profile?.bio || '',
+          });
+        }
+      };
+
+      fetchUserProfile();
     }
   }, [user, profile]);
 
@@ -104,7 +129,7 @@ const Settings = () => {
         if (profileError) throw profileError;
       }
 
-      // Update profiles table
+      // Update profiles table (this is the key part for username)
       const { error: publicProfileError } = await supabase
         .from('profiles')
         .upsert({
@@ -341,9 +366,9 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex flex-col items-center space-y-4 mb-6">
                   <Avatar className="w-24 h-24 border-4 border-cyan-500">
-                    <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} />
+                    <AvatarImage src={user?.user_metadata?.avatar_url || "/placeholder.svg"} />
                     <AvatarFallback className="bg-slate-700 text-xl">
-                      {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                      {(profileData.name || profileData.username || user?.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <Button variant="outline" className="border-cyan-500 text-cyan-400">
@@ -671,52 +696,11 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="text-white">Preferences</CardTitle>
                 <CardDescription className="text-slate-400">
-                  Customize your app experience
+                  Customize your notification preferences
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">Theme</h4>
-                      <p className="text-sm text-slate-400">Choose your preferred theme</p>
-                    </div>
-                    <Select
-                      value={preferences?.theme || 'dark'}
-                      onValueChange={(value) => handlePreferenceUpdate('theme', value)}
-                    >
-                      <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
-                        <SelectValue placeholder="Select theme" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="system">System</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">Language</h4>
-                      <p className="text-sm text-slate-400">Set your preferred language</p>
-                    </div>
-                    <Select
-                      value={preferences?.language || 'en'}
-                      onValueChange={(value) => handlePreferenceUpdate('language', value)}
-                    >
-                      <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
                   <div className="flex items-center justify-between pt-2">
                     <div>
                       <h4 className="font-medium text-white">Email Notifications</h4>

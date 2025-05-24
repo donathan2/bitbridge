@@ -38,7 +38,7 @@ export const useSocialConnections = () => {
         }
 
         console.log('Social connections data:', data);
-        setConnections(data || []);
+        setConnections((data || []) as SocialConnection[]);
       } catch (err) {
         console.error('Error fetching social connections:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -68,7 +68,7 @@ export const useSocialConnections = () => {
 
       setConnections(prev => {
         const filtered = prev.filter(conn => conn.platform !== platform);
-        return [...filtered, data];
+        return [...filtered, data as SocialConnection];
       });
       
       return data;
