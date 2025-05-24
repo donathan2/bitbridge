@@ -70,9 +70,9 @@ const Profile = () => {
   
   // Calculate experience progress for the next level - same logic as NavBar
   const getExperienceForLevel = (level: number) => level * 1000; // 1000 XP per level
-  const currentLevelXP = getExperienceForLevel((profile?.experience_level || 1) - 1);
-  const nextLevelXP = getExperienceForLevel(profile?.experience_level || 1);
-  const progressInCurrentLevel = (profile?.experience_points || 0) - currentLevelXP;
+  const currentLevelXP = getExperienceForLevel((userProfile?.experience_level || 1) - 1);
+  const nextLevelXP = getExperienceForLevel(userProfile?.experience_level || 1);
+  const progressInCurrentLevel = (userProfile?.experience_points || 0) - currentLevelXP;
   const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
   const experiencePercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
   
