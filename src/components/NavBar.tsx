@@ -1,15 +1,14 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault, Compass, LogOut } from 'lucide-react';
+import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault, Compass } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const NavBar = () => {
   const location = useLocation();
-  const { user, signOut, loading } = useAuth();
+  const { user, loading } = useAuth();
   
   // Mock user data - in real app this would come from context/store
   const userStats = {
@@ -130,24 +129,6 @@ const NavBar = () => {
                   <Settings className="h-4 w-4 mr-1" />
                   <span>Settings</span>
                 </Link>
-                
-                {/* User Avatar and Sign Out */}
-                <div className="flex items-center space-x-2 ml-4">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-cyan-600 text-white">
-                      {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={signOut}
-                    className="text-slate-300 hover:text-cyan-400"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </div>
               </>
             ) : (
               <div className="flex items-center space-x-2">
