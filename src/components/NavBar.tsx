@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Settings, Users, Bitcoin, DollarSign, Star } from 'lucide-react';
+import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const NavBar = () => {
@@ -66,49 +65,60 @@ const NavBar = () => {
           </div>
           
           {/* Navigation tabs */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <Link 
               to="/find-project" 
-              className={`px-4 py-2 rounded-md flex items-center ${
+              className={`px-3 py-2 rounded-md flex items-center text-sm ${
                 location.pathname === '/find-project' 
                   ? 'bg-slate-700 text-cyan-400' 
                   : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
               }`}
             >
-              <Home className="h-5 w-5 mr-1" />
+              <Home className="h-4 w-4 mr-1" />
               <span>Home</span>
             </Link>
             <Link 
+              to="/bitvault" 
+              className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                location.pathname === '/bitvault' 
+                  ? 'bg-slate-700 text-cyan-400' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+              }`}
+            >
+              <Vault className="h-4 w-4 mr-1" />
+              <span>BitVault</span>
+            </Link>
+            <Link 
               to="/friends" 
-              className={`px-4 py-2 rounded-md flex items-center ${
+              className={`px-3 py-2 rounded-md flex items-center text-sm ${
                 location.pathname === '/friends' 
                   ? 'bg-slate-700 text-cyan-400' 
                   : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
               }`}
             >
-              <Users className="h-5 w-5 mr-1" />
+              <Users className="h-4 w-4 mr-1" />
               <span>Friends</span>
             </Link>
             <Link 
               to="/profile" 
-              className={`px-4 py-2 rounded-md flex items-center ${
+              className={`px-3 py-2 rounded-md flex items-center text-sm ${
                 location.pathname === '/profile' 
                   ? 'bg-slate-700 text-cyan-400' 
                   : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
               }`}
             >
-              <User className="h-5 w-5 mr-1" />
+              <User className="h-4 w-4 mr-1" />
               <span>Profile</span>
             </Link>
             <Link 
               to="/settings" 
-              className={`px-4 py-2 rounded-md flex items-center ${
+              className={`px-3 py-2 rounded-md flex items-center text-sm ${
                 location.pathname === '/settings' 
                   ? 'bg-slate-700 text-cyan-400' 
                   : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
               }`}
             >
-              <Settings className="h-5 w-5 mr-1" />
+              <Settings className="h-4 w-4 mr-1" />
               <span>Settings</span>
             </Link>
           </div>
