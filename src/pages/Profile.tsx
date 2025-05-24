@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -66,6 +65,14 @@ const Profile = () => {
   const userEmail = user.email || '';
   const avatarUrl = user.user_metadata?.avatar_url || "/placeholder.svg";
   
+  // Calculate experience progress for the next level - same logic as NavBar
+  const getExperienceForLevel = (level: number) => level * 1000; // 1000 XP per level
+  const currentLevelXP = getExperienceForLevel((profile?.experience_level || 1) - 1);
+  const nextLevelXP = getExperienceForLevel(profile?.experience_level || 1);
+  const progressInCurrentLevel = (profile?.experience_points || 0) - currentLevelXP;
+  const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
+  const experiencePercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
+  
   // Use real profile data or defaults
   const userProfile = {
     name: displayName,
@@ -75,7 +82,7 @@ const Profile = () => {
     skillLevel: profile?.skill_level || "Beginner Developer",
     experience: {
       current: profile?.experience_points || 0,
-      nextLevel: ((profile?.experience_level || 1) + 1) * 1000, // Each level requires 1000 more XP
+      nextLevel: nextLevelXP,
       level: profile?.experience_level || 1
     },
     currency: {
@@ -118,8 +125,6 @@ const Profile = () => {
     ],
     messages: [] // No messages for now since we don't have a messages table
   }));
-
-  const experiencePercentage = (userProfile.experience.current / userProfile.experience.nextLevel) * 100;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
