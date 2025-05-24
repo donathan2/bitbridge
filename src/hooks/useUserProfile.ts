@@ -174,26 +174,47 @@ export const useUserProfile = () => {
             // For each project, fetch all its members
             const projectsWithMembers = await Promise.all(
               projectsData?.map(async (project) => {
-                const { data: allProjectMembers, error: membersError } = await supabase
+                // First get all project members
+                const { data: projectMembersData, error: membersError } = await supabase
                   .from('project_members')
-                  .select(`
-                    role,
-                    user_id,
-                    profiles!inner(username, full_name, avatar_url)
-                  `)
+                  .select('role, user_id')
                   .eq('project_id', project.id);
 
                 if (membersError) {
                   console.error('Error fetching project members:', membersError);
+                  return {
+                    id: project.id,
+                    title: project.title,
+                    description: project.description,
+                    status: 'ongoing' as const,
+                    difficulty: project.difficulty,
+                    technologies: project.categories || [],
+                    progress: 50,
+                    xp_reward: project.xp_reward,
+                    github_url: project.github_url,
+                    started_date: membershipData.find(m => m.project_id === project.id)?.joined_at || project.created_at,
+                    members: []
+                  };
                 }
 
-                const members: ProjectMember[] = allProjectMembers?.map(member => ({
-                  role: member.role,
-                  user_id: member.user_id,
-                  username: member.profiles?.username || 'Unknown User',
-                  avatar_url: member.profiles?.avatar_url || null,
-                  full_name: member.profiles?.full_name || null
-                })) || [];
+                // Then get profile data for each member
+                const membersWithProfiles = await Promise.all(
+                  projectMembersData?.map(async (member) => {
+                    const { data: profileData } = await supabase
+                      .from('profiles')
+                      .select('username, full_name, avatar_url')
+                      .eq('id', member.user_id)
+                      .single();
+
+                    return {
+                      role: member.role,
+                      user_id: member.user_id,
+                      username: profileData?.username || 'Unknown User',
+                      avatar_url: profileData?.avatar_url || null,
+                      full_name: profileData?.full_name || null
+                    };
+                  }) || []
+                );
 
                 const userMembership = membershipData.find(m => m.project_id === project.id);
                 
@@ -208,7 +229,7 @@ export const useUserProfile = () => {
                   xp_reward: project.xp_reward,
                   github_url: project.github_url,
                   started_date: userMembership?.joined_at || project.created_at,
-                  members: members
+                  members: membersWithProfiles
                 };
               }) || []
             );
