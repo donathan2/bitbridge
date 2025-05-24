@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -11,14 +12,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
+
+// Icon mapping for achievements
+const iconMap: { [key: string]: any } = {
+  Target,
+  Users,
+  Code,
+  Lightbulb,
+  GitBranch,
+  Award,
+  Zap,
+  Shield,
+  Trophy,
+  Star
+};
 
 const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { profile, achievements, projects, loading: profileLoading, error } = useUserProfile();
   
   // Handle loading state
-  if (loading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <div className="text-cyan-400 text-lg">Loading...</div>
@@ -34,234 +51,73 @@ const Profile = () => {
       </div>
     );
   }
+
+  // Handle error
+  if (error) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="text-red-400 text-lg">Error loading profile: {error}</div>
+      </div>
+    );
+  }
   
   // Get user data from authenticated user
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const userEmail = user.email || '';
   const avatarUrl = user.user_metadata?.avatar_url || "/placeholder.svg";
   
-  // Mock user data with real user info - in real app this would come from database
+  // Use real profile data or defaults
   const userProfile = {
     name: displayName,
     username: `@${userEmail.split('@')[0]}`,
-    bio: "Full-stack developer passionate about React, TypeScript and building beautiful user experiences. 5+ years of experience in web development, currently exploring WebAssembly and AI applications.",
+    bio: profile?.bio || "Welcome to BitBridge! Update your bio to tell others about yourself.",
     avatar: avatarUrl,
-    skillLevel: "Advanced Developer",
+    skillLevel: profile?.skill_level || "Beginner Developer",
     experience: {
-      current: 7500,
-      nextLevel: 10000,
-      level: 8
+      current: profile?.experience_points || 0,
+      nextLevel: ((profile?.experience_level || 1) + 1) * 1000, // Each level requires 1000 more XP
+      level: profile?.experience_level || 1
     },
     currency: {
-      bits: 3250,
-      bytes: 47
+      bits: profile?.bits_currency || 100,
+      bytes: profile?.bytes_currency || 5
     },
     stats: {
-      totalProjects: 24,
-      completedProjects: 18,
-      ongoingProjects: 6,
-      totalXP: 7500
+      totalProjects: projects.length,
+      completedProjects: projects.filter(p => p.status === 'completed').length,
+      ongoingProjects: projects.filter(p => p.status === 'ongoing').length,
+      totalXP: profile?.experience_points || 0
     }
   };
 
-  // Mock achievements data
-  const achievements = [
-    {
-      id: 1,
-      title: "First Steps",
-      description: "Complete your first project",
-      icon: Target,
-      category: "Milestones",
-      earned: true,
-      earnedDate: "2024-03-15",
-      xpReward: 100,
-      rarity: "Common"
-    },
-    {
-      id: 2,
-      title: "Team Player",
-      description: "Collaborate on 5 different projects",
-      icon: Users,
-      category: "Collaboration",
-      earned: true,
-      earnedDate: "2024-04-20",
-      xpReward: 250,
-      rarity: "Uncommon"
-    },
-    {
-      id: 3,
-      title: "Code Master",
-      description: "Complete 10 projects",
-      icon: Code,
-      category: "Milestones",
-      earned: true,
-      earnedDate: "2024-05-10",
-      xpReward: 500,
-      rarity: "Rare"
-    },
-    {
-      id: 4,
-      title: "Innovation Expert",
-      description: "Use 15 different technologies across projects",
-      icon: Lightbulb,
-      category: "Skills",
-      earned: true,
-      earnedDate: "2024-05-18",
-      xpReward: 300,
-      rarity: "Uncommon"
-    },
-    {
-      id: 5,
-      title: "Git Guardian",
-      description: "Make 100 commits across all projects",
-      icon: GitBranch,
-      category: "Development",
-      earned: true,
-      earnedDate: "2024-05-20",
-      xpReward: 200,
-      rarity: "Common"
-    },
-    {
-      id: 6,
-      title: "Mentor",
-      description: "Help 10 other developers in their projects",
-      icon: Award,
-      category: "Collaboration",
-      earned: false,
-      progress: 7,
-      total: 10,
-      xpReward: 750,
-      rarity: "Epic"
-    },
-    {
-      id: 7,
-      title: "Speed Demon",
-      description: "Complete a project in under 24 hours",
-      icon: Zap,
-      category: "Performance",
-      earned: false,
-      xpReward: 400,
-      rarity: "Rare"
-    },
-    {
-      id: 8,
-      title: "Perfectionist",
-      description: "Complete 5 projects with 100% test coverage",
-      icon: Shield,
-      category: "Quality",
-      earned: false,
-      progress: 2,
-      total: 5,
-      xpReward: 600,
-      rarity: "Epic"
-    }
-  ];
+  const completedProjects = projects.filter(p => p.status === 'completed').map(project => ({
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    tech: project.technologies,
+    xp: project.xp_reward || 0,
+    completedDate: project.completed_date || new Date().toISOString(),
+    difficulty: project.difficulty,
+    githubUrl: project.github_url || "",
+    teamMembers: [
+      { role: project.members[0]?.role || "Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl }
+    ]
+  }));
 
-  const completedProjects = [
-    {
-      id: 1,
-      title: "E-commerce Dashboard",
-      description: "Modern React dashboard with analytics",
-      tech: ["React", "TypeScript", "Tailwind"],
-      xp: 850,
-      completedDate: "2024-05-15",
-      difficulty: "Advanced",
-      githubUrl: "https://github.com/alexchen/ecommerce-dashboard",
-      teamMembers: [
-        { role: "Frontend Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
-        { role: "Backend Developer", username: "@sarahj", avatar: "/placeholder.svg" },
-        { role: "UI/UX Designer", username: "@mwong", avatar: "/placeholder.svg" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Task Management App",
-      description: "Full-stack productivity application",
-      tech: ["Next.js", "Prisma", "PostgreSQL"],
-      xp: 1200,
-      completedDate: "2024-05-10",
-      difficulty: "Expert",
-      githubUrl: "https://github.com/alexchen/task-manager",
-      teamMembers: [
-        { role: "Full-stack Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
-        { role: "Backend Developer", username: "@priyap", avatar: "/placeholder.svg" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Weather Widget",
-      description: "Real-time weather component",
-      tech: ["React", "API Integration"],
-      xp: 450,
-      completedDate: "2024-05-05",
-      difficulty: "Intermediate",
-      githubUrl: "https://github.com/alexchen/weather-widget",
-      teamMembers: [
-        { role: "Frontend Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl }
-      ]
-    }
-  ];
-
-  const ongoingProjects = [
-    {
-      id: 1,
-      title: "AI Chat Interface",
-      description: "Modern chat UI with AI integration",
-      tech: ["React", "TypeScript", "OpenAI"],
-      progress: 75,
-      startDate: "2024-05-20",
-      difficulty: "Advanced",
-      githubUrl: "https://github.com/alexchen/ai-chat",
-      teamMembers: [
-        { role: "Frontend Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
-        { role: "AI Engineer", username: "@jwilson", avatar: "/placeholder.svg" },
-        { role: "UX Designer", username: "@echen", avatar: "/placeholder.svg" }
-      ],
-      messages: [
-        { username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl, text: "Just pushed the new chat components", timestamp: "2024-05-22 10:30 AM" },
-        { username: "@jwilson", avatar: "/placeholder.svg", text: "Great! I'll update the API integration tomorrow", timestamp: "2024-05-22 11:45 AM" },
-        { username: "@echen", avatar: "/placeholder.svg", text: "I've uploaded the new design mockups to Figma", timestamp: "2024-05-23 09:15 AM" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Portfolio Website",
-      description: "Personal portfolio with animations",
-      tech: ["React", "Framer Motion"],
-      progress: 60,
-      startDate: "2024-05-18",
-      difficulty: "Intermediate",
-      githubUrl: "https://github.com/alexchen/portfolio",
-      teamMembers: [
-        { role: "Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
-        { role: "Designer", username: "@sarahj", avatar: "/placeholder.svg" }
-      ],
-      messages: [
-        { username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl, text: "Homepage animations are complete", timestamp: "2024-05-21 09:30 AM" },
-        { username: "@sarahj", avatar: "/placeholder.svg", text: "New color scheme looks great!", timestamp: "2024-05-22 14:20 PM" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Mobile Game",
-      description: "Puzzle game with React Native",
-      tech: ["React Native", "Expo"],
-      progress: 30,
-      startDate: "2024-05-22",
-      difficulty: "Expert",
-      githubUrl: "https://github.com/alexchen/puzzle-game",
-      teamMembers: [
-        { role: "Mobile Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
-        { role: "Game Designer", username: "@mwong", avatar: "/placeholder.svg" },
-        { role: "Sound Engineer", username: "@dsmith", avatar: "/placeholder.svg" },
-        { role: "Animator", username: "@akhan", avatar: "/placeholder.svg" }
-      ],
-      messages: [
-        { username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl, text: "Basic game mechanics implemented", timestamp: "2024-05-22 16:30 PM" },
-        { username: "@mwong", avatar: "/placeholder.svg", text: "Level designs ready for review", timestamp: "2024-05-23 08:40 AM" }
-      ]
-    }
-  ];
+  const ongoingProjects = projects.filter(p => p.status === 'ongoing').map(project => ({
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    tech: project.technologies,
+    progress: project.progress || 0,
+    startDate: project.started_date || new Date().toISOString(),
+    difficulty: project.difficulty,
+    githubUrl: project.github_url || "",
+    teamMembers: [
+      { role: project.members[0]?.role || "Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl }
+    ],
+    messages: [] // No messages for now since we don't have a messages table
+  }));
 
   const experiencePercentage = (userProfile.experience.current / userProfile.experience.nextLevel) * 100;
 
@@ -296,8 +152,8 @@ const Profile = () => {
     navigate(`/project/${projectId}`);
   };
 
-  const earnedAchievements = achievements.filter(a => a.earned);
-  const unlockedAchievements = achievements.filter(a => !a.earned);
+  const earnedAchievements = achievements.filter(a => a.earned_at);
+  const unlockedAchievements = achievements.filter(a => !a.earned_at);
 
   return (
     <div className="p-6">
@@ -419,38 +275,46 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="space-y-6 max-h-96 overflow-y-auto">
-                    {completedProjects.map((project) => (
-                      <div 
-                        key={project.id} 
-                        className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-lg text-white">{project.title}</h3>
-                          <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
-                            {project.difficulty}
-                          </Badge>
-                        </div>
-                        <p className="text-slate-300 mb-4 font-light">{project.description}</p>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tech.map((tech) => (
-                            <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex justify-between items-center text-sm text-slate-400">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(project.completedDate).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-1 text-cyan-400 font-medium">
-                            <Star className="w-4 h-4" />
-                            +{project.xp} XP
-                          </div>
-                        </div>
+                    {completedProjects.length === 0 ? (
+                      <div className="text-center text-slate-400 py-8">
+                        <Code className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No completed projects yet</p>
+                        <p className="text-sm mt-2">Start working on projects to see them here!</p>
                       </div>
-                    ))}
+                    ) : (
+                      completedProjects.map((project) => (
+                        <div 
+                          key={project.id} 
+                          className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
+                          onClick={() => setSelectedProject(project)}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-semibold text-lg text-white">{project.title}</h3>
+                            <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
+                              {project.difficulty}
+                            </Badge>
+                          </div>
+                          <p className="text-slate-300 mb-4 font-light">{project.description}</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {project.tech.map((tech) => (
+                              <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                                {tech}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex justify-between items-center text-sm text-slate-400">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(project.completedDate).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1 text-cyan-400 font-medium">
+                              <Star className="w-4 h-4" />
+                              +{project.xp} XP
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -465,39 +329,47 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="space-y-6 max-h-96 overflow-y-auto">
-                    {ongoingProjects.map((project) => (
-                      <div 
-                        key={project.id} 
-                        className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-lg text-white">{project.title}</h3>
-                          <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
-                            {project.difficulty}
-                          </Badge>
-                        </div>
-                        <p className="text-slate-300 mb-4 font-light">{project.description}</p>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tech.map((tech) => (
-                            <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between text-sm font-medium text-slate-300">
-                            <span>Progress</span>
-                            <span>{project.progress}%</span>
-                          </div>
-                          <Progress value={project.progress} className="h-2 bg-slate-700" />
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-slate-400">
-                          <Clock className="w-4 h-4" />
-                          Started {new Date(project.startDate).toLocaleDateString()}
-                        </div>
+                    {ongoingProjects.length === 0 ? (
+                      <div className="text-center text-slate-400 py-8">
+                        <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No ongoing projects yet</p>
+                        <p className="text-sm mt-2">Join a project to start collaborating!</p>
                       </div>
-                    ))}
+                    ) : (
+                      ongoingProjects.map((project) => (
+                        <div 
+                          key={project.id} 
+                          className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
+                          onClick={() => setSelectedProject(project)}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-semibold text-lg text-white">{project.title}</h3>
+                            <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
+                              {project.difficulty}
+                            </Badge>
+                          </div>
+                          <p className="text-slate-300 mb-4 font-light">{project.description}</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {project.tech.map((tech) => (
+                              <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                                {tech}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm font-medium text-slate-300">
+                              <span>Progress</span>
+                              <span>{project.progress}%</span>
+                            </div>
+                            <Progress value={project.progress} className="h-2 bg-slate-700" />
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-slate-400">
+                            <Clock className="w-4 h-4" />
+                            Started {new Date(project.startDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -526,7 +398,7 @@ const Profile = () => {
                   <CardContent className="p-6 text-center">
                     <Star className="h-12 w-12 text-cyan-400 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-white mb-2">
-                      {earnedAchievements.reduce((total, achievement) => total + achievement.xpReward, 0)}
+                      {earnedAchievements.reduce((total, achievement) => total + achievement.xp_reward, 0)}
                     </h3>
                     <p className="text-slate-400">XP from Achievements</p>
                   </CardContent>
@@ -540,35 +412,43 @@ const Profile = () => {
                   Earned Achievements
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {earnedAchievements.map((achievement) => {
-                    const IconComponent = achievement.icon;
-                    return (
-                      <Card key={achievement.id} className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-lg">
-                              <IconComponent className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-semibold text-white">{achievement.title}</h3>
-                                <Badge className={`${getRarityColor(achievement.rarity)} text-white text-xs`}>
-                                  {achievement.rarity}
-                                </Badge>
+                  {earnedAchievements.length === 0 ? (
+                    <div className="col-span-full text-center text-slate-400 py-8">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No achievements earned yet</p>
+                      <p className="text-sm mt-2">Complete projects and activities to earn achievements!</p>
+                    </div>
+                  ) : (
+                    earnedAchievements.map((achievement) => {
+                      const IconComponent = iconMap[achievement.icon_name] || Star;
+                      return (
+                        <Card key={achievement.id} className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4 mb-4">
+                              <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-lg">
+                                <IconComponent className="h-6 w-6 text-white" />
                               </div>
-                              <p className="text-slate-300 text-sm mb-3">{achievement.description}</p>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-slate-400">
-                                  Earned {new Date(achievement.earnedDate!).toLocaleDateString()}
-                                </span>
-                                <span className="text-cyan-400 font-medium">+{achievement.xpReward} XP</span>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="font-semibold text-white">{achievement.title}</h3>
+                                  <Badge className={`${getRarityColor(achievement.rarity)} text-white text-xs`}>
+                                    {achievement.rarity}
+                                  </Badge>
+                                </div>
+                                <p className="text-slate-300 text-sm mb-3">{achievement.description}</p>
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-slate-400">
+                                    Earned {new Date(achievement.earned_at!).toLocaleDateString()}
+                                  </span>
+                                  <span className="text-cyan-400 font-medium">+{achievement.xp_reward} XP</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -580,7 +460,7 @@ const Profile = () => {
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {unlockedAchievements.map((achievement) => {
-                    const IconComponent = achievement.icon;
+                    const IconComponent = iconMap[achievement.icon_name] || Star;
                     const hasProgress = achievement.progress !== undefined && achievement.total !== undefined;
                     const progressPercentage = hasProgress ? (achievement.progress! / achievement.total!) * 100 : 0;
                     
@@ -609,7 +489,7 @@ const Profile = () => {
                                 </div>
                               )}
                               <div className="text-sm text-slate-400">
-                                Reward: <span className="text-cyan-400 font-medium">+{achievement.xpReward} XP</span>
+                                Reward: <span className="text-cyan-400 font-medium">+{achievement.xp_reward} XP</span>
                               </div>
                             </div>
                           </div>
@@ -692,21 +572,23 @@ const Profile = () => {
                 </div>
                 
                 {/* GitHub Link */}
-                <div className="flex items-center gap-2">
-                  <Github className="h-5 w-5 text-white" />
-                  <a 
-                    href={selectedProject.githubUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-cyan-400 hover:underline flex items-center"
-                  >
-                    GitHub Repository
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </div>
+                {selectedProject.githubUrl && (
+                  <div className="flex items-center gap-2">
+                    <Github className="h-5 w-5 text-white" />
+                    <a 
+                      href={selectedProject.githubUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-cyan-400 hover:underline flex items-center"
+                    >
+                      GitHub Repository
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  </div>
+                )}
                 
                 {/* Project workspace button - replacing the chat button */}
-                {selectedProject.progress !== undefined && selectedProject.messages && (
+                {selectedProject.progress !== undefined && (
                   <div className="mt-4">
                     <Button 
                       className="w-full bg-cyan-600 hover:bg-cyan-700 text-white flex items-center justify-center gap-2"

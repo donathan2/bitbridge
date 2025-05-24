@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: Database["public"]["Enums"]["achievement_category"]
+          created_at: string | null
+          description: string
+          icon_name: string
+          id: string
+          rarity: Database["public"]["Enums"]["achievement_rarity"]
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["achievement_category"]
+          created_at?: string | null
+          description: string
+          icon_name: string
+          id?: string
+          rarity: Database["public"]["Enums"]["achievement_rarity"]
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["achievement_category"]
+          created_at?: string | null
+          description?: string
+          icon_name?: string
+          id?: string
+          rarity?: Database["public"]["Enums"]["achievement_rarity"]
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -36,6 +69,160 @@ export type Database = {
         }
         Relationships: []
       }
+      project_members: {
+        Row: {
+          id: string
+          joined_at: string | null
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          completed_date: string | null
+          created_at: string | null
+          description: string
+          difficulty: Database["public"]["Enums"]["project_difficulty"]
+          github_url: string | null
+          id: string
+          progress: number | null
+          started_date: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          technologies: string[]
+          title: string
+          updated_at: string | null
+          xp_reward: number | null
+        }
+        Insert: {
+          completed_date?: string | null
+          created_at?: string | null
+          description: string
+          difficulty?: Database["public"]["Enums"]["project_difficulty"]
+          github_url?: string | null
+          id?: string
+          progress?: number | null
+          started_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          technologies?: string[]
+          title: string
+          updated_at?: string | null
+          xp_reward?: number | null
+        }
+        Update: {
+          completed_date?: string | null
+          created_at?: string | null
+          description?: string
+          difficulty?: Database["public"]["Enums"]["project_difficulty"]
+          github_url?: string | null
+          id?: string
+          progress?: number | null
+          started_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          technologies?: string[]
+          title?: string
+          updated_at?: string | null
+          xp_reward?: number | null
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          progress: number | null
+          total: number | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          progress?: number | null
+          total?: number | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          progress?: number | null
+          total?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          bio: string | null
+          bits_currency: number | null
+          bytes_currency: number | null
+          created_at: string | null
+          experience_level: number | null
+          experience_points: number | null
+          id: string
+          skill_level: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          bits_currency?: number | null
+          bytes_currency?: number | null
+          created_at?: string | null
+          experience_level?: number | null
+          experience_points?: number | null
+          id?: string
+          skill_level?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          bits_currency?: number | null
+          bytes_currency?: number | null
+          created_at?: string | null
+          experience_level?: number | null
+          experience_points?: number | null
+          id?: string
+          skill_level?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -44,7 +231,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      achievement_category:
+        | "Milestones"
+        | "Collaboration"
+        | "Skills"
+        | "Development"
+        | "Performance"
+        | "Quality"
+      achievement_rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
+      project_difficulty: "Beginner" | "Intermediate" | "Advanced" | "Expert"
+      project_status: "ongoing" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -159,6 +355,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      achievement_category: [
+        "Milestones",
+        "Collaboration",
+        "Skills",
+        "Development",
+        "Performance",
+        "Quality",
+      ],
+      achievement_rarity: ["Common", "Uncommon", "Rare", "Epic", "Legendary"],
+      project_difficulty: ["Beginner", "Intermediate", "Advanced", "Expert"],
+      project_status: ["ongoing", "completed"],
+    },
   },
 } as const
