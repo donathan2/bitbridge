@@ -1,596 +1,692 @@
-
-import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  Search, 
-  Filter, 
-  Star, 
-  Code, 
-  Calendar, 
-  Users, 
-  Clock,
-  CheckCircle,
-  UserCheck,
-  Plus,
-  Bitcoin,
-  DollarSign,
-  X
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Search, Filter, Plus, Users, Calendar, Star, Github, ExternalLink } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProjectJoin } from '@/hooks/useProjectJoin';
+import { toast } from '@/components/ui/use-toast';
 
-const createProjectSchema = z.object({
-  title: z.string().min(2, "Project name must be at least 2 characters"),
-  description: z.string().min(10, "Please provide a more detailed description"),
-  roles: z.string().min(3, "Please specify required roles"),
-  categories: z.string().min(3, "Please specify required technologies/categories"),
-  githubRepo: z.string().url("Must be a valid URL"),
-  endDate: z.string().refine(date => {
-    const selectedDate = new Date(date);
-    const today = new Date();
-    return selectedDate > today;
-  }, "End date must be in the future"),
-  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert'])
-});
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  categories: string[];
+  rolesNeeded: string[];
+  githubUrl: string | null;
+  endDate: string | null;
+  difficulty: string;
+  xpReward: number;
+  bitsReward: number;
+  bytesReward: number;
+  creatorId: string;
+  createdAt: string | null;
+  creator: {
+    name: string;
+    username: string;
+    avatar: string;
+  };
+}
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case 'Beginner': return 'bg-teal-500';
+    case 'Intermediate': return 'bg-blue-500';
+    case 'Advanced': return 'bg-indigo-600';
+    case 'Expert': return 'bg-violet-700';
+    default: return 'bg-teal-500';
+  }
+};
+
+interface CreateProjectForm {
+  title: string;
+  description: string;
+  categories: string[];
+  rolesNeeded: string[];
+  githubUrl: string;
+  endDate: string;
+  difficulty: string;
+}
 
 const FindProject = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>("any");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("any");
-  const [skillFilter, setSkillFilter] = useState<string>("any");
-  const [selectedRoles, setSelectedRoles] = useState<{[key: string]: string}>({});
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [categoryInputs, setCategoryInputs] = useState<string[]>(['']);
-  
-  const queryClient = useQueryClient();
-  
-  const form = useForm<z.infer<typeof createProjectSchema>>({
-    resolver: zodResolver(createProjectSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      roles: "",
-      categories: "",
-      githubRepo: "",
-      endDate: "",
-      difficulty: "Beginner"
-    }
+  const { user } = useAuth();
+  const { joinProject, loading: joinLoading } = useProjectJoin();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [userJoinedProjects, setUserJoinedProjects] = useState<string[]>([]);
+
+  const [createProjectForm, setCreateProjectForm] = useState<CreateProjectForm>({
+    title: '',
+    description: '',
+    categories: [],
+    rolesNeeded: [],
+    githubUrl: '',
+    endDate: '',
+    difficulty: 'Beginner',
   });
 
-  // Fetch projects from database
-  const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleDifficultyChange = (value: string) => {
+    setDifficultyFilter(value);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setCategoryFilter(value);
+  };
+
+  const filterProjects = () => {
+    let filtered = [...projects];
+
+    if (searchTerm) {
+      filtered = filtered.filter(project =>
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (difficultyFilter) {
+      filtered = filtered.filter(project => project.difficulty === difficultyFilter);
+    }
+
+    if (categoryFilter) {
+      filtered = filtered.filter(project => project.categories.includes(categoryFilter));
+    }
+
+    setFilteredProjects(filtered);
+  };
+
+  useEffect(() => {
+    filterProjects();
+  }, [searchTerm, difficultyFilter, categoryFilter, projects]);
+
+  useEffect(() => {
+    fetchProjects();
+    if (user) {
+      fetchUserJoinedProjects();
+    }
+  }, [user]);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          profiles!projects_creator_id_fkey (
+            full_name,
+            username,
+            avatar_url
+          )
+        `)
         .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
 
-  const onSubmit = async (data: z.infer<typeof createProjectSchema>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("You must be logged in to create a project");
+      if (error) {
+        console.error('Error fetching projects:', error);
         return;
       }
 
-      const rolesArray = data.roles.split(',').map(role => role.trim());
-      const categoriesArray = data.categories.split(',').map(cat => cat.trim());
+      const transformedProjects = data?.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        categories: project.categories,
+        rolesNeeded: project.roles_needed,
+        githubUrl: project.github_url,
+        endDate: project.end_date,
+        difficulty: project.difficulty,
+        xpReward: project.xp_reward,
+        bitsReward: project.bits_reward,
+        bytesReward: project.bytes_reward,
+        creatorId: project.creator_id,
+        createdAt: project.created_at,
+        creator: {
+          name: project.profiles?.full_name || 'Unknown User',
+          username: project.profiles?.username || 'unknown',
+          avatar: project.profiles?.avatar_url || '/placeholder.svg'
+        }
+      })) || [];
 
-      const { error } = await supabase
-        .from('projects')
-        .insert({
-          title: data.title,
-          description: data.description,
-          roles_needed: rolesArray,
-          categories: categoriesArray,
-          github_url: data.githubRepo,
-          end_date: data.endDate,
-          difficulty: data.difficulty,
-          creator_id: user.id
-        });
+      setProjects(transformedProjects);
+      setFilteredProjects(transformedProjects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (error) throw error;
+  const fetchUserJoinedProjects = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', user.id);
 
-      toast.success("Project created successfully!", {
-        description: `${data.title} has been created and is now visible to everyone.`
+      if (error) {
+        console.error('Error fetching user projects:', error);
+        return;
+      }
+
+      const joinedProjectIds = data?.map(item => item.project_id) || [];
+      setUserJoinedProjects(joinedProjectIds);
+    } catch (error) {
+      console.error('Error fetching user projects:', error);
+    }
+  };
+
+  const handleJoinProject = async (projectId: string) => {
+    const success = await joinProject(projectId);
+    if (success) {
+      // Refresh the user's joined projects list
+      fetchUserJoinedProjects();
+      setSelectedProject(null);
+    }
+  };
+
+  const handleCreateProject = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to create a project.",
+        variant: "destructive",
       });
-      
-      setIsDialogOpen(false);
-      form.reset();
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      return;
+    }
+
+    try {
+      const { title, description, categories, rolesNeeded, githubUrl, endDate, difficulty } = createProjectForm;
+
+      // Validate the form data
+      if (!title || !description || categories.length === 0 || rolesNeeded.length === 0 || !difficulty) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Insert the new project into the database
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([
+          {
+            title,
+            description,
+            categories,
+            roles_needed: rolesNeeded,
+            github_url: githubUrl,
+            end_date: endDate,
+            difficulty,
+            creator_id: user.id,
+            xp_reward: 100, // You might want to calculate this dynamically
+            bits_reward: 50, // You might want to calculate this dynamically
+            bytes_reward: 10, // You might want to calculate this dynamically
+          },
+        ])
+        .select()
+
+      if (error) {
+        console.error('Error creating project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create project. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Optionally, reset the form and close the dialog
+      setCreateProjectForm({
+        title: '',
+        description: '',
+        categories: [],
+        rolesNeeded: [],
+        githubUrl: '',
+        endDate: '',
+        difficulty: 'Beginner',
+      });
+      setIsCreateDialogOpen(false);
+
+      // Refresh the projects list
+      fetchProjects();
+
+      toast({
+        title: "Project created!",
+        description: "Your project has been created successfully.",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Error creating project:', error);
-      toast.error("Failed to create project. Please try again.");
-    }
-  };
-  
-  // Get difficulty badge color
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-teal-500';
-      case 'Intermediate': return 'bg-blue-500';
-      case 'Advanced': return 'bg-indigo-600';
-      case 'Expert': return 'bg-violet-700';
-      default: return 'bg-teal-500';
-    }
-  };
-  
-  // Filter projects based on search query and filters
-  const filteredProjects = projects.filter((project: any) => {
-    const matchesSearch = searchQuery === '' || 
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesRole = roleFilter === "any" || 
-      project.roles_needed.some((role: string) => role.toLowerCase().includes(roleFilter.toLowerCase()));
-    
-    const matchesDifficulty = difficultyFilter === "any" || 
-      project.difficulty === difficultyFilter;
-    
-    const matchesSkill = skillFilter === "any" || 
-      project.categories.some((skill: string) => skill.toLowerCase().includes(skillFilter.toLowerCase()));
-    
-    return matchesSearch && matchesRole && matchesDifficulty && matchesSkill;
-  });
-
-  const allSkills = Array.from(
-    new Set(projects.flatMap((project: any) => project.categories))
-  ).sort();
-
-  const allRoles = Array.from(
-    new Set(projects.flatMap((project: any) => project.roles_needed))
-  ).sort();
-
-  const handleRoleSelect = (projectId: string, role: string) => {
-    setSelectedRoles({
-      ...selectedRoles,
-      [projectId]: role
-    });
-  };
-
-  const getAvailableRoles = (project: any) => {
-    return project.roles_needed || [];
-  };
-
-  const addCategoryInput = () => {
-    setCategoryInputs([...categoryInputs, '']);
-  };
-
-  const removeCategoryInput = (index: number) => {
-    if (categoryInputs.length > 1) {
-      const newInputs = categoryInputs.filter((_, i) => i !== index);
-      setCategoryInputs(newInputs);
+      toast({
+        title: "Error",
+        description: "Failed to create project. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const updateCategoryInput = (index: number, value: string) => {
-    const newInputs = [...categoryInputs];
-    newInputs[index] = value;
-    setCategoryInputs(newInputs);
-    
-    // Update form field
-    const categoriesString = newInputs.filter(cat => cat.trim()).join(', ');
-    form.setValue('categories', categoriesString);
+  const isUserMember = (projectId: string) => {
+    return userJoinedProjects.includes(projectId);
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center text-slate-300">Loading projects...</div>
-        </div>
-      </div>
-    );
-  }
+  const isProjectCreator = (project: Project) => {
+    return user && project.creatorId === user.id;
+  };
 
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header with Create Project Button */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Explore Projects</h1>
-            <p className="text-lg text-slate-300 font-light">
-              Join exciting projects, gain experience, and earn XP
-            </p>
-          </div>
-          <Button 
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-2 mt-4 md:mt-0 text-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 border-0"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Create Project
-          </Button>
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Find Projects</h1>
+          <p className="text-lg text-slate-300 font-light">Explore exciting projects and join a team</p>
         </div>
 
-        {/* Search and Filters */}
-        <Card className="bg-slate-800 border-slate-700 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex flex-col lg:flex-row gap-4 items-end">
-              {/* Search Bar */}
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input
-                  placeholder="Search projects..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-slate-700 border-slate-600 text-slate-200 placeholder:text-slate-400"
-                />
-              </div>
-              
-              {/* Filter Section */}
-              <div className="flex gap-2 flex-wrap lg:flex-nowrap">
-                <Select onValueChange={setRoleFilter} value={roleFilter}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
-                    <SelectValue placeholder="Role" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectItem value="any">Any Role</SelectItem>
-                    {allRoles.map(role => (
-                      <SelectItem key={role} value={role}>{role}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Select onValueChange={setDifficultyFilter} value={difficultyFilter}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
-                    <SelectValue placeholder="Difficulty" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectItem value="any">Any Difficulty</SelectItem>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
-                    <SelectItem value="Expert">Expert</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select onValueChange={setSkillFilter} value={skillFilter}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
-                    <SelectValue placeholder="Skill" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectItem value="any">Any Skill</SelectItem>
-                    {allSkills.map(skill => (
-                      <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Project Results */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">
-              {filteredProjects.length} {filteredProjects.length === 1 ? 'Project' : 'Projects'} Found
-            </h2>
-            <div className="flex items-center text-slate-300 text-sm">
-              <Filter className="mr-2 h-4 w-4" />
-              Sorted by newest
-            </div>
+        {/* Search and Filter Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-2 w-full md:w-auto">
+            <Input
+              type="text"
+              placeholder="Search projects..."
+              className="bg-slate-700 border-slate-600 text-slate-200 w-full"
+              value={searchTerm}
+              onChange={handleInputChange}
+            />
+            <Search className="h-5 w-5 text-slate-400 -ml-8" />
           </div>
 
-          {filteredProjects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredProjects.map((project: any) => (
-                <Card key={project.id} className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 flex flex-col h-full">
-                  <CardContent className="p-5 flex flex-col h-full">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{project.title}</h3>
-                        <div className="text-xs text-slate-400">
-                          <span className="flex items-center">
-                            <Calendar className="mr-1 h-3 w-3" />
-                            Posted {new Date(project.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-glow`}>
-                        {project.difficulty}
-                      </Badge>
-                    </div>
-                    
-                    <p className="text-slate-300 text-sm mb-3 line-clamp-2">{project.description}</p>
-                    
-                    {/* Categories */}
-                    <div className="mb-3">
-                      <div className="flex flex-wrap gap-1">
-                        {project.categories.slice(0, 3).map((category: string, idx: number) => (
-                          <Badge key={idx} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                            {category}
-                          </Badge>
-                        ))}
-                        {project.categories.length > 3 && (
-                          <Badge variant="outline" className="text-xs text-slate-300 border-slate-600">
-                            +{project.categories.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Project Roles */}
-                    <div className="space-y-2 mb-3 flex-grow">
-                      <h4 className="text-sm font-medium text-slate-300 mb-1">Team Roles</h4>
-                      <ul className="space-y-1">
-                        {project.roles_needed.map((role: string, idx: number) => (
-                          <li key={idx} className="flex items-center justify-between text-xs text-slate-300">
-                            <span className="flex items-center">
-                              <CheckCircle className="mr-1 h-3 w-3 text-cyan-400" />
-                              {role}
-                            </span>
-                            <span className="text-cyan-400 text-xs">
-                              Available
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    {/* Rewards section */}
-                    <div className="flex items-center justify-between text-xs mb-3">
-                      <div className="flex items-center text-slate-300">
-                        <Clock className="mr-1 h-3 w-3" />
-                        {project.end_date ? `Due ${new Date(project.end_date).toLocaleDateString()}` : 'No deadline'}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center font-medium text-cyan-400">
-                          <Star className="mr-1 h-3 w-3" />
-                          +{project.xp_reward} XP
-                        </div>
-                        <div className="flex items-center font-medium text-yellow-400">
-                          <Bitcoin className="mr-1 h-3 w-3" />
-                          +{project.bits_reward} bits
-                        </div>
-                        <div className="flex items-center font-medium text-purple-400">
-                          <DollarSign className="mr-1 h-3 w-3" />
-                          +{project.bytes_reward} bytes
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Role Selection and Join Button */}
-                    <div className="flex items-center gap-2 mt-auto">
-                      <Select 
-                        value={selectedRoles[project.id] || ""} 
-                        onValueChange={(value) => handleRoleSelect(project.id, value)}
-                      >
-                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 flex-grow">
-                          <SelectValue placeholder="Select Role" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                          {getAvailableRoles(project).map((role: string) => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button 
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-                        disabled={!selectedRoles[project.id]}
-                      >
-                        Join
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="bg-slate-800 border-slate-700 p-6 text-center">
-              <p className="text-slate-300">No projects match your search criteria.</p>
-              <p className="text-slate-400 mt-2">Try adjusting your filters or search term.</p>
-            </Card>
-          )}
-        </div>
-      </div>
+          <div className="flex items-center space-x-4">
+            <Select onValueChange={handleDifficultyChange}>
+              <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
+                <SelectValue placeholder="Difficulty" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                <SelectItem value="">All Difficulties</SelectItem>
+                <SelectItem value="Beginner">Beginner</SelectItem>
+                <SelectItem value="Intermediate">Intermediate</SelectItem>
+                <SelectItem value="Advanced">Advanced</SelectItem>
+                <SelectItem value="Expert">Expert</SelectItem>
+              </SelectContent>
+            </Select>
 
-      {/* Create Project Dialog - More Compact */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-slate-800 text-white border-slate-700 sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-cyan-400">Create New Project</DialogTitle>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-200 text-sm">Project Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Smart AI Assistant" className="bg-slate-700 border-slate-600 h-8" {...field} />
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="difficulty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-200 text-sm">Difficulty</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-slate-700 border-slate-600 h-8">
-                            <SelectValue placeholder="Select difficulty" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                          <SelectItem value="Beginner">Beginner</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate</SelectItem>
-                          <SelectItem value="Advanced">Advanced</SelectItem>
-                          <SelectItem value="Expert">Expert</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200 text-sm">Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="An AI assistant that helps users with daily tasks..." 
-                        className="bg-slate-700 border-slate-600 min-h-16 text-sm" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="roles"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-200 text-sm">Required Roles</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Frontend Developer, Backend Engineer..." 
-                          className="bg-slate-700 border-slate-600 min-h-16 text-sm"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="categories"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-200 text-sm">Technologies/Categories</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="React, Node.js, TypeScript, MongoDB..." 
-                          className="bg-slate-700 border-slate-600 min-h-16 text-sm"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="githubRepo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-200 text-sm">GitHub Repository</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://github.com/username/repo" 
-                          className="bg-slate-700 border-slate-600 h-8 text-sm"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-200 text-sm">Goal End Date</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="date" 
-                          className="bg-slate-700 border-slate-600 h-8 text-sm"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <DialogFooter className="sm:justify-between gap-2 pt-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700 h-8"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    form.reset();
-                  }}
-                >
-                  Cancel
+            <Select onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="Web Development">Web Development</SelectItem>
+                <SelectItem value="Mobile Development">Mobile Development</SelectItem>
+                <SelectItem value="AI/ML">AI/ML</SelectItem>
+                <SelectItem value="Blockchain">Blockchain</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-cyan-500 text-cyan-400">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
                 </Button>
-                <Button 
-                  type="submit"
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 h-8"
-                >
+              </DialogTrigger>
+              <DialogContent className="bg-slate-800 text-white border-slate-700">
+                <DialogHeader>
+                  <DialogTitle>Filter Projects</DialogTitle>
+                  <DialogDescription>
+                    Apply advanced filters to find the perfect project.
+                  </DialogDescription>
+                </DialogHeader>
+                {/* Add more filter options here */}
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Create Project Button */}
+        <div className="text-right">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create a New Project</DialogTitle>
+                <DialogDescription>
+                  Share your project idea with the community.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">
+                    Title
+                  </Label>
+                  <Input
+                    id="title"
+                    value={createProjectForm.title}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, title: e.target.value })}
+                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={createProjectForm.description}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, description: e.target.value })}
+                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="categories" className="text-right">
+                    Categories
+                  </Label>
+                  <Input
+                    id="categories"
+                    value={createProjectForm.categories.join(', ')}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, categories: e.target.value.split(',').map(s => s.trim()) })}
+                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                    placeholder="e.g., Web Development, AI/ML"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="rolesNeeded" className="text-right">
+                    Roles Needed
+                  </Label>
+                  <Input
+                    id="rolesNeeded"
+                    value={createProjectForm.rolesNeeded.join(', ')}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, rolesNeeded: e.target.value.split(',').map(s => s.trim()) })}
+                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                    placeholder="e.g., Frontend Developer, Backend Developer"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="githubUrl" className="text-right">
+                    GitHub URL
+                  </Label>
+                  <Input
+                    id="githubUrl"
+                    value={createProjectForm.githubUrl}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, githubUrl: e.target.value })}
+                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="endDate" className="text-right">
+                    End Date
+                  </Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={createProjectForm.endDate}
+                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, endDate: e.target.value })}
+                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="difficulty" className="text-right">
+                    Difficulty
+                  </Label>
+                  <Select onValueChange={(value) => setCreateProjectForm({ ...createProjectForm, difficulty: value })}>
+                    <SelectTrigger className="col-span-3 bg-slate-700 border-slate-600 text-slate-200">
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
+                      <SelectItem value="Expert">Expert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" onClick={handleCreateProject} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
                   Create Project
                 </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            <div className="col-span-full text-center text-slate-400 py-8">
+              <Search className="w-12 h-12 mx-auto mb-4 animate-spin" />
+              <p>Loading projects...</p>
+            </div>
+          ) : filteredProjects.length === 0 ? (
+            <div className="col-span-full text-center text-slate-400 py-8">
+              <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No projects found</p>
+            </div>
+          ) : (
+            filteredProjects.map((project) => (
+              <Card key={project.id} className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all cursor-pointer group">
+                <CardHeader className="pb-4" onClick={() => setSelectedProject(project)}>
+                  <div className="flex justify-between items-start mb-2">
+                    <CardTitle className="text-lg text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
+                      {project.title}
+                    </CardTitle>
+                    <Badge className={`${getDifficultyColor(project.difficulty)} text-white text-xs flex-shrink-0 ml-2`}>
+                      {project.difficulty}
+                    </Badge>
+                  </div>
+                  <p className="text-slate-300 text-sm line-clamp-3 mb-4">
+                    {project.description}
+                  </p>
+                </CardHeader>
+
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    {/* Categories */}
+                    <div className="flex flex-wrap gap-1">
+                      {project.categories.slice(0, 3).map((category) => (
+                        <Badge key={category} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                          {category}
+                        </Badge>
+                      ))}
+                      {project.categories.length > 3 && (
+                        <Badge variant="outline" className="text-xs text-slate-400 border-slate-600">
+                          +{project.categories.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Creator Info */}
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={project.creator.avatar} />
+                        <AvatarFallback className="bg-cyan-600 text-white text-xs">
+                          {project.creator.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-slate-400">by @{project.creator.username}</span>
+                    </div>
+
+                    {/* Rewards */}
+                    <div className="flex justify-between items-center text-sm text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-cyan-400" />
+                        <span className="text-cyan-400">{project.xpReward} XP</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>{new Date(project.createdAt!).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Join Button */}
+                    <div className="pt-2">
+                      {isProjectCreator(project) ? (
+                        <Button disabled className="w-full bg-slate-600 text-slate-400">
+                          <Users className="mr-2 h-4 w-4" />
+                          Your Project
+                        </Button>
+                      ) : isUserMember(project.id) ? (
+                        <Button disabled className="w-full bg-green-600 text-white">
+                          <Users className="mr-2 h-4 w-4" />
+                          Already Joined
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleJoinProject(project.id);
+                          }}
+                          disabled={joinLoading}
+                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          {joinLoading ? 'Joining...' : 'Join Project'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Project Details Dialog */}
+        <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+          <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-cyan-400 flex items-center gap-2">
+                {selectedProject?.title}
+                <Badge className={selectedProject && `${getDifficultyColor(selectedProject.difficulty)} ml-2 text-white`}>
+                  {selectedProject?.difficulty}
+                </Badge>
+              </DialogTitle>
+              <DialogDescription className="text-slate-300">
+                {selectedProject?.description}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedProject && (
+              <div className="space-y-6 mt-4">
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-700 p-4 rounded-lg">
+                    <p className="text-slate-300 font-semibold mb-1">Creator</p>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={selectedProject.creator.avatar} />
+                        <AvatarFallback className="bg-cyan-600 text-white text-xs">
+                          {selectedProject.creator.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-cyan-300">@{selectedProject.creator.username}</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-700 p-4 rounded-lg">
+                    <p className="text-slate-300 font-semibold mb-1">Created Date</p>
+                    <p className="text-white">{new Date(selectedProject.createdAt!).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                
+                {/* Categories */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Categories</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.categories.map((category: string) => (
+                      <Badge key={category} className="bg-slate-700 text-cyan-300">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Roles Needed */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Roles Needed</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.rolesNeeded.map((role: string) => (
+                      <Badge key={role} className="bg-slate-700 text-cyan-300">
+                        {role}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* GitHub Link */}
+                {selectedProject.githubUrl && (
+                  <div className="flex items-center gap-2">
+                    <Github className="h-5 w-5 text-white" />
+                    <a 
+                      href={selectedProject.githubUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-cyan-400 hover:underline flex items-center"
+                    >
+                      GitHub Repository
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  </div>
+                )}
+                
+                {/* Project Actions */}
+                <div className="flex justify-end gap-3 mt-4">
+                  {isProjectCreator(selectedProject) ? (
+                    <Button disabled className="bg-slate-600 text-slate-400">
+                      Your Project
+                    </Button>
+                  ) : isUserMember(selectedProject.id) ? (
+                    <Button disabled className="bg-green-600 text-white">
+                      Already Joined
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => handleJoinProject(selectedProject.id)}
+                      disabled={joinLoading}
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                    >
+                      {joinLoading ? 'Joining...' : 'Join Project'}
+                    </Button>
+                  )}
+                  <Button variant="outline" className="border-slate-600 text-slate-300" onClick={() => setSelectedProject(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
