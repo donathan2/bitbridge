@@ -232,8 +232,10 @@ const FindProject = () => {
         return;
       }
 
+      console.log('Creating project...');
+
       // Insert the new project into the database
-      const { data, error } = await supabase
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert([
           {
@@ -245,15 +247,16 @@ const FindProject = () => {
             end_date: endDate,
             difficulty,
             creator_id: user.id,
-            xp_reward: 100, // You might want to calculate this dynamically
-            bits_reward: 50, // You might want to calculate this dynamically
-            bytes_reward: 10, // You might want to calculate this dynamically
+            xp_reward: 100,
+            bits_reward: 50,
+            bytes_reward: 10,
           },
         ])
         .select()
+        .single();
 
-      if (error) {
-        console.error('Error creating project:', error);
+      if (projectError) {
+        console.error('Error creating project:', projectError);
         toast({
           title: "Error",
           description: "Failed to create project. Please try again.",
@@ -262,7 +265,30 @@ const FindProject = () => {
         return;
       }
 
-      // Optionally, reset the form and close the dialog
+      console.log('Project created:', projectData);
+
+      // Automatically add the creator as a project member
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: projectData.id,
+          user_id: user.id,
+          role: 'Project Lead'
+        });
+
+      if (memberError) {
+        console.error('Error adding creator as member:', memberError);
+        // Don't fail the entire operation, just log the error
+        toast({
+          title: "Warning",
+          description: "Project created but failed to add you as a member. You can join manually.",
+          variant: "default",
+        });
+      } else {
+        console.log('Creator added as project member');
+      }
+
+      // Reset form and close dialog
       setCreateProjectForm({
         title: '',
         description: '',
@@ -274,12 +300,15 @@ const FindProject = () => {
       });
       setIsCreateDialogOpen(false);
 
-      // Refresh the projects list
-      fetchProjects();
+      // Refresh both projects list and user's joined projects
+      await Promise.all([
+        fetchProjects(),
+        fetchUserJoinedProjects()
+      ]);
 
       toast({
         title: "Project created!",
-        description: "Your project has been created successfully.",
+        description: "Your project has been created successfully and you've been added as a member.",
         variant: "default",
       });
     } catch (error) {
@@ -557,14 +586,9 @@ const FindProject = () => {
                       </div>
                     </div>
 
-                    {/* Join Button */}
+                    {/* Join Button - Now based purely on membership status */}
                     <div className="pt-2">
-                      {isProjectCreator(project) ? (
-                        <Button disabled className="w-full bg-slate-600 text-slate-400">
-                          <Users className="mr-2 h-4 w-4" />
-                          Your Project
-                        </Button>
-                      ) : isUserMember(project.id) ? (
+                      {isUserMember(project.id) ? (
                         <Button disabled className="w-full bg-green-600 text-white">
                           <Users className="mr-2 h-4 w-4" />
                           Already Joined
@@ -666,13 +690,9 @@ const FindProject = () => {
                   </div>
                 )}
                 
-                {/* Project Actions */}
+                {/* Project Actions - Now based purely on membership status */}
                 <div className="flex justify-end gap-3 mt-4">
-                  {isProjectCreator(selectedProject) ? (
-                    <Button disabled className="bg-slate-600 text-slate-400">
-                      Your Project
-                    </Button>
-                  ) : isUserMember(selectedProject.id) ? (
+                  {isUserMember(selectedProject.id) ? (
                     <Button disabled className="bg-green-600 text-white">
                       Already Joined
                     </Button>
