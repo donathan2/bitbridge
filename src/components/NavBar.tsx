@@ -10,15 +10,23 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 const NavBar = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile, loading: profileLoading } = useUserProfile();
+  
+  // Use profile data or fallback to defaults
+  const displayProfile = profile || {
+    experience_level: 1,
+    experience_points: 0,
+    bits_currency: 100,
+    bytes_currency: 5
+  };
   
   // Calculate experience progress for the next level
   const getExperienceForLevel = (level: number) => level * 1000; // 1000 XP per level
-  const currentLevelXP = profile ? getExperienceForLevel(profile.experience_level - 1) : 0;
-  const nextLevelXP = profile ? getExperienceForLevel(profile.experience_level) : 1000;
-  const progressInCurrentLevel = profile ? profile.experience_points - currentLevelXP : 0;
+  const currentLevelXP = getExperienceForLevel(displayProfile.experience_level - 1);
+  const nextLevelXP = getExperienceForLevel(displayProfile.experience_level);
+  const progressInCurrentLevel = displayProfile.experience_points - currentLevelXP;
   const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
-  const experiencePercentage = profile ? (progressInCurrentLevel / xpNeededForNextLevel) * 100 : 0;
+  const experiencePercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
   
   return (
     <nav className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
@@ -34,31 +42,34 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* XP and Currency Display - only show if authenticated and profile is loaded */}
-          {user && profile && (
+          {/* XP and Currency Display - show for authenticated users with fallback values */}
+          {user && (
             <div className="hidden lg:flex items-center space-x-4 bg-slate-700 px-4 py-2 rounded-lg">
               {/* Level Badge */}
               <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                {profile.experience_level}
+                {displayProfile.experience_level}
               </div>
               
               {/* XP Bar */}
               <div className="flex items-center space-x-2">
                 <div className="w-24">
-                  <Progress value={experiencePercentage} className="h-2 bg-slate-600" />
+                  <Progress value={Math.max(0, experiencePercentage)} className="h-2 bg-slate-600" />
                 </div>
-                <span className="text-xs text-slate-300">{profile.experience_points}/{nextLevelXP}</span>
+                <span className="text-xs text-slate-300">
+                  {displayProfile.experience_points}/{nextLevelXP}
+                  {profileLoading && !profile && <span className="opacity-50"> (loading...)</span>}
+                </span>
               </div>
               
               {/* Currency */}
               <div className="flex items-center space-x-3 text-sm">
                 <div className="flex items-center space-x-1">
                   <Bitcoin className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-400 font-medium">{profile.bits_currency?.toLocaleString() || 0}</span>
+                  <span className="text-yellow-400 font-medium">{displayProfile.bits_currency?.toLocaleString() || 0}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <DollarSign className="w-4 h-4 text-purple-400" />
-                  <span className="text-purple-400 font-medium">{profile.bytes_currency || 0}</span>
+                  <span className="text-purple-400 font-medium">{displayProfile.bytes_currency || 0}</span>
                 </div>
               </div>
             </div>
