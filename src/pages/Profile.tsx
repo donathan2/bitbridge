@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign, Award, Target, Users, GitBranch, Lightbulb, Shield } from 'lucide-react';
+import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign, Award, Target, Users, GitBranch, Lightbulb, Shield, AlertCircle, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,10 @@ const Profile = () => {
   if (authLoading || profileLoading || profileDataLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="text-cyan-400 text-lg">Loading...</div>
+        <div className="text-cyan-400 text-lg flex items-center gap-2">
+          <RefreshCw className="w-5 h-5 animate-spin" />
+          Loading profile...
+        </div>
       </div>
     );
   }
@@ -53,11 +57,24 @@ const Profile = () => {
     );
   }
 
-  // Handle error
+  // Handle error with more detailed information
   if (error) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="text-red-400 text-lg">Error loading profile: {error}</div>
+        <Card className="bg-slate-800 border-red-500 max-w-md">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">Profile Loading Error</h3>
+            <p className="text-red-400 text-sm mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="bg-cyan-600 hover:bg-cyan-700"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
