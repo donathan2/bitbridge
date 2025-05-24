@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useProfile } from '@/hooks/useProfile';
 
 // Icon mapping for achievements
 const iconMap: { [key: string]: any } = {
@@ -31,10 +32,11 @@ const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { profile, achievements, projects, loading: profileLoading, error } = useUserProfile();
+  const { profile: userProfile, achievements, projects, loading: profileLoading, error } = useUserProfile();
+  const { profile: profileData, loading: profileDataLoading } = useProfile();
   
   // Handle loading state
-  if (authLoading || profileLoading) {
+  if (authLoading || profileLoading || profileDataLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <div className="text-cyan-400 text-lg">Loading...</div>
@@ -60,10 +62,11 @@ const Profile = () => {
     );
   }
   
-  // Get user data from authenticated user
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  // Get user data from authenticated user and profiles table
+  const displayName = profileData?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const displayUsername = profileData?.username || user.email?.split('@')[0] || 'user';
   const userEmail = user.email || '';
-  const avatarUrl = user.user_metadata?.avatar_url || "/placeholder.svg";
+  const avatarUrl = profileData?.avatar_url || user.user_metadata?.avatar_url || "/placeholder.svg";
   
   // Calculate experience progress for the next level - same logic as NavBar
   const getExperienceForLevel = (level: number) => level * 1000; // 1000 XP per level
@@ -73,27 +76,27 @@ const Profile = () => {
   const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
   const experiencePercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
   
-  // Use real profile data or defaults
-  const userProfile = {
+  // Use real profile data or defaults with updated username
+  const userProfileData = {
     name: displayName,
-    username: `@${userEmail.split('@')[0]}`,
-    bio: profile?.bio || "Welcome to BitBridge! Update your bio to tell others about yourself.",
+    username: `@${displayUsername}`,
+    bio: userProfile?.bio || "Welcome to BitBridge! Update your bio to tell others about yourself.",
     avatar: avatarUrl,
-    skillLevel: profile?.skill_level || "Beginner Developer",
+    skillLevel: userProfile?.skill_level || "Beginner Developer",
     experience: {
-      current: profile?.experience_points || 0,
+      current: userProfile?.experience_points || 0,
       nextLevel: nextLevelXP,
-      level: profile?.experience_level || 1
+      level: userProfile?.experience_level || 1
     },
     currency: {
-      bits: profile?.bits_currency || 100,
-      bytes: profile?.bytes_currency || 5
+      bits: userProfile?.bits_currency || 100,
+      bytes: userProfile?.bytes_currency || 5
     },
     stats: {
       totalProjects: projects.length,
       completedProjects: projects.filter(p => p.status === 'completed').length,
       ongoingProjects: projects.filter(p => p.status === 'ongoing').length,
-      totalXP: profile?.experience_points || 0
+      totalXP: userProfile?.experience_points || 0
     }
   };
 
@@ -107,7 +110,7 @@ const Profile = () => {
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
     teamMembers: [
-      { role: project.members[0]?.role || "Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl }
+      { role: project.members[0]?.role || "Developer", username: `@${displayUsername}`, avatar: avatarUrl }
     ]
   }));
 
@@ -121,7 +124,7 @@ const Profile = () => {
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
     teamMembers: [
-      { role: project.members[0]?.role || "Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl }
+      { role: project.members[0]?.role || "Developer", username: `@${displayUsername}`, avatar: avatarUrl }
     ],
     messages: [] // No messages for now since we don't have a messages table
   }));
@@ -175,29 +178,29 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center gap-10">
               <div className="relative">
                 <Avatar className="w-36 h-36 border-4 border-slate-700 shadow-lg">
-                  <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
+                  <AvatarImage src={userProfileData.avatar} alt={userProfileData.name} />
                   <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                    {userProfile.name.split(' ').map(n => n[0]).join('')}
+                    {userProfileData.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg shadow-cyan-500/20">
-                  {userProfile.experience.level}
+                  {userProfileData.experience.level}
                 </div>
               </div>
               
               <div className="flex-1 text-center md:text-left space-y-5">
                 <div>
-                  <h2 className="text-3xl font-bold text-white mb-1 font-sans">{userProfile.name}</h2>
-                  <p className="text-lg text-slate-300 mb-2 font-light">{userProfile.username}</p>
+                  <h2 className="text-3xl font-bold text-white mb-1 font-sans">{userProfileData.name}</h2>
+                  <p className="text-lg text-slate-300 mb-2 font-light">{userProfileData.username}</p>
                   <Badge className="mt-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-3 py-1 shadow-glow">
-                    {userProfile.skillLevel}
+                    {userProfileData.skillLevel}
                   </Badge>
                 </div>
                 
                 {/* Bio */}
                 <div className="max-w-2xl">
                   <p className="text-slate-300 font-light leading-relaxed">
-                    {userProfile.bio}
+                    {userProfileData.bio}
                   </p>
                 </div>
                 
@@ -205,12 +208,12 @@ const Profile = () => {
                 <div className="space-y-4 max-w-lg">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm font-medium text-slate-300">
-                      <span>Level {userProfile.experience.level}</span>
-                      <span>{userProfile.experience.current} / {userProfile.experience.nextLevel} XP</span>
+                      <span>Level {userProfileData.experience.level}</span>
+                      <span>{userProfileData.experience.current} / {userProfileData.experience.nextLevel} XP</span>
                     </div>
                     <Progress value={experiencePercentage} className="h-3 bg-slate-700" />
                     <p className="text-sm text-slate-400 font-light">
-                      {userProfile.experience.nextLevel - userProfile.experience.current} XP to next level
+                      {userProfileData.experience.nextLevel - userProfileData.experience.current} XP to next level
                     </p>
                   </div>
                   
@@ -218,12 +221,12 @@ const Profile = () => {
                   <div className="flex gap-4 justify-center md:justify-start">
                     <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
                       <Bitcoin className="w-5 h-5 text-yellow-400" />
-                      <span className="text-yellow-400 font-bold">{userProfile.currency.bits.toLocaleString()}</span>
+                      <span className="text-yellow-400 font-bold">{userProfileData.currency.bits.toLocaleString()}</span>
                       <span className="text-slate-300 text-sm">Bits</span>
                     </div>
                     <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-purple-400" />
-                      <span className="text-purple-400 font-bold">{userProfile.currency.bytes}</span>
+                      <span className="text-purple-400 font-bold">{userProfileData.currency.bytes}</span>
                       <span className="text-slate-300 text-sm">Bytes</span>
                     </div>
                   </div>
@@ -234,17 +237,17 @@ const Profile = () => {
               <div className="grid grid-cols-2 gap-5 text-center">
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Trophy className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{userProfile.stats.completedProjects}</p>
+                  <p className="text-2xl font-bold text-white">{userProfileData.stats.completedProjects}</p>
                   <p className="text-sm text-slate-300 font-light">Completed</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Code className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{userProfile.stats.ongoingProjects}</p>
+                  <p className="text-2xl font-bold text-white">{userProfileData.stats.ongoingProjects}</p>
                   <p className="text-sm text-slate-300 font-light">Ongoing</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Star className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{userProfile.stats.totalXP}</p>
+                  <p className="text-2xl font-bold text-white">{userProfileData.stats.totalXP}</p>
                   <p className="text-sm text-slate-300 font-light">Total XP</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
