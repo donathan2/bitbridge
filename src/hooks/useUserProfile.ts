@@ -25,6 +25,14 @@ export interface Achievement {
   total?: number;
 }
 
+export interface ProjectMember {
+  role: string;
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  full_name: string | null;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -37,10 +45,7 @@ export interface Project {
   github_url?: string;
   started_date?: string;
   completed_date?: string;
-  members: Array<{
-    role: string;
-    user_id: string;
-  }>;
+  members: ProjectMember[];
 }
 
 export const useUserProfile = () => {
@@ -132,7 +137,7 @@ export const useUserProfile = () => {
         console.log('Combined achievements:', combinedAchievements);
         setAchievements(combinedAchievements);
 
-        // Fetch user's joined projects - with improved error handling
+        // Fetch user's joined projects with actual member data
         console.log('Fetching project memberships...');
         try {
           const { data: membershipData, error: membershipError } = await supabase
@@ -144,7 +149,7 @@ export const useUserProfile = () => {
             console.error('Membership error:', membershipError);
             console.log('Setting projects to empty array due to membership error');
             setProjects([]);
-            return; // Continue without failing the entire load
+            return;
           }
 
           console.log('Membership data:', membershipData);
@@ -163,32 +168,53 @@ export const useUserProfile = () => {
               console.error('Projects error:', projectsError);
               console.log('Setting projects to empty array due to projects error');
               setProjects([]);
-              return; // Continue without failing the entire load
+              return;
             }
 
-            // Transform projects data to match expected format
-            const transformedProjects = projectsData?.map(project => {
-              const membership = membershipData.find(m => m.project_id === project.id);
-              return {
-                id: project.id,
-                title: project.title,
-                description: project.description,
-                status: 'ongoing' as const,
-                difficulty: project.difficulty,
-                technologies: project.categories || [],
-                progress: 50, // Default progress for now
-                xp_reward: project.xp_reward,
-                github_url: project.github_url,
-                started_date: membership?.joined_at || project.created_at,
-                members: [{
-                  role: membership?.role || 'Developer',
-                  user_id: user.id
-                }]
-              };
-            }) || [];
+            // For each project, fetch all its members
+            const projectsWithMembers = await Promise.all(
+              projectsData?.map(async (project) => {
+                const { data: allProjectMembers, error: membersError } = await supabase
+                  .from('project_members')
+                  .select(`
+                    role,
+                    user_id,
+                    profiles!inner(username, full_name, avatar_url)
+                  `)
+                  .eq('project_id', project.id);
 
-            console.log('Transformed projects:', transformedProjects);
-            setProjects(transformedProjects);
+                if (membersError) {
+                  console.error('Error fetching project members:', membersError);
+                }
+
+                const members: ProjectMember[] = allProjectMembers?.map(member => ({
+                  role: member.role,
+                  user_id: member.user_id,
+                  username: member.profiles?.username || 'Unknown User',
+                  avatar_url: member.profiles?.avatar_url || null,
+                  full_name: member.profiles?.full_name || null
+                })) || [];
+
+                const userMembership = membershipData.find(m => m.project_id === project.id);
+                
+                return {
+                  id: project.id,
+                  title: project.title,
+                  description: project.description,
+                  status: 'ongoing' as const,
+                  difficulty: project.difficulty,
+                  technologies: project.categories || [],
+                  progress: 50, // Default progress for now
+                  xp_reward: project.xp_reward,
+                  github_url: project.github_url,
+                  started_date: userMembership?.joined_at || project.created_at,
+                  members: members
+                };
+              }) || []
+            );
+
+            console.log('Projects with members:', projectsWithMembers);
+            setProjects(projectsWithMembers);
           } else {
             console.log('No project memberships found');
             setProjects([]);
@@ -197,7 +223,6 @@ export const useUserProfile = () => {
           console.error('Error in project fetching section:', projectError);
           console.log('Setting projects to empty array due to project section error');
           setProjects([]);
-          // Continue without failing the entire load
         }
 
       } catch (err) {

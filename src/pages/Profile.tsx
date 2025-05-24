@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -126,9 +125,7 @@ const Profile = () => {
     completedDate: project.completed_date || new Date().toISOString(),
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
-    teamMembers: [
-      { role: project.members[0]?.role || "Developer", username: `@${displayUsername}`, avatar: avatarUrl }
-    ]
+    teamMembers: project.members
   }));
 
   const ongoingProjects = projects.filter(p => p.status === 'ongoing').map(project => ({
@@ -140,9 +137,7 @@ const Profile = () => {
     startDate: project.started_date || new Date().toISOString(),
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
-    teamMembers: [
-      { role: project.members[0]?.role || "Developer", username: `@${displayUsername}`, avatar: avatarUrl }
-    ],
+    teamMembers: project.members,
     messages: [] // No messages for now since we don't have a messages table
   }));
 
@@ -575,20 +570,20 @@ const Profile = () => {
                   </div>
                 </div>
                 
-                {/* Team Members */}
+                {/* Team Members - Now using real data */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Team Members</h3>
                   <div className="grid md:grid-cols-2 gap-3">
                     {selectedProject.teamMembers.map((member: any, index: number) => (
                       <div key={index} className="flex items-center gap-3 bg-slate-700 p-3 rounded-lg">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={member.avatar} />
+                          <AvatarImage src={member.avatar_url || "/placeholder.svg"} />
                           <AvatarFallback className="bg-cyan-600 text-white">
-                            {member.username.substring(1, 3).toUpperCase()}
+                            {(member.full_name || member.username || 'U').charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-cyan-300">{member.username}</p>
+                          <p className="text-cyan-300">@{member.username}</p>
                           <p className="text-xs text-slate-300">{member.role}</p>
                         </div>
                       </div>
