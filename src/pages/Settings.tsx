@@ -175,12 +175,41 @@ const Settings = () => {
       return;
     }
 
+    if (!passwordData.currentPassword) {
+      toast({
+        title: "Error",
+        description: "Please enter your current password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const { error } = await supabase.auth.updateUser({
+      // First, verify the current password by attempting to sign in
+      if (!user?.email) {
+        throw new Error('No email found for current user');
+      }
+
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: passwordData.currentPassword,
+      });
+
+      if (verifyError) {
+        toast({
+          title: "Error",
+          description: "Current password is incorrect.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If verification succeeds, update the password
+      const { error: updateError } = await supabase.auth.updateUser({
         password: passwordData.newPassword
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       setPasswordData({
         currentPassword: '',
@@ -190,7 +219,7 @@ const Settings = () => {
 
       toast({
         title: "Password updated",
-        description: "Your password has been changed successfully.",
+        description: "Your password has been changed successfully. You may need to sign in again on other devices.",
         variant: "default",
       });
     } catch (error) {
@@ -467,8 +496,10 @@ const Settings = () => {
                         value={passwordData.currentPassword}
                         onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
                         className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                        placeholder="Enter current password"
                       />
                     </div>
+                    <p className="text-sm text-slate-400">Required to verify your identity</p>
                   </div>
                   
                   <div className="space-y-2">
@@ -481,6 +512,7 @@ const Settings = () => {
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
                         className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                        placeholder="Enter new password"
                       />
                     </div>
                   </div>
@@ -495,6 +527,7 @@ const Settings = () => {
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
                         className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                        placeholder="Confirm new password"
                       />
                     </div>
                   </div>
