@@ -1,14 +1,18 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault, Compass } from 'lucide-react';
+import { Home, User, Settings, Users, Bitcoin, DollarSign, Star, Vault, Compass, LogOut } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const NavBar = () => {
   const location = useLocation();
+  const { user, signOut, loading } = useAuth();
   
   // Mock user data - in real app this would come from context/store
-  const user = {
+  const userStats = {
     experience: {
       current: 7500,
       nextLevel: 10000,
@@ -20,7 +24,7 @@ const NavBar = () => {
     }
   };
 
-  const experiencePercentage = (user.experience.current / user.experience.nextLevel) * 100;
+  const experiencePercentage = (userStats.experience.current / userStats.experience.nextLevel) * 100;
   
   return (
     <nav className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
@@ -36,92 +40,129 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* XP and Currency Display */}
-          <div className="hidden lg:flex items-center space-x-4 bg-slate-700 px-4 py-2 rounded-lg">
-            {/* Level Badge */}
-            <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-              {user.experience.level}
-            </div>
-            
-            {/* XP Bar */}
-            <div className="flex items-center space-x-2">
-              <Star className="w-4 h-4 text-cyan-400" />
-              <div className="w-24">
-                <Progress value={experiencePercentage} className="h-2 bg-slate-600" />
+          {/* XP and Currency Display - only show if authenticated */}
+          {user && (
+            <div className="hidden lg:flex items-center space-x-4 bg-slate-700 px-4 py-2 rounded-lg">
+              {/* Level Badge */}
+              <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                {userStats.experience.level}
               </div>
-              <span className="text-xs text-slate-300">{user.experience.current}/{user.experience.nextLevel}</span>
-            </div>
-            
-            {/* Currency */}
-            <div className="flex items-center space-x-3 text-sm">
-              <div className="flex items-center space-x-1">
-                <Bitcoin className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 font-medium">{user.currency.bits.toLocaleString()}</span>
+              
+              {/* XP Bar */}
+              <div className="flex items-center space-x-2">
+                <Star className="w-4 h-4 text-cyan-400" />
+                <div className="w-24">
+                  <Progress value={experiencePercentage} className="h-2 bg-slate-600" />
+                </div>
+                <span className="text-xs text-slate-300">{userStats.experience.current}/{userStats.experience.nextLevel}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <DollarSign className="w-4 h-4 text-purple-400" />
-                <span className="text-purple-400 font-medium">{user.currency.bytes}</span>
+              
+              {/* Currency */}
+              <div className="flex items-center space-x-3 text-sm">
+                <div className="flex items-center space-x-1">
+                  <Bitcoin className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-400 font-medium">{userStats.currency.bits.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <DollarSign className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-400 font-medium">{userStats.currency.bytes}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           
           {/* Navigation tabs */}
           <div className="flex items-center space-x-1">
-            <Link 
-              to="/profile" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/profile' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Home className="h-4 w-4 mr-1" />
-              <span>Home</span>
-            </Link>
-            <Link 
-              to="/find-project" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/find-project' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Compass className="h-4 w-4 mr-1" />
-              <span>Explore</span>
-            </Link>
-            <Link 
-              to="/bitvault" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/bitvault' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Vault className="h-4 w-4 mr-1" />
-              <span>BitVault</span>
-            </Link>
-            <Link 
-              to="/friends" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/friends' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Users className="h-4 w-4 mr-1" />
-              <span>Friends</span>
-            </Link>
-            <Link 
-              to="/settings" 
-              className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                location.pathname === '/settings' 
-                  ? 'bg-slate-700 text-cyan-400' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-              }`}
-            >
-              <Settings className="h-4 w-4 mr-1" />
-              <span>Settings</span>
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  to="/profile" 
+                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                    location.pathname === '/profile' 
+                      ? 'bg-slate-700 text-cyan-400' 
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+                  }`}
+                >
+                  <Home className="h-4 w-4 mr-1" />
+                  <span>Home</span>
+                </Link>
+                <Link 
+                  to="/find-project" 
+                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                    location.pathname === '/find-project' 
+                      ? 'bg-slate-700 text-cyan-400' 
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+                  }`}
+                >
+                  <Compass className="h-4 w-4 mr-1" />
+                  <span>Explore</span>
+                </Link>
+                <Link 
+                  to="/bitvault" 
+                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                    location.pathname === '/bitvault' 
+                      ? 'bg-slate-700 text-cyan-400' 
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+                  }`}
+                >
+                  <Vault className="h-4 w-4 mr-1" />
+                  <span>BitVault</span>
+                </Link>
+                <Link 
+                  to="/friends" 
+                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                    location.pathname === '/friends' 
+                      ? 'bg-slate-700 text-cyan-400' 
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+                  }`}
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  <span>Friends</span>
+                </Link>
+                <Link 
+                  to="/settings" 
+                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                    location.pathname === '/settings' 
+                      ? 'bg-slate-700 text-cyan-400' 
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
+                  }`}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  <span>Settings</span>
+                </Link>
+                
+                {/* User Avatar and Sign Out */}
+                <div className="flex items-center space-x-2 ml-4">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-cyan-600 text-white">
+                      {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={signOut}
+                    className="text-slate-300 hover:text-cyan-400"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link to="/auth">
+                  <Button variant="ghost" className="text-slate-300 hover:text-cyan-400">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
