@@ -10,17 +10,42 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   
-  // Mock user data with currency and achievements
-  const user = {
-    name: "Alex Chen",
-    username: "@alexchen",
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="text-cyan-400 text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  // Handle no user
+  if (!user) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="text-slate-300 text-lg">Please log in to view your profile.</div>
+      </div>
+    );
+  }
+  
+  // Get user data from authenticated user
+  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const userEmail = user.email || '';
+  const avatarUrl = user.user_metadata?.avatar_url || "/placeholder.svg";
+  
+  // Mock user data with real user info - in real app this would come from database
+  const userProfile = {
+    name: displayName,
+    username: `@${userEmail.split('@')[0]}`,
     bio: "Full-stack developer passionate about React, TypeScript and building beautiful user experiences. 5+ years of experience in web development, currently exploring WebAssembly and AI applications.",
-    avatar: "/placeholder.svg",
+    avatar: avatarUrl,
     skillLevel: "Advanced Developer",
     experience: {
       current: 7500,
@@ -143,7 +168,7 @@ const Profile = () => {
       difficulty: "Advanced",
       githubUrl: "https://github.com/alexchen/ecommerce-dashboard",
       teamMembers: [
-        { role: "Frontend Developer", username: "@alexchen", avatar: "/placeholder.svg" },
+        { role: "Frontend Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
         { role: "Backend Developer", username: "@sarahj", avatar: "/placeholder.svg" },
         { role: "UI/UX Designer", username: "@mwong", avatar: "/placeholder.svg" }
       ]
@@ -158,7 +183,7 @@ const Profile = () => {
       difficulty: "Expert",
       githubUrl: "https://github.com/alexchen/task-manager",
       teamMembers: [
-        { role: "Full-stack Developer", username: "@alexchen", avatar: "/placeholder.svg" },
+        { role: "Full-stack Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
         { role: "Backend Developer", username: "@priyap", avatar: "/placeholder.svg" }
       ]
     },
@@ -172,7 +197,7 @@ const Profile = () => {
       difficulty: "Intermediate",
       githubUrl: "https://github.com/alexchen/weather-widget",
       teamMembers: [
-        { role: "Frontend Developer", username: "@alexchen", avatar: "/placeholder.svg" }
+        { role: "Frontend Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl }
       ]
     }
   ];
@@ -188,12 +213,12 @@ const Profile = () => {
       difficulty: "Advanced",
       githubUrl: "https://github.com/alexchen/ai-chat",
       teamMembers: [
-        { role: "Frontend Developer", username: "@alexchen", avatar: "/placeholder.svg" },
+        { role: "Frontend Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
         { role: "AI Engineer", username: "@jwilson", avatar: "/placeholder.svg" },
         { role: "UX Designer", username: "@echen", avatar: "/placeholder.svg" }
       ],
       messages: [
-        { username: "@alexchen", avatar: "/placeholder.svg", text: "Just pushed the new chat components", timestamp: "2024-05-22 10:30 AM" },
+        { username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl, text: "Just pushed the new chat components", timestamp: "2024-05-22 10:30 AM" },
         { username: "@jwilson", avatar: "/placeholder.svg", text: "Great! I'll update the API integration tomorrow", timestamp: "2024-05-22 11:45 AM" },
         { username: "@echen", avatar: "/placeholder.svg", text: "I've uploaded the new design mockups to Figma", timestamp: "2024-05-23 09:15 AM" }
       ]
@@ -208,11 +233,11 @@ const Profile = () => {
       difficulty: "Intermediate",
       githubUrl: "https://github.com/alexchen/portfolio",
       teamMembers: [
-        { role: "Developer", username: "@alexchen", avatar: "/placeholder.svg" },
+        { role: "Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
         { role: "Designer", username: "@sarahj", avatar: "/placeholder.svg" }
       ],
       messages: [
-        { username: "@alexchen", avatar: "/placeholder.svg", text: "Homepage animations are complete", timestamp: "2024-05-21 09:30 AM" },
+        { username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl, text: "Homepage animations are complete", timestamp: "2024-05-21 09:30 AM" },
         { username: "@sarahj", avatar: "/placeholder.svg", text: "New color scheme looks great!", timestamp: "2024-05-22 14:20 PM" }
       ]
     },
@@ -226,19 +251,19 @@ const Profile = () => {
       difficulty: "Expert",
       githubUrl: "https://github.com/alexchen/puzzle-game",
       teamMembers: [
-        { role: "Mobile Developer", username: "@alexchen", avatar: "/placeholder.svg" },
+        { role: "Mobile Developer", username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl },
         { role: "Game Designer", username: "@mwong", avatar: "/placeholder.svg" },
         { role: "Sound Engineer", username: "@dsmith", avatar: "/placeholder.svg" },
         { role: "Animator", username: "@akhan", avatar: "/placeholder.svg" }
       ],
       messages: [
-        { username: "@alexchen", avatar: "/placeholder.svg", text: "Basic game mechanics implemented", timestamp: "2024-05-22 16:30 PM" },
+        { username: `@${userEmail.split('@')[0]}`, avatar: avatarUrl, text: "Basic game mechanics implemented", timestamp: "2024-05-22 16:30 PM" },
         { username: "@mwong", avatar: "/placeholder.svg", text: "Level designs ready for review", timestamp: "2024-05-23 08:40 AM" }
       ]
     }
   ];
 
-  const experiencePercentage = (user.experience.current / user.experience.nextLevel) * 100;
+  const experiencePercentage = (userProfile.experience.current / userProfile.experience.nextLevel) * 100;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -289,29 +314,29 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center gap-10">
               <div className="relative">
                 <Avatar className="w-36 h-36 border-4 border-slate-700 shadow-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
                   <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                    {user.name.split(' ').map(n => n[0]).join('')}
+                    {userProfile.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg shadow-cyan-500/20">
-                  {user.experience.level}
+                  {userProfile.experience.level}
                 </div>
               </div>
               
               <div className="flex-1 text-center md:text-left space-y-5">
                 <div>
-                  <h2 className="text-3xl font-bold text-white mb-1 font-sans">{user.name}</h2>
-                  <p className="text-lg text-slate-300 mb-2 font-light">{user.username}</p>
+                  <h2 className="text-3xl font-bold text-white mb-1 font-sans">{userProfile.name}</h2>
+                  <p className="text-lg text-slate-300 mb-2 font-light">{userProfile.username}</p>
                   <Badge className="mt-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-3 py-1 shadow-glow">
-                    {user.skillLevel}
+                    {userProfile.skillLevel}
                   </Badge>
                 </div>
                 
                 {/* Bio */}
                 <div className="max-w-2xl">
                   <p className="text-slate-300 font-light leading-relaxed">
-                    {user.bio}
+                    {userProfile.bio}
                   </p>
                 </div>
                 
@@ -319,12 +344,12 @@ const Profile = () => {
                 <div className="space-y-4 max-w-lg">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm font-medium text-slate-300">
-                      <span>Level {user.experience.level}</span>
-                      <span>{user.experience.current} / {user.experience.nextLevel} XP</span>
+                      <span>Level {userProfile.experience.level}</span>
+                      <span>{userProfile.experience.current} / {userProfile.experience.nextLevel} XP</span>
                     </div>
                     <Progress value={experiencePercentage} className="h-3 bg-slate-700" />
                     <p className="text-sm text-slate-400 font-light">
-                      {user.experience.nextLevel - user.experience.current} XP to next level
+                      {userProfile.experience.nextLevel - userProfile.experience.current} XP to next level
                     </p>
                   </div>
                   
@@ -332,12 +357,12 @@ const Profile = () => {
                   <div className="flex gap-4 justify-center md:justify-start">
                     <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
                       <Bitcoin className="w-5 h-5 text-yellow-400" />
-                      <span className="text-yellow-400 font-bold">{user.currency.bits.toLocaleString()}</span>
+                      <span className="text-yellow-400 font-bold">{userProfile.currency.bits.toLocaleString()}</span>
                       <span className="text-slate-300 text-sm">Bits</span>
                     </div>
                     <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-purple-400" />
-                      <span className="text-purple-400 font-bold">{user.currency.bytes}</span>
+                      <span className="text-purple-400 font-bold">{userProfile.currency.bytes}</span>
                       <span className="text-slate-300 text-sm">Bytes</span>
                     </div>
                   </div>
@@ -348,17 +373,17 @@ const Profile = () => {
               <div className="grid grid-cols-2 gap-5 text-center">
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Trophy className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.completedProjects}</p>
+                  <p className="text-2xl font-bold text-white">{userProfile.stats.completedProjects}</p>
                   <p className="text-sm text-slate-300 font-light">Completed</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Code className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.ongoingProjects}</p>
+                  <p className="text-2xl font-bold text-white">{userProfile.stats.ongoingProjects}</p>
                   <p className="text-sm text-slate-300 font-light">Ongoing</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Star className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.totalXP}</p>
+                  <p className="text-2xl font-bold text-white">{userProfile.stats.totalXP}</p>
                   <p className="text-sm text-slate-300 font-light">Total XP</p>
                 </div>
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
