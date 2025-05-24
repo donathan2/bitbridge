@@ -253,7 +253,7 @@ const FindProject = () => {
         {/* Header with Create Project Button */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Find a Project</h1>
+            <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Explore Projects</h1>
             <p className="text-lg text-slate-300 font-light">
               Join exciting projects, gain experience, and earn XP
             </p>
