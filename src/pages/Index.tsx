@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Trophy, Code, Star, Search, Zap, BarChart, Users, Rocket } from 'lucide-react';
+import { User, Trophy, Code, Star, Search, Zap, BarChart, Users, Rocket, UserPlus } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -163,8 +163,14 @@ const Index = () => {
               Create your developer profile and start tracking your progress today
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/find-project">
+              <Link to="/signup">
                 <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Sign Up
+                </Button>
+              </Link>
+              <Link to="/explore">
+                <Button size="lg" variant="outline" className="bg-slate-700 border-slate-600 hover:bg-slate-600 text-slate-200 px-8 py-3 text-lg shadow-lg transition-all duration-300">
                   <Search className="w-5 h-5 mr-2" />
                   Explore Projects
                 </Button>
