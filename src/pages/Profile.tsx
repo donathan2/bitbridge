@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink } from 'lucide-react';
+import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const navigate = useNavigate();
   
-  // Mock user data
+  // Mock user data with currency
   const user = {
     name: "Alex Chen",
     username: "@alexchen",
@@ -26,6 +26,10 @@ const Profile = () => {
       current: 7500,
       nextLevel: 10000,
       level: 8
+    },
+    currency: {
+      bits: 3250,
+      bytes: 47
     },
     stats: {
       totalProjects: 24,
@@ -217,7 +221,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Stats Grid */}
+              {/* Updated Stats Grid with Currency */}
               <div className="grid grid-cols-2 gap-5 text-center">
                 <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
                   <Trophy className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
@@ -239,6 +243,32 @@ const Profile = () => {
                   <p className="text-2xl font-bold text-white">{user.stats.totalProjects}</p>
                   <p className="text-sm text-slate-300 font-light">Total Projects</p>
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Currency Section */}
+        <Card className="bg-slate-800 border-slate-700 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-yellow-600 to-purple-600 text-white p-6">
+            <CardTitle className="flex items-center gap-2 font-sans">
+              <Bitcoin className="w-6 h-6" />
+              Currency Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-slate-700 p-6 rounded-xl text-center hover:shadow-lg hover:shadow-yellow-500/10 transition-all">
+                <Bitcoin className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+                <p className="text-3xl font-bold text-yellow-400 mb-2">{user.currency.bits.toLocaleString()}</p>
+                <p className="text-slate-300 font-light">Bits</p>
+                <p className="text-xs text-slate-400 mt-1">Common currency earned from projects</p>
+              </div>
+              <div className="bg-slate-700 p-6 rounded-xl text-center hover:shadow-lg hover:shadow-purple-500/10 transition-all">
+                <DollarSign className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <p className="text-3xl font-bold text-purple-400 mb-2">{user.currency.bytes}</p>
+                <p className="text-slate-300 font-light">Bytes</p>
+                <p className="text-xs text-slate-400 mt-1">Rare currency for special achievements</p>
               </div>
             </div>
           </CardContent>

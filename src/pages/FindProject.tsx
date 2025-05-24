@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,9 @@ import {
   Clock,
   CheckCircle,
   UserCheck,
-  Plus
+  Plus,
+  Bitcoin,
+  DollarSign
 } from 'lucide-react';
 import {
   Select,
@@ -93,7 +94,7 @@ const FindProject = () => {
     form.reset();
   };
   
-  // Mock project data
+  // Mock project data with currency rewards
   const projects = [
     {
       id: 1,
@@ -101,6 +102,8 @@ const FindProject = () => {
       description: "Building a React Native e-commerce app with product listings, cart functionality, and payment processing",
       difficulty: "Advanced",
       xpReward: 1200,
+      bitsReward: 850,
+      bytesReward: 12,
       skills: ["React Native", "JavaScript", "Redux", "API Integration"],
       rolesNeeded: ["Frontend Developer", "UI/UX Designer", "Tester"],
       rolesFilled: {
@@ -119,6 +122,8 @@ const FindProject = () => {
       description: "Backend API for a task management application with user authentication and task CRUD operations",
       difficulty: "Intermediate",
       xpReward: 850,
+      bitsReward: 600,
+      bytesReward: 8,
       skills: ["Node.js", "Express", "MongoDB", "Authentication"],
       rolesNeeded: ["Backend Developer", "Database Designer", "API Tester"],
       rolesFilled: {
@@ -137,6 +142,8 @@ const FindProject = () => {
       description: "Building a video streaming platform with user accounts, content recommendations, and playback controls",
       difficulty: "Expert",
       xpReward: 1500,
+      bitsReward: 1200,
+      bytesReward: 20,
       skills: ["React", "Node.js", "WebRTC", "AWS", "Redis"],
       rolesNeeded: ["Full-stack Developer", "DevOps Engineer", "QA Engineer"],
       rolesFilled: {
@@ -155,6 +162,8 @@ const FindProject = () => {
       description: "Web application to track personal expenses, income, and generate financial reports",
       difficulty: "Beginner",
       xpReward: 600,
+      bitsReward: 400,
+      bytesReward: 5,
       skills: ["HTML", "CSS", "JavaScript", "Chart.js"],
       rolesNeeded: ["Frontend Developer", "UI Designer", "Tester"],
       rolesFilled: {
@@ -173,6 +182,8 @@ const FindProject = () => {
       description: "Dashboard displaying weather forecasts with interactive maps and data visualization",
       difficulty: "Intermediate",
       xpReward: 750,
+      bitsReward: 550,
+      bytesReward: 7,
       skills: ["React", "TypeScript", "API Integration", "D3.js"],
       rolesNeeded: ["Frontend Developer", "API Specialist", "UI Designer"],
       rolesFilled: {
@@ -405,14 +416,25 @@ const FindProject = () => {
                       <Progress value={project.progress} className="h-1.5 bg-slate-700" />
                     </div>
                     
+                    {/* Updated rewards section with currency */}
                     <div className="flex items-center justify-between text-xs mb-3">
                       <div className="flex items-center text-slate-300">
                         <Clock className="mr-1 h-3 w-3" />
                         {project.estimatedCompletion}
                       </div>
-                      <div className="flex items-center font-medium text-cyan-400">
-                        <Star className="mr-1 h-3 w-3" />
-                        +{project.xpReward} XP
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center font-medium text-cyan-400">
+                          <Star className="mr-1 h-3 w-3" />
+                          +{project.xpReward} XP
+                        </div>
+                        <div className="flex items-center font-medium text-yellow-400">
+                          <Bitcoin className="mr-1 h-3 w-3" />
+                          +{project.bitsReward} bits
+                        </div>
+                        <div className="flex items-center font-medium text-purple-400">
+                          <DollarSign className="mr-1 h-3 w-3" />
+                          +{project.bytesReward} bytes
+                        </div>
                       </div>
                     </div>
                     
@@ -434,7 +456,7 @@ const FindProject = () => {
                             </SelectContent>
                           </Select>
                           <Button 
-                            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
                             disabled={!selectedRoles[project.id]}
                           >
                             Join
