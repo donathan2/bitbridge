@@ -12,25 +12,25 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-6xl font-bold text-cyan-400 mb-6 font-sans">
-            BitBridge
+            Explore BitBridge
           </h1>
           <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-            Track your coding journey, showcase your projects, and level up your development skills
+            Discover amazing projects, find your next challenge, and connect with developers worldwide
           </p>
           <div className="max-w-xl mx-auto">
-            <p className="text-lg text-cyan-300 font-medium">Your path to becoming a better developer starts here</p>
+            <p className="text-lg text-cyan-300 font-medium">Your coding adventure awaits</p>
             <div className="mt-6 flex flex-col md:flex-row gap-4 justify-center items-center">
               <div className="flex items-center gap-3 text-slate-300">
                 <div className="bg-cyan-500/20 p-2 rounded-full">
                   <Zap className="h-5 w-5 text-cyan-400" />
                 </div>
-                <span>Gain XP from completing projects</span>
+                <span>Discover new projects</span>
               </div>
               <div className="flex items-center gap-3 text-slate-300">
                 <div className="bg-cyan-500/20 p-2 rounded-full">
                   <Users className="h-5 w-5 text-cyan-400" />
                 </div>
-                <span>Collaborate with others</span>
+                <span>Join amazing teams</span>
               </div>
             </div>
           </div>
@@ -41,41 +41,41 @@ const Index = () => {
           <Card className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 hover:-translate-y-1">
             <CardHeader className="text-center pb-4">
               <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
+                <Search className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-xl font-bold text-cyan-400">Find Projects</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-slate-300">
+                Browse through hundreds of exciting projects across different technologies and skill levels
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 hover:-translate-y-1">
+            <CardHeader className="text-center pb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-xl font-bold text-cyan-400">Join Teams</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-slate-300">
+                Connect with like-minded developers and collaborate on projects that match your interests
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 hover:-translate-y-1">
+            <CardHeader className="text-center pb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-xl font-bold text-cyan-400">Track Progress</CardTitle>
+              <CardTitle className="text-xl font-bold text-cyan-400">Earn Rewards</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-slate-300">
-                Monitor your coding journey with XP tracking, skill levels, and achievement badges
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 hover:-translate-y-1">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
-                <Code className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-xl font-bold text-cyan-400">Manage Projects</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-slate-300">
-                Keep track of your completed and ongoing projects with detailed progress tracking
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 hover:-translate-y-1">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
-                <Star className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-xl font-bold text-cyan-400">Showcase Skills</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-slate-300">
-                Display your technical expertise and project portfolio in a beautiful, professional format
+                Complete projects to earn XP, bits, bytes, and unlock new opportunities and perks
               </p>
             </CardContent>
           </Card>
@@ -83,13 +83,13 @@ const Index = () => {
 
         {/* Statistics Section */}
         <div className="mb-20">
-          <h2 className="text-3xl font-bold text-cyan-400 text-center mb-10">Progress Metrics</h2>
+          <h2 className="text-3xl font-bold text-cyan-400 text-center mb-10">Community Stats</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-6 text-center">
                 <BarChart className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
                 <h3 className="text-4xl font-bold text-white mb-2">125+</h3>
-                <p className="text-slate-400">Projects Completed</p>
+                <p className="text-slate-400">Active Projects</p>
               </CardContent>
             </Card>
 
@@ -158,15 +158,15 @@ const Index = () => {
         {/* Call to Action */}
         <div className="text-center">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-10 shadow-lg max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-cyan-400 mb-4 font-sans">Ready to showcase your journey?</h2>
+            <h2 className="text-3xl font-bold text-cyan-400 mb-4 font-sans">Ready to start exploring?</h2>
             <p className="text-slate-300 mb-8">
-              Create your developer profile and start tracking your progress today
+              Find your next project and start building something amazing today
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link to="/find-project">
                 <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
                   <Search className="w-5 h-5 mr-2" />
-                  Explore Projects
+                  Browse Projects
                 </Button>
               </Link>
             </div>
