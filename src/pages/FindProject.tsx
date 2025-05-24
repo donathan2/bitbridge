@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,8 @@ import {
   UserCheck,
   Plus,
   Bitcoin,
-  DollarSign
+  DollarSign,
+  X
 } from 'lucide-react';
 import {
   Select,
@@ -36,29 +38,31 @@ import {
 import { 
   Form, 
   FormControl, 
-  FormDescription, 
   FormField, 
   FormItem, 
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const createProjectSchema = z.object({
-  name: z.string().min(2, "Project name must be at least 2 characters"),
+  title: z.string().min(2, "Project name must be at least 2 characters"),
   description: z.string().min(10, "Please provide a more detailed description"),
   roles: z.string().min(3, "Please specify required roles"),
+  categories: z.string().min(3, "Please specify required technologies/categories"),
   githubRepo: z.string().url("Must be a valid URL"),
   endDate: z.string().refine(date => {
     const selectedDate = new Date(date);
     const today = new Date();
     return selectedDate > today;
-  }, "End date must be in the future")
+  }, "End date must be in the future"),
+  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert'])
 });
 
 const FindProject = () => {
@@ -66,138 +70,79 @@ const FindProject = () => {
   const [roleFilter, setRoleFilter] = useState<string>("any");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("any");
   const [skillFilter, setSkillFilter] = useState<string>("any");
-  const [selectedRoles, setSelectedRoles] = useState<{[key: number]: string}>({});
+  const [selectedRoles, setSelectedRoles] = useState<{[key: string]: string}>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [categoryInputs, setCategoryInputs] = useState<string[]>(['']);
+  
+  const queryClient = useQueryClient();
   
   const form = useForm<z.infer<typeof createProjectSchema>>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
-      name: "",
+      title: "",
       description: "",
       roles: "",
+      categories: "",
       githubRepo: "",
-      endDate: ""
+      endDate: "",
+      difficulty: "Beginner"
     }
   });
 
-  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
-    // Here you would normally save this data to your backend
-    console.log("Project data:", data);
-    
-    // Show success notification
-    toast.success("Project created successfully!", {
-      description: `${data.name} has been created.`
-    });
-    
-    // Close the dialog and reset form
-    setIsDialogOpen(false);
-    form.reset();
+  // Fetch projects from database
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const onSubmit = async (data: z.infer<typeof createProjectSchema>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to create a project");
+        return;
+      }
+
+      const rolesArray = data.roles.split(',').map(role => role.trim());
+      const categoriesArray = data.categories.split(',').map(cat => cat.trim());
+
+      const { error } = await supabase
+        .from('projects')
+        .insert({
+          title: data.title,
+          description: data.description,
+          roles_needed: rolesArray,
+          categories: categoriesArray,
+          github_url: data.githubRepo,
+          end_date: data.endDate,
+          difficulty: data.difficulty,
+          creator_id: user.id
+        });
+
+      if (error) throw error;
+
+      toast.success("Project created successfully!", {
+        description: `${data.title} has been created and is now visible to everyone.`
+      });
+      
+      setIsDialogOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error("Failed to create project. Please try again.");
+    }
   };
   
-  // Mock project data with currency rewards
-  const projects = [
-    {
-      id: 1,
-      title: "E-commerce Mobile App",
-      description: "Building a React Native e-commerce app with product listings, cart functionality, and payment processing",
-      difficulty: "Advanced",
-      xpReward: 1200,
-      bitsReward: 850,
-      bytesReward: 12,
-      skills: ["React Native", "JavaScript", "Redux", "API Integration"],
-      rolesNeeded: ["Frontend Developer", "UI/UX Designer", "Tester"],
-      rolesFilled: {
-        "Frontend Developer": {name: "alexcodes", avatar: "/placeholder.svg"}, 
-        "UI/UX Designer": null, 
-        "Tester": null
-      },
-      postedDate: "2024-05-18",
-      estimatedCompletion: "4 weeks",
-      ownerName: "Sarah Johnson",
-      progress: 25
-    },
-    {
-      id: 2,
-      title: "Task Management API",
-      description: "Backend API for a task management application with user authentication and task CRUD operations",
-      difficulty: "Intermediate",
-      xpReward: 850,
-      bitsReward: 600,
-      bytesReward: 8,
-      skills: ["Node.js", "Express", "MongoDB", "Authentication"],
-      rolesNeeded: ["Backend Developer", "Database Designer", "API Tester"],
-      rolesFilled: {
-        "Backend Developer": null, 
-        "Database Designer": {name: "emily42", avatar: "/placeholder.svg"}, 
-        "API Tester": null
-      },
-      postedDate: "2024-05-15",
-      estimatedCompletion: "3 weeks",
-      ownerName: "Michael Chang",
-      progress: 40
-    },
-    {
-      id: 3,
-      title: "Video Streaming Platform",
-      description: "Building a video streaming platform with user accounts, content recommendations, and playback controls",
-      difficulty: "Expert",
-      xpReward: 1500,
-      bitsReward: 1200,
-      bytesReward: 20,
-      skills: ["React", "Node.js", "WebRTC", "AWS", "Redis"],
-      rolesNeeded: ["Full-stack Developer", "DevOps Engineer", "QA Engineer"],
-      rolesFilled: {
-        "Full-stack Developer": {name: "devdavid", avatar: "/placeholder.svg"}, 
-        "DevOps Engineer": null, 
-        "QA Engineer": null
-      },
-      postedDate: "2024-05-20",
-      estimatedCompletion: "8 weeks",
-      ownerName: "Emily Wilson",
-      progress: 10
-    },
-    {
-      id: 4,
-      title: "Personal Finance Tracker",
-      description: "Web application to track personal expenses, income, and generate financial reports",
-      difficulty: "Beginner",
-      xpReward: 600,
-      bitsReward: 400,
-      bytesReward: 5,
-      skills: ["HTML", "CSS", "JavaScript", "Chart.js"],
-      rolesNeeded: ["Frontend Developer", "UI Designer", "Tester"],
-      rolesFilled: {
-        "Frontend Developer": null, 
-        "UI Designer": null, 
-        "Tester": {name: "miketester", avatar: "/placeholder.svg"}
-      },
-      postedDate: "2024-05-22",
-      estimatedCompletion: "2 weeks",
-      ownerName: "David Lee",
-      progress: 15
-    },
-    {
-      id: 5,
-      title: "Weather Forecast Dashboard",
-      description: "Dashboard displaying weather forecasts with interactive maps and data visualization",
-      difficulty: "Intermediate",
-      xpReward: 750,
-      bitsReward: 550,
-      bytesReward: 7,
-      skills: ["React", "TypeScript", "API Integration", "D3.js"],
-      rolesNeeded: ["Frontend Developer", "API Specialist", "UI Designer"],
-      rolesFilled: {
-        "Frontend Developer": null, 
-        "API Specialist": null, 
-        "UI Designer": null
-      },
-      postedDate: "2024-05-19",
-      estimatedCompletion: "3 weeks",
-      ownerName: "Julia Parker",
-      progress: 30
-    }
-  ];
-
   // Get difficulty badge color
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -210,33 +155,32 @@ const FindProject = () => {
   };
   
   // Filter projects based on search query and filters
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project: any) => {
     const matchesSearch = searchQuery === '' || 
       project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.ownerName.toLowerCase().includes(searchQuery.toLowerCase());
+      project.description.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === "any" || 
-      project.rolesNeeded.some(role => role.toLowerCase().includes(roleFilter.toLowerCase()));
+      project.roles_needed.some((role: string) => role.toLowerCase().includes(roleFilter.toLowerCase()));
     
     const matchesDifficulty = difficultyFilter === "any" || 
       project.difficulty === difficultyFilter;
     
     const matchesSkill = skillFilter === "any" || 
-      project.skills.some(skill => skill.toLowerCase().includes(skillFilter.toLowerCase()));
+      project.categories.some((skill: string) => skill.toLowerCase().includes(skillFilter.toLowerCase()));
     
     return matchesSearch && matchesRole && matchesDifficulty && matchesSkill;
   });
 
   const allSkills = Array.from(
-    new Set(projects.flatMap(project => project.skills))
+    new Set(projects.flatMap((project: any) => project.categories))
   ).sort();
 
   const allRoles = Array.from(
-    new Set(projects.flatMap(project => project.rolesNeeded))
+    new Set(projects.flatMap((project: any) => project.roles_needed))
   ).sort();
 
-  const handleRoleSelect = (projectId: number, role: string) => {
+  const handleRoleSelect = (projectId: string, role: string) => {
     setSelectedRoles({
       ...selectedRoles,
       [projectId]: role
@@ -244,8 +188,39 @@ const FindProject = () => {
   };
 
   const getAvailableRoles = (project: any) => {
-    return project.rolesNeeded.filter((role: string) => !project.rolesFilled[role]);
+    return project.roles_needed || [];
   };
+
+  const addCategoryInput = () => {
+    setCategoryInputs([...categoryInputs, '']);
+  };
+
+  const removeCategoryInput = (index: number) => {
+    if (categoryInputs.length > 1) {
+      const newInputs = categoryInputs.filter((_, i) => i !== index);
+      setCategoryInputs(newInputs);
+    }
+  };
+
+  const updateCategoryInput = (index: number, value: string) => {
+    const newInputs = [...categoryInputs];
+    newInputs[index] = value;
+    setCategoryInputs(newInputs);
+    
+    // Update form field
+    const categoriesString = newInputs.filter(cat => cat.trim()).join(', ');
+    form.setValue('categories', categoriesString);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center text-slate-300">Loading projects...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -275,14 +250,14 @@ const FindProject = () => {
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Search projects or users..."
+                  placeholder="Search projects..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 bg-slate-700 border-slate-600 text-slate-200 placeholder:text-slate-400"
                 />
               </div>
               
-              {/* Filter Section - Now on the same line */}
+              {/* Filter Section */}
               <div className="flex gap-2 flex-wrap lg:flex-nowrap">
                 <Select onValueChange={setRoleFilter} value={roleFilter}>
                   <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 w-[140px]">
@@ -339,7 +314,7 @@ const FindProject = () => {
 
           {filteredProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredProjects.map(project => (
+              {filteredProjects.map((project: any) => (
                 <Card key={project.id} className="bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 flex flex-col h-full">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-3">
@@ -348,7 +323,7 @@ const FindProject = () => {
                         <div className="text-xs text-slate-400">
                           <span className="flex items-center">
                             <Calendar className="mr-1 h-3 w-3" />
-                            Posted {new Date(project.postedDate).toLocaleDateString()} by {project.ownerName}
+                            Posted {new Date(project.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -359,17 +334,17 @@ const FindProject = () => {
                     
                     <p className="text-slate-300 text-sm mb-3 line-clamp-2">{project.description}</p>
                     
-                    {/* Skills */}
+                    {/* Categories */}
                     <div className="mb-3">
                       <div className="flex flex-wrap gap-1">
-                        {project.skills.slice(0, 3).map((skill, idx) => (
+                        {project.categories.slice(0, 3).map((category: string, idx: number) => (
                           <Badge key={idx} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                            {skill}
+                            {category}
                           </Badge>
                         ))}
-                        {project.skills.length > 3 && (
+                        {project.categories.length > 3 && (
                           <Badge variant="outline" className="text-xs text-slate-300 border-slate-600">
-                            +{project.skills.length - 3} more
+                            +{project.categories.length - 3} more
                           </Badge>
                         )}
                       </div>
@@ -379,94 +354,63 @@ const FindProject = () => {
                     <div className="space-y-2 mb-3 flex-grow">
                       <h4 className="text-sm font-medium text-slate-300 mb-1">Team Roles</h4>
                       <ul className="space-y-1">
-                        {project.rolesNeeded.map((role, idx) => (
+                        {project.roles_needed.map((role: string, idx: number) => (
                           <li key={idx} className="flex items-center justify-between text-xs text-slate-300">
                             <span className="flex items-center">
-                              {project.rolesFilled[role] ? 
-                                <UserCheck className="mr-1 h-3 w-3 text-green-500" /> : 
-                                <CheckCircle className="mr-1 h-3 w-3 text-cyan-400" />
-                              }
+                              <CheckCircle className="mr-1 h-3 w-3 text-cyan-400" />
                               {role}
                             </span>
-                            {project.rolesFilled[role] ? (
-                              <span className="flex items-center text-green-500 text-xs">
-                                <Avatar className="h-4 w-4 mr-1">
-                                  <AvatarImage src={project.rolesFilled[role].avatar} />
-                                  <AvatarFallback className="text-[8px] bg-slate-600">
-                                    {project.rolesFilled[role].name.substring(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {project.rolesFilled[role].name}
-                              </span>
-                            ) : (
-                              <span className="text-cyan-400 text-xs">
-                                Available
-                              </span>
-                            )}
+                            <span className="text-cyan-400 text-xs">
+                              Available
+                            </span>
                           </li>
                         ))}
                       </ul>
                     </div>
                     
-                    <div className="space-y-2 mb-3">
-                      <div className="flex justify-between text-xs font-medium text-slate-300">
-                        <span>Progress</span>
-                        <span>{project.progress}%</span>
-                      </div>
-                      <Progress value={project.progress} className="h-1.5 bg-slate-700" />
-                    </div>
-                    
-                    {/* Updated rewards section with currency */}
+                    {/* Rewards section */}
                     <div className="flex items-center justify-between text-xs mb-3">
                       <div className="flex items-center text-slate-300">
                         <Clock className="mr-1 h-3 w-3" />
-                        {project.estimatedCompletion}
+                        {project.end_date ? `Due ${new Date(project.end_date).toLocaleDateString()}` : 'No deadline'}
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center font-medium text-cyan-400">
                           <Star className="mr-1 h-3 w-3" />
-                          +{project.xpReward} XP
+                          +{project.xp_reward} XP
                         </div>
                         <div className="flex items-center font-medium text-yellow-400">
                           <Bitcoin className="mr-1 h-3 w-3" />
-                          +{project.bitsReward} bits
+                          +{project.bits_reward} bits
                         </div>
                         <div className="flex items-center font-medium text-purple-400">
                           <DollarSign className="mr-1 h-3 w-3" />
-                          +{project.bytesReward} bytes
+                          +{project.bytes_reward} bytes
                         </div>
                       </div>
                     </div>
                     
                     {/* Role Selection and Join Button */}
                     <div className="flex items-center gap-2 mt-auto">
-                      {getAvailableRoles(project).length > 0 ? (
-                        <>
-                          <Select 
-                            value={selectedRoles[project.id] || ""} 
-                            onValueChange={(value) => handleRoleSelect(project.id, value)}
-                          >
-                            <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 flex-grow">
-                              <SelectValue placeholder="Select Role" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                              {getAvailableRoles(project).map((role: string) => (
-                                <SelectItem key={role} value={role}>{role}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-                            disabled={!selectedRoles[project.id]}
-                          >
-                            Join
-                          </Button>
-                        </>
-                      ) : (
-                        <Button className="w-full bg-slate-700 text-slate-300" disabled>
-                          No Roles Available
-                        </Button>
-                      )}
+                      <Select 
+                        value={selectedRoles[project.id] || ""} 
+                        onValueChange={(value) => handleRoleSelect(project.id, value)}
+                      >
+                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200 flex-grow">
+                          <SelectValue placeholder="Select Role" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                          {getAvailableRoles(project).map((role: string) => (
+                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+                        disabled={!selectedRoles[project.id]}
+                      >
+                        Join
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -481,109 +425,154 @@ const FindProject = () => {
         </div>
       </div>
 
-      {/* Create Project Dialog */}
+      {/* Create Project Dialog - More Compact */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-slate-800 text-white border-slate-700 sm:max-w-md">
+        <DialogContent className="bg-slate-800 text-white border-slate-700 sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-cyan-400">Create New Project</DialogTitle>
+            <DialogTitle className="text-xl text-cyan-400">Create New Project</DialogTitle>
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Project Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Smart AI Assistant" className="bg-slate-700 border-slate-600" {...field} />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-200 text-sm">Project Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Smart AI Assistant" className="bg-slate-700 border-slate-600 h-8" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="difficulty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-200 text-sm">Difficulty</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-slate-700 border-slate-600 h-8">
+                            <SelectValue placeholder="Select difficulty" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                          <SelectItem value="Beginner">Beginner</SelectItem>
+                          <SelectItem value="Intermediate">Intermediate</SelectItem>
+                          <SelectItem value="Advanced">Advanced</SelectItem>
+                          <SelectItem value="Expert">Expert</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-200">Description</FormLabel>
+                    <FormLabel className="text-slate-200 text-sm">Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="An AI assistant that helps users with daily tasks..." 
-                        className="bg-slate-700 border-slate-600 min-h-24" 
+                        className="bg-slate-700 border-slate-600 min-h-16 text-sm" 
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-red-400 text-xs" />
                   </FormItem>
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="roles"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Required Roles</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Frontend Developer, Backend Engineer, UI/UX Designer..." 
-                        className="bg-slate-700 border-slate-600"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription className="text-slate-400 text-xs">
-                      List the roles needed for this project, separated by commas
-                    </FormDescription>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="roles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-200 text-sm">Required Roles</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Frontend Developer, Backend Engineer..." 
+                          className="bg-slate-700 border-slate-600 min-h-16 text-sm"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="categories"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-200 text-sm">Technologies/Categories</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="React, Node.js, TypeScript, MongoDB..." 
+                          className="bg-slate-700 border-slate-600 min-h-16 text-sm"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
-              <FormField
-                control={form.control}
-                name="githubRepo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">GitHub Repository</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://github.com/username/repo" 
-                        className="bg-slate-700 border-slate-600"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="githubRepo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-200 text-sm">GitHub Repository</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://github.com/username/repo" 
+                          className="bg-slate-700 border-slate-600 h-8 text-sm"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-200 text-sm">Goal End Date</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="date" 
+                          className="bg-slate-700 border-slate-600 h-8 text-sm"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-200">Goal End Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date" 
-                        className="bg-slate-700 border-slate-600"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter className="sm:justify-between gap-2 pt-4">
+              <DialogFooter className="sm:justify-between gap-2 pt-2">
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700 h-8"
                   onClick={() => {
                     setIsDialogOpen(false);
                     form.reset();
@@ -593,7 +582,7 @@ const FindProject = () => {
                 </Button>
                 <Button 
                   type="submit"
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 h-8"
                 >
                   Create Project
                 </Button>

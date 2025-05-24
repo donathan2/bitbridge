@@ -91,61 +91,56 @@ export type Database = {
           role?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       projects: {
         Row: {
-          completed_date: string | null
+          bits_reward: number
+          bytes_reward: number
+          categories: string[]
           created_at: string | null
+          creator_id: string
           description: string
-          difficulty: Database["public"]["Enums"]["project_difficulty"]
+          difficulty: string
+          end_date: string | null
           github_url: string | null
           id: string
-          progress: number | null
-          started_date: string | null
-          status: Database["public"]["Enums"]["project_status"]
-          technologies: string[]
+          roles_needed: string[]
           title: string
           updated_at: string | null
-          xp_reward: number | null
+          xp_reward: number
         }
         Insert: {
-          completed_date?: string | null
+          bits_reward?: number
+          bytes_reward?: number
+          categories?: string[]
           created_at?: string | null
+          creator_id: string
           description: string
-          difficulty?: Database["public"]["Enums"]["project_difficulty"]
+          difficulty: string
+          end_date?: string | null
           github_url?: string | null
           id?: string
-          progress?: number | null
-          started_date?: string | null
-          status?: Database["public"]["Enums"]["project_status"]
-          technologies?: string[]
+          roles_needed?: string[]
           title: string
           updated_at?: string | null
-          xp_reward?: number | null
+          xp_reward?: number
         }
         Update: {
-          completed_date?: string | null
+          bits_reward?: number
+          bytes_reward?: number
+          categories?: string[]
           created_at?: string | null
+          creator_id?: string
           description?: string
-          difficulty?: Database["public"]["Enums"]["project_difficulty"]
+          difficulty?: string
+          end_date?: string | null
           github_url?: string | null
           id?: string
-          progress?: number | null
-          started_date?: string | null
-          status?: Database["public"]["Enums"]["project_status"]
-          technologies?: string[]
+          roles_needed?: string[]
           title?: string
           updated_at?: string | null
-          xp_reward?: number | null
+          xp_reward?: number
         }
         Relationships: []
       }
@@ -285,7 +280,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_project_rewards: {
+        Args: { difficulty_level: string; categories_count: number }
+        Returns: {
+          xp_reward: number
+          bits_reward: number
+          bytes_reward: number
+        }[]
+      }
     }
     Enums: {
       achievement_category:
