@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectJoin } from '@/hooks/useProjectJoin';
@@ -37,12 +39,33 @@ interface Project {
 interface CreateProjectForm {
   title: string;
   description: string;
-  categories: string[];
+  techStack: string[];
+  track: string[];
   rolesNeeded: string[];
   githubUrl: string;
   endDate: string;
   difficulty: string;
+  customTechStack: string;
+  customTrack: string;
+  customRole: string;
 }
+
+const TECH_STACK_OPTIONS = [
+  'React', 'Vue.js', 'Angular', 'Node.js', 'Python', 'Java', 'JavaScript', 'TypeScript',
+  'PHP', 'Ruby', 'Go', 'Rust', 'C++', 'C#', 'Swift', 'Kotlin', 'Flutter', 'React Native',
+  'MongoDB', 'PostgreSQL', 'MySQL', 'Firebase', 'AWS', 'Docker', 'Kubernetes'
+];
+
+const TRACK_OPTIONS = [
+  'Web Development', 'Mobile Development', 'AI/ML', 'Blockchain', 'DevOps', 'Game Development',
+  'Data Science', 'Cybersecurity', 'Cloud Computing', 'IoT', 'AR/VR', 'Desktop Applications'
+];
+
+const ROLE_OPTIONS = [
+  'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'UI/UX Designer',
+  'Product Manager', 'DevOps Engineer', 'Data Scientist', 'QA Engineer', 'Mobile Developer',
+  'AI/ML Engineer', 'Blockchain Developer', 'Technical Writer', 'Marketing Specialist'
+];
 
 const FindProject = () => {
   const { user } = useAuth();
@@ -60,11 +83,15 @@ const FindProject = () => {
   const [createProjectForm, setCreateProjectForm] = useState<CreateProjectForm>({
     title: '',
     description: '',
-    categories: [],
+    techStack: [],
+    track: [],
     rolesNeeded: [],
     githubUrl: '',
     endDate: '',
     difficulty: 'Beginner',
+    customTechStack: '',
+    customTrack: '',
+    customRole: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -245,10 +272,29 @@ const FindProject = () => {
     }
 
     try {
-      const { title, description, categories, rolesNeeded, githubUrl, endDate, difficulty } = createProjectForm;
+      const { title, description, techStack, track, rolesNeeded, githubUrl, endDate, difficulty, customTechStack, customTrack, customRole } = createProjectForm;
+
+      // Combine selected options with custom entries
+      const finalTechStack = [...techStack];
+      if (customTechStack.trim()) {
+        finalTechStack.push(customTechStack.trim());
+      }
+
+      const finalTrack = [...track];
+      if (customTrack.trim()) {
+        finalTrack.push(customTrack.trim());
+      }
+
+      const finalRoles = [...rolesNeeded];
+      if (customRole.trim()) {
+        finalRoles.push(customRole.trim());
+      }
+
+      // Combine tech stack and track for categories
+      const finalCategories = [...finalTechStack, ...finalTrack];
 
       // Validate the form data
-      if (!title || !description || categories.length === 0 || rolesNeeded.length === 0 || !difficulty) {
+      if (!title || !description || finalCategories.length === 0 || finalRoles.length === 0 || !difficulty) {
         toast({
           title: "Error",
           description: "Please fill in all required fields.",
@@ -257,7 +303,7 @@ const FindProject = () => {
         return;
       }
 
-      console.log('Creating project with data:', createProjectForm);
+      console.log('Creating project with data:', { title, description, categories: finalCategories, roles: finalRoles });
 
       // Insert the new project into the database with active status
       const { data: projectData, error: projectError } = await supabase
@@ -266,13 +312,13 @@ const FindProject = () => {
           {
             title,
             description,
-            categories,
-            roles_needed: rolesNeeded,
+            categories: finalCategories,
+            roles_needed: finalRoles,
             github_url: githubUrl || null,
             end_date: endDate || null,
             difficulty,
             creator_id: user.id,
-            status: 'active' // Explicitly set status to active
+            status: 'active'
           },
         ])
         .select()
@@ -314,11 +360,15 @@ const FindProject = () => {
       setCreateProjectForm({
         title: '',
         description: '',
-        categories: [],
+        techStack: [],
+        track: [],
         rolesNeeded: [],
         githubUrl: '',
         endDate: '',
         difficulty: 'Beginner',
+        customTechStack: '',
+        customTrack: '',
+        customRole: '',
       });
       setIsCreateDialogOpen(false);
 
@@ -343,6 +393,15 @@ const FindProject = () => {
     }
   };
 
+  const handleCheckboxChange = (field: 'techStack' | 'track' | 'rolesNeeded', value: string, checked: boolean) => {
+    setCreateProjectForm(prev => ({
+      ...prev,
+      [field]: checked 
+        ? [...prev[field], value]
+        : prev[field].filter(item => item !== value)
+    }));
+  };
+
   const isUserMember = (projectId: string) => {
     return userJoinedProjects.includes(projectId);
   };
@@ -361,64 +420,66 @@ const FindProject = () => {
         </div>
 
         {/* Search and Filter Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2 w-full md:w-auto">
-            <Input
-              type="text"
-              placeholder="Search projects..."
-              className="bg-slate-700 border-slate-600 text-slate-200 w-full"
-              value={searchTerm}
-              onChange={handleInputChange}
-            />
-            <Search className="h-5 w-5 text-slate-400 -ml-8" />
-          </div>
+        <Card className="bg-slate-800 border-slate-700 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-2 w-full md:w-auto">
+                <Input
+                  type="text"
+                  placeholder="Search projects..."
+                  className="bg-slate-700 border-slate-600 text-slate-200 w-full"
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                />
+                <Search className="h-5 w-5 text-slate-400 -ml-8" />
+              </div>
 
-          <div className="flex items-center space-x-4">
-            <Select onValueChange={handleDifficultyChange}>
-              <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
-                <SelectValue placeholder="Difficulty" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                <SelectItem value="all">All Difficulties</SelectItem>
-                <SelectItem value="Beginner">Beginner</SelectItem>
-                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                <SelectItem value="Advanced">Advanced</SelectItem>
-                <SelectItem value="Expert">Expert</SelectItem>
-              </SelectContent>
-            </Select>
+              <div className="flex items-center space-x-4">
+                <Select onValueChange={handleDifficultyChange}>
+                  <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectValue placeholder="Difficulty" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectItem value="all">All Difficulties</SelectItem>
+                    <SelectItem value="Beginner">Beginner</SelectItem>
+                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                    <SelectItem value="Advanced">Advanced</SelectItem>
+                    <SelectItem value="Expert">Expert</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            <Select onValueChange={handleCategoryChange}>
-              <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Web Development">Web Development</SelectItem>
-                <SelectItem value="Mobile Development">Mobile Development</SelectItem>
-                <SelectItem value="AI/ML">AI/ML</SelectItem>
-                <SelectItem value="Blockchain">Blockchain</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {[...TECH_STACK_OPTIONS, ...TRACK_OPTIONS].map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="border-cyan-500 text-cyan-400">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filters
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-slate-800 text-white border-slate-700">
-                <DialogHeader>
-                  <DialogTitle>Filter Projects</DialogTitle>
-                  <DialogDescription>
-                    Apply advanced filters to find the perfect project.
-                  </DialogDescription>
-                </DialogHeader>
-                {/* Add more filter options here */}
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="border-cyan-500 text-cyan-400">
+                      <Filter className="mr-2 h-4 w-4" />
+                      Filters
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-800 text-white border-slate-700">
+                    <DialogHeader>
+                      <DialogTitle>Filter Projects</DialogTitle>
+                      <DialogDescription>
+                        Apply advanced filters to find the perfect project.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Create Project Button */}
         <div className="text-right">
@@ -429,7 +490,7 @@ const FindProject = () => {
                 Create Project
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl">
+            <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create a New Project</DialogTitle>
                 <DialogDescription>
@@ -464,30 +525,76 @@ const FindProject = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="categories" className="text-right">
-                    Categories *
-                  </Label>
-                  <Input
-                    id="categories"
-                    value={createProjectForm.categories.join(', ')}
-                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, categories: e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0) })}
-                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
-                    placeholder="e.g., Web Development, AI/ML"
-                  />
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">Tech Stack *</Label>
+                  <div className="col-span-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto p-2 bg-slate-900 rounded border border-slate-600">
+                      {TECH_STACK_OPTIONS.map(tech => (
+                        <div key={tech} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`tech-${tech}`}
+                            checked={createProjectForm.techStack.includes(tech)}
+                            onCheckedChange={(checked) => handleCheckboxChange('techStack', tech, checked as boolean)}
+                          />
+                          <Label htmlFor={`tech-${tech}`} className="text-xs">{tech}</Label>
+                        </div>
+                      ))}
+                    </div>
+                    <Input
+                      placeholder="Other (specify)"
+                      value={createProjectForm.customTechStack}
+                      onChange={(e) => setCreateProjectForm({ ...createProjectForm, customTechStack: e.target.value })}
+                      className="bg-slate-700 border-slate-600 text-slate-200"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="rolesNeeded" className="text-right">
-                    Roles Needed *
-                  </Label>
-                  <Input
-                    id="rolesNeeded"
-                    value={createProjectForm.rolesNeeded.join(', ')}
-                    onChange={(e) => setCreateProjectForm({ ...createProjectForm, rolesNeeded: e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0) })}
-                    className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
-                    placeholder="e.g., Frontend Developer, Backend Developer"
-                  />
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">Track *</Label>
+                  <div className="col-span-3 space-y-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-slate-900 rounded border border-slate-600">
+                      {TRACK_OPTIONS.map(track => (
+                        <div key={track} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`track-${track}`}
+                            checked={createProjectForm.track.includes(track)}
+                            onCheckedChange={(checked) => handleCheckboxChange('track', track, checked as boolean)}
+                          />
+                          <Label htmlFor={`track-${track}`} className="text-xs">{track}</Label>
+                        </div>
+                      ))}
+                    </div>
+                    <Input
+                      placeholder="Other (specify)"
+                      value={createProjectForm.customTrack}
+                      onChange={(e) => setCreateProjectForm({ ...createProjectForm, customTrack: e.target.value })}
+                      className="bg-slate-700 border-slate-600 text-slate-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">Roles Needed *</Label>
+                  <div className="col-span-3 space-y-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-slate-900 rounded border border-slate-600">
+                      {ROLE_OPTIONS.map(role => (
+                        <div key={role} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`role-${role}`}
+                            checked={createProjectForm.rolesNeeded.includes(role)}
+                            onCheckedChange={(checked) => handleCheckboxChange('rolesNeeded', role, checked as boolean)}
+                          />
+                          <Label htmlFor={`role-${role}`} className="text-xs">{role}</Label>
+                        </div>
+                      ))}
+                    </div>
+                    <Input
+                      placeholder="Other (specify)"
+                      value={createProjectForm.customRole}
+                      onChange={(e) => setCreateProjectForm({ ...createProjectForm, customRole: e.target.value })}
+                      className="bg-slate-700 border-slate-600 text-slate-200"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
