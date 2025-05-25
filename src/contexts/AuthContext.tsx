@@ -32,12 +32,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Handle successful OAuth sign-in
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Use setTimeout to prevent potential auth state conflicts
+          setTimeout(() => {
+            // Only redirect if we're on the auth page or root page
+            const currentPath = window.location.pathname;
+            if (currentPath === '/auth' || currentPath === '/') {
+              window.location.href = '/profile';
+            }
+          }, 100);
+        }
+        
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -48,11 +62,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      setLoading(true);
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
+      // Force redirect to auth page
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Error signing out:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

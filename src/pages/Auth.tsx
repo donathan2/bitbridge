@@ -82,19 +82,37 @@ const Auth = () => {
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log(`Attempting ${provider} login...`);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin + '/profile',
+          redirectTo: `${window.location.origin}/profile`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error(`${provider} OAuth error:`, error);
+        throw error;
+      }
+      
+      console.log(`${provider} OAuth initiated successfully`, data);
+      
+      // Don't navigate immediately - let the OAuth flow handle the redirect
+      toast({
+        title: "Redirecting...",
+        description: `Please complete the ${provider} authentication.`,
+      });
+      
     } catch (error: any) {
       console.error('Social login error:', error);
       toast({
-        title: "Login Error",
-        description: error.message || `Failed to sign in with ${provider}`,
+        title: "Authentication Error",
+        description: error.message || `Failed to sign in with ${provider}. Please check your connection and try again.`,
         variant: "destructive",
       });
     }
@@ -173,6 +191,7 @@ const Auth = () => {
               variant="outline" 
               className="bg-slate-700 border-slate-600 hover:bg-slate-600 text-slate-200"
               onClick={() => handleSocialLogin('github')}
+              type="button"
             >
               <Github className="mr-2 h-5 w-5" />
               GitHub
@@ -181,6 +200,7 @@ const Auth = () => {
               variant="outline" 
               className="bg-slate-700 border-slate-600 hover:bg-slate-600 text-slate-200"
               onClick={() => handleSocialLogin('google')}
+              type="button"
             >
               <Mail className="mr-2 h-5 w-5" />
               Google
