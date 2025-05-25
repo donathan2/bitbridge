@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,15 +5,23 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Bitcoin, DollarSign, Zap, Star, Shield, Rocket, Brain, Clock, Trophy, Users, Code, Target } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const BitVault = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const { profile } = useUserProfile();
   
+  // Use actual user currency from profile
+  const userCurrency = {
+    bits: profile?.bits_currency || 0,
+    bytes: profile?.bytes_currency || 0
+  };
+
   // Mock user data - in real app this would come from context/store
   const user = {
     currency: {
-      bits: 3250,
-      bytes: 47
+      bits: userCurrency.bits,
+      bytes: userCurrency.bytes
     }
   };
 
@@ -115,7 +122,7 @@ const BitVault = () => {
   ];
 
   const canAfford = (price: { bits: number; bytes: number }) => {
-    return user.currency.bits >= price.bits && user.currency.bytes >= price.bytes;
+    return userCurrency.bits >= price.bits && userCurrency.bytes >= price.bytes;
   };
 
   const handlePurchase = (item: any) => {
@@ -142,14 +149,14 @@ const BitVault = () => {
               <div className="bg-slate-700 px-6 py-4 rounded-lg flex items-center gap-3">
                 <Bitcoin className="w-8 h-8 text-yellow-400" />
                 <div>
-                  <p className="text-yellow-400 font-bold text-2xl">{user.currency.bits.toLocaleString()}</p>
+                  <p className="text-yellow-400 font-bold text-2xl">{userCurrency.bits.toLocaleString()}</p>
                   <p className="text-slate-300 text-sm">Bits Available</p>
                 </div>
               </div>
               <div className="bg-slate-700 px-6 py-4 rounded-lg flex items-center gap-3">
                 <DollarSign className="w-8 h-8 text-purple-400" />
                 <div>
-                  <p className="text-purple-400 font-bold text-2xl">{user.currency.bytes}</p>
+                  <p className="text-purple-400 font-bold text-2xl">{userCurrency.bytes}</p>
                   <p className="text-slate-300 text-sm">Bytes Available</p>
                 </div>
               </div>

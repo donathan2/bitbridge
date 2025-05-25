@@ -100,12 +100,30 @@ export const useProjectCompletion = () => {
       // Distribute rewards to all members
       if (members && members.length > 0) {
         for (const member of members) {
+          // Get current user profile
+          const { data: currentProfile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('experience_points, bits_currency, bytes_currency')
+            .eq('user_id', member.user_id)
+            .single();
+
+          if (profileError) {
+            console.error('❌ Error fetching user profile:', member.user_id, profileError);
+            continue;
+          }
+
+          // Calculate new values
+          const newXP = (currentProfile.experience_points || 0) + finalRewards.xp;
+          const newBits = (currentProfile.bits_currency || 0) + finalRewards.bits;
+          const newBytes = (currentProfile.bytes_currency || 0) + finalRewards.bytes;
+
+          // Update user profile with new rewards
           const { error: rewardError } = await supabase
             .from('user_profiles')
             .update({
-              experience_points: supabase.sql`experience_points + ${finalRewards.xp}`,
-              bits_currency: supabase.sql`bits_currency + ${finalRewards.bits}`,
-              bytes_currency: supabase.sql`bytes_currency + ${finalRewards.bytes}`,
+              experience_points: newXP,
+              bits_currency: newBits,
+              bytes_currency: newBytes,
               updated_at: new Date().toISOString()
             })
             .eq('user_id', member.user_id);
