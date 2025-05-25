@@ -42,8 +42,6 @@ export interface Project {
   technologies: string[];
   progress?: number;
   xp_reward?: number;
-  bits_reward?: number;
-  bytes_reward?: number;
   github_url?: string;
   started_date?: string;
   completed_date?: string;

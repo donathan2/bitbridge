@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Code, Users, Trophy, Zap, Star, DollarSign } from 'lucide-react';
+import { Code, Users, Trophy, Zap, Bitcoin, DollarSign } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -86,9 +86,9 @@ const Index = () => {
           <div className="flex justify-center gap-8 flex-wrap">
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
-                <Star className="w-8 h-8 text-cyan-400" />
+                <Trophy className="w-8 h-8 text-yellow-400" />
                 <div className="text-left">
-                  <p className="text-cyan-400 font-bold text-xl">Experience Points</p>
+                  <p className="text-yellow-400 font-bold text-xl">Experience Points</p>
                   <p className="text-slate-300 text-sm">Level up your developer profile</p>
                 </div>
               </div>
@@ -96,9 +96,9 @@ const Index = () => {
             
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-yellow-400">₿</span>
+                <Bitcoin className="w-8 h-8 text-blue-400" />
                 <div className="text-left">
-                  <p className="text-yellow-400 font-bold text-xl">Bits Currency</p>
+                  <p className="text-blue-400 font-bold text-xl">Bits Currency</p>
                   <p className="text-slate-300 text-sm">Earn and spend on upgrades</p>
                 </div>
               </div>
