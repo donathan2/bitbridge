@@ -42,6 +42,78 @@ export type Database = {
         }
         Relationships: []
       }
+      friend_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      friend_requests: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          id: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -164,6 +236,7 @@ export type Database = {
           bits_reward: number
           bytes_reward: number
           categories: string[]
+          completed_at: string | null
           created_at: string | null
           creator_id: string
           description: string
@@ -181,6 +254,7 @@ export type Database = {
           bits_reward?: number
           bytes_reward?: number
           categories?: string[]
+          completed_at?: string | null
           created_at?: string | null
           creator_id: string
           description: string
@@ -198,6 +272,7 @@ export type Database = {
           bits_reward?: number
           bytes_reward?: number
           categories?: string[]
+          completed_at?: string | null
           created_at?: string | null
           creator_id?: string
           description?: string

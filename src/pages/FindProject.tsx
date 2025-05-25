@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Plus } from 'lucide-react';
@@ -420,18 +421,20 @@ const FindProject = () => {
         </div>
 
         {/* Search and Filter Section */}
-        <Card className="bg-slate-800 border-slate-700 shadow-lg">
-          <CardContent className="p-6">
+        <Card className="bg-slate-800 border-slate-700 shadow-lg border-2 border-cyan-500/20">
+          <CardContent className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-700/50">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center space-x-2 w-full md:w-auto">
-                <Input
-                  type="text"
-                  placeholder="Search projects..."
-                  className="bg-slate-700 border-slate-600 text-slate-200 w-full"
-                  value={searchTerm}
-                  onChange={handleInputChange}
-                />
-                <Search className="h-5 w-5 text-slate-400 -ml-8" />
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search projects..."
+                    className="pl-10 bg-slate-700 border-slate-600 text-slate-200 w-full shadow-inner"
+                    value={searchTerm}
+                    onChange={handleInputChange}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center space-x-4">
@@ -462,7 +465,7 @@ const FindProject = () => {
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="border-cyan-500 text-cyan-400">
+                    <Button variant="outline" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10">
                       <Filter className="mr-2 h-4 w-4" />
                       Filters
                     </Button>

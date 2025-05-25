@@ -19,14 +19,14 @@ interface Friend {
   avatar: string;
   status: string;
   lastActive: string;
-  messages: Message[];
 }
 
-interface Message {
+interface FriendMessage {
   id: string;
   text: string;
   sender: string;
   timestamp: string;
+  sender_id: string;
 }
 
 interface FriendRequest {
@@ -34,7 +34,7 @@ interface FriendRequest {
   name: string;
   username: string;
   avatar: string;
-  mutualFriends: number;
+  sender_id: string;
 }
 
 interface SearchResult {
@@ -53,6 +53,7 @@ const Friends = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [messages, setMessages] = useState<FriendMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -70,13 +71,43 @@ const Friends = () => {
     }
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (selectedFriend) {
+      fetchMessages(selectedFriend.id);
+    }
+  }, [selectedFriend]);
+
   const fetchFriends = async () => {
     if (!user) return;
     
     try {
-      // TODO: Implement friend relationships table
-      // For now, return empty array
-      setFriends([]);
+      const { data, error } = await supabase
+        .from('friendships')
+        .select(`
+          *,
+          user1:profiles!friendships_user1_id_fkey(id, full_name, username, avatar_url),
+          user2:profiles!friendships_user2_id_fkey(id, full_name, username, avatar_url)
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+
+      if (error) {
+        console.error('Error fetching friends:', error);
+        return;
+      }
+
+      const friendsList = data?.map(friendship => {
+        const friend = friendship.user1_id === user.id ? friendship.user2 : friendship.user1;
+        return {
+          id: friend.id,
+          name: friend.full_name || 'Unknown User',
+          username: friend.username || 'unknown',
+          avatar: friend.avatar_url || '/placeholder.svg',
+          status: 'Online',
+          lastActive: 'Now'
+        };
+      }) || [];
+
+      setFriends(friendsList);
     } catch (error) {
       console.error('Error fetching friends:', error);
     }
@@ -86,11 +117,60 @@ const Friends = () => {
     if (!user) return;
     
     try {
-      // TODO: Implement friend requests table
-      // For now, return empty array
-      setFriendRequests([]);
+      const { data, error } = await supabase
+        .from('friend_requests')
+        .select(`
+          *,
+          sender:profiles!friend_requests_sender_id_fkey(id, full_name, username, avatar_url)
+        `)
+        .eq('receiver_id', user.id)
+        .eq('status', 'pending');
+
+      if (error) {
+        console.error('Error fetching friend requests:', error);
+        return;
+      }
+
+      const requestsList = data?.map(request => ({
+        id: request.id,
+        name: request.sender.full_name || 'Unknown User',
+        username: request.sender.username || 'unknown',
+        avatar: request.sender.avatar_url || '/placeholder.svg',
+        sender_id: request.sender_id
+      })) || [];
+
+      setFriendRequests(requestsList);
     } catch (error) {
       console.error('Error fetching friend requests:', error);
+    }
+  };
+
+  const fetchMessages = async (friendId: string) => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('friend_messages')
+        .select('*')
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
+        return;
+      }
+
+      const messagesList = data?.map(msg => ({
+        id: msg.id,
+        text: msg.message,
+        sender: msg.sender_id === user.id ? 'me' : 'friend',
+        timestamp: new Date(msg.created_at).toLocaleTimeString(),
+        sender_id: msg.sender_id
+      })) || [];
+
+      setMessages(messagesList);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   };
 
@@ -123,7 +203,24 @@ const Friends = () => {
     if (!user) return;
     
     try {
-      // TODO: Implement friend requests functionality
+      const { error } = await supabase
+        .from('friend_requests')
+        .insert({
+          sender_id: user.id,
+          receiver_id: userId,
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Error sending friend request:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send friend request.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Friend request sent!",
         description: "Your friend request has been sent.",
@@ -138,13 +235,42 @@ const Friends = () => {
     }
   };
 
-  const acceptFriendRequest = async (requestId: string) => {
+  const acceptFriendRequest = async (requestId: string, senderId: string) => {
+    if (!user) return;
+    
     try {
-      // TODO: Implement accept friend request functionality
+      // Update request status to accepted
+      const { error: updateError } = await supabase
+        .from('friend_requests')
+        .update({ status: 'accepted', updated_at: new Date().toISOString() })
+        .eq('id', requestId);
+
+      if (updateError) {
+        console.error('Error updating friend request:', updateError);
+        return;
+      }
+
+      // Create friendship (ensure consistent ordering)
+      const user1Id = user.id < senderId ? user.id : senderId;
+      const user2Id = user.id < senderId ? senderId : user.id;
+
+      const { error: friendshipError } = await supabase
+        .from('friendships')
+        .insert({
+          user1_id: user1Id,
+          user2_id: user2Id
+        });
+
+      if (friendshipError) {
+        console.error('Error creating friendship:', friendshipError);
+        return;
+      }
+
       toast({
         title: "Friend request accepted!",
         description: "You are now friends.",
       });
+      
       await fetchFriends();
       await fetchFriendRequests();
     } catch (error) {
@@ -159,11 +285,21 @@ const Friends = () => {
 
   const declineFriendRequest = async (requestId: string) => {
     try {
-      // TODO: Implement decline friend request functionality
+      const { error } = await supabase
+        .from('friend_requests')
+        .update({ status: 'declined', updated_at: new Date().toISOString() })
+        .eq('id', requestId);
+
+      if (error) {
+        console.error('Error declining friend request:', error);
+        return;
+      }
+
       toast({
         title: "Friend request declined",
         description: "The friend request has been declined.",
       });
+      
       await fetchFriendRequests();
     } catch (error) {
       console.error('Error declining friend request:', error);
@@ -181,8 +317,26 @@ const Friends = () => {
     if (!newMessage.trim() || !selectedFriend || !user) return;
     
     try {
-      // TODO: Implement messaging functionality
+      const { error } = await supabase
+        .from('friend_messages')
+        .insert({
+          sender_id: user.id,
+          receiver_id: selectedFriend.id,
+          message: newMessage.trim()
+        });
+
+      if (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setNewMessage("");
+      await fetchMessages(selectedFriend.id);
       
       toast({
         title: "Message sent!",
@@ -319,17 +473,11 @@ const Friends = () => {
                                   {friend.name.split(' ').map(n => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-800 ${friend.status === "Online" ? "bg-green-500" : "bg-slate-500"}`}></span>
+                              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-800 bg-green-500"></span>
                             </div>
                             <div className="flex-1">
                               <h3 className="font-semibold text-white">{friend.name}</h3>
                               <p className="text-sm text-slate-400">{friend.username}</p>
-                              {friend.messages.length > 0 && (
-                                <p className="text-xs text-slate-500 truncate mt-1">
-                                  {friend.messages[friend.messages.length - 1].sender === "me" ? "You: " : ""}
-                                  {friend.messages[friend.messages.length - 1].text}
-                                </p>
-                              )}
                             </div>
                             <div className="text-right text-xs text-slate-500">
                               <p>{friend.lastActive}</p>
@@ -365,12 +513,11 @@ const Friends = () => {
                             <div className="flex-1">
                               <h3 className="font-semibold text-lg text-white">{request.name}</h3>
                               <p className="text-sm text-slate-400">{request.username}</p>
-                              <p className="text-xs text-slate-500 mt-1">{request.mutualFriends} mutual connections</p>
                               <div className="flex gap-2 mt-3">
                                 <Button 
                                   size="sm" 
                                   className="bg-green-600 hover:bg-green-700 text-white"
-                                  onClick={() => acceptFriendRequest(request.id)}
+                                  onClick={() => acceptFriendRequest(request.id, request.sender_id)}
                                 >
                                   <Check className="h-4 w-4 mr-1" />
                                   Accept
@@ -410,7 +557,7 @@ const Friends = () => {
                             {selectedFriend.name.split(' ').map((n: string) => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
-                        <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-slate-800 ${selectedFriend.status === "Online" ? "bg-green-500" : "bg-slate-500"}`}></span>
+                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-slate-800 bg-green-500"></span>
                       </div>
                       <div>
                         <h3 className="font-medium text-white">{selectedFriend.name}</h3>
@@ -420,7 +567,7 @@ const Friends = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow p-4 overflow-auto flex flex-col space-y-4 max-h-[calc(75vh-8rem)]">
-                  {selectedFriend.messages.length === 0 ? (
+                  {messages.length === 0 ? (
                     <div className="flex-grow flex items-center justify-center text-slate-400">
                       <div className="text-center">
                         <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -428,7 +575,7 @@ const Friends = () => {
                       </div>
                     </div>
                   ) : (
-                    selectedFriend.messages.map((message: Message) => (
+                    messages.map((message: FriendMessage) => (
                       <div
                         key={message.id}
                         className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
