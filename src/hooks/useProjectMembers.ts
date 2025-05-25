@@ -24,7 +24,14 @@ export const useProjectMembers = (projectId: string) => {
       setLoading(true);
       console.log('🔍 Fetching members for project:', projectId);
 
-      // Fetch project members with the simplified RLS policies
+      if (!projectId) {
+        console.log('⚠️ No project ID provided');
+        setMembers([]);
+        setError(null);
+        return;
+      }
+
+      // Fetch project members with the clean RLS policies
       const { data: memberData, error: memberError } = await supabase
         .from('project_members')
         .select('id, role, user_id, joined_at')
@@ -85,6 +92,10 @@ export const useProjectMembers = (projectId: string) => {
   useEffect(() => {
     if (projectId) {
       fetchMembers();
+    } else {
+      setMembers([]);
+      setLoading(false);
+      setError(null);
     }
   }, [projectId]);
 

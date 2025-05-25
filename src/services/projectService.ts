@@ -41,7 +41,7 @@ export const projectService = {
         return { success: false, error: 'Already a member' };
       }
 
-      // Step 2: Add user to project
+      // Step 2: Add user to project with explicit timestamp
       console.log('➕ Adding user to project...');
       const { data: newMember, error: insertError } = await supabase
         .from('project_members')

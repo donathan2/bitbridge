@@ -20,6 +20,9 @@ export const useProjectJoin = () => {
       const result = await projectService.joinProject(projectId, user.id, role);
       console.log('📋 Join project result:', result);
       return result.success;
+    } catch (error) {
+      console.error('💥 Error in joinProject hook:', error);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -38,6 +41,9 @@ export const useProjectJoin = () => {
       const result = await projectService.leaveProject(projectId, user.id);
       console.log('📋 Leave project result:', result);
       return result.success;
+    } catch (error) {
+      console.error('💥 Error in leaveProject hook:', error);
+      return false;
     } finally {
       setLoading(false);
     }
