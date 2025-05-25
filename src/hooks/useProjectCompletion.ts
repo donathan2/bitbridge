@@ -56,11 +56,11 @@ export const useProjectCompletion = () => {
 
       console.log('💰 Final rewards to distribute:', finalRewards);
 
-      // Update project status to completed
+      // Update project status to completed - this is the key change
       const { error: updateError } = await supabase
         .from('projects')
         .update({ 
-          status: 'completed',
+          status: 'completed',  // This moves the project from ongoing to completed
           completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           // Ensure the rewards are set correctly

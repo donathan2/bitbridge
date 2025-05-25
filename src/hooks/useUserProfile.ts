@@ -188,15 +188,16 @@ export const useUserProfile = () => {
                     id: project.id,
                     title: project.title,
                     description: project.description,
-                    status: 'ongoing' as const,
+                    status: project.status === 'completed' ? 'completed' : 'ongoing' as const,
                     difficulty: project.difficulty,
                     technologies: project.categories || [],
-                    progress: 50,
+                    progress: project.status === 'completed' ? 100 : 50,
                     xp_reward: project.xp_reward,
                     bits_reward: project.bits_reward,
                     bytes_reward: project.bytes_reward,
                     github_url: project.github_url,
                     started_date: membershipData.find(m => m.project_id === project.id)?.joined_at || project.created_at,
+                    completed_date: project.completed_at,
                     members: []
                   };
                 }
@@ -226,15 +227,16 @@ export const useUserProfile = () => {
                   id: project.id,
                   title: project.title,
                   description: project.description,
-                  status: 'ongoing' as const,
+                  status: project.status === 'completed' ? 'completed' : 'ongoing' as const,
                   difficulty: project.difficulty,
                   technologies: project.categories || [],
-                  progress: 50, // Default progress for now
+                  progress: project.status === 'completed' ? 100 : 50,
                   xp_reward: project.xp_reward,
                   bits_reward: project.bits_reward,
                   bytes_reward: project.bytes_reward,
                   github_url: project.github_url,
                   started_date: userMembership?.joined_at || project.created_at,
+                  completed_date: project.completed_at,
                   members: membersWithProfiles
                 };
               }) || []

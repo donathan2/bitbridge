@@ -29,7 +29,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    assigned_role: '',
     assigned_user_id: '',
     due_date: '',
     status: 'pending'
@@ -41,7 +40,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setFormData({
         title: task.title,
         description: task.description || '',
-        assigned_role: task.assigned_role || '',
         assigned_user_id: task.assigned_user_id || '',
         due_date: task.due_date || '',
         status: task.status
@@ -50,7 +48,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setFormData({
         title: '',
         description: '',
-        assigned_role: '',
         assigned_user_id: '',
         due_date: '',
         status: 'pending'
@@ -64,7 +61,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
     // Convert placeholder values back to empty strings before saving
     const dataToSave = {
       ...formData,
-      assigned_role: formData.assigned_role === 'no-role-selected' ? '' : formData.assigned_role,
       assigned_user_id: formData.assigned_user_id === 'no-user-selected' ? '' : formData.assigned_user_id
     };
 
@@ -76,10 +72,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       onClose();
     }
   };
-
-  const filteredMembers = formData.assigned_role && formData.assigned_role !== 'no-role-selected'
-    ? members.filter(member => member.role === formData.assigned_role)
-    : members;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -112,24 +104,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="assigned_role" className="text-right">Assign to Role</Label>
-            <Select 
-              value={formData.assigned_role || 'no-role-selected'}
-              onValueChange={(value) => setFormData({ ...formData, assigned_role: value === 'no-role-selected' ? '' : value, assigned_user_id: '' })}
-            >
-              <SelectTrigger className="col-span-3 bg-slate-700 border-slate-600">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="no-role-selected">Any Role</SelectItem>
-                {availableRoles.map((role) => (
-                  <SelectItem key={role} value={role}>{role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="assigned_user" className="text-right">Assign to User</Label>
             <Select 
               value={formData.assigned_user_id || 'no-user-selected'}
@@ -140,7 +114,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-slate-700 border-slate-600">
                 <SelectItem value="no-user-selected">No specific user</SelectItem>
-                {filteredMembers.map((member) => (
+                {members.map((member) => (
                   <SelectItem key={member.user_id} value={member.user_id}>
                     {member.user?.username || member.user?.full_name || 'Unknown User'} ({member.role})
                   </SelectItem>
