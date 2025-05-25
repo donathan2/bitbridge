@@ -61,8 +61,15 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const handleSave = async () => {
     if (!formData.title.trim()) return;
 
+    // Convert placeholder values back to empty strings before saving
+    const dataToSave = {
+      ...formData,
+      assigned_role: formData.assigned_role === 'no-role-selected' ? '' : formData.assigned_role,
+      assigned_user_id: formData.assigned_user_id === 'no-user-selected' ? '' : formData.assigned_user_id
+    };
+
     setSaving(true);
-    const success = await onSave(formData);
+    const success = await onSave(dataToSave);
     setSaving(false);
 
     if (success) {
@@ -70,7 +77,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
     }
   };
 
-  const filteredMembers = formData.assigned_role 
+  const filteredMembers = formData.assigned_role && formData.assigned_role !== 'no-role-selected'
     ? members.filter(member => member.role === formData.assigned_role)
     : members;
 
@@ -107,14 +114,14 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="assigned_role" className="text-right">Assign to Role</Label>
             <Select 
-              value={formData.assigned_role}
-              onValueChange={(value) => setFormData({ ...formData, assigned_role: value, assigned_user_id: '' })}
+              value={formData.assigned_role || 'no-role-selected'}
+              onValueChange={(value) => setFormData({ ...formData, assigned_role: value === 'no-role-selected' ? '' : value, assigned_user_id: '' })}
             >
               <SelectTrigger className="col-span-3 bg-slate-700 border-slate-600">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="">Any Role</SelectItem>
+                <SelectItem value="no-role-selected">Any Role</SelectItem>
                 {availableRoles.map((role) => (
                   <SelectItem key={role} value={role}>{role}</SelectItem>
                 ))}
@@ -125,14 +132,14 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="assigned_user" className="text-right">Assign to User</Label>
             <Select 
-              value={formData.assigned_user_id}
-              onValueChange={(value) => setFormData({ ...formData, assigned_user_id: value })}
+              value={formData.assigned_user_id || 'no-user-selected'}
+              onValueChange={(value) => setFormData({ ...formData, assigned_user_id: value === 'no-user-selected' ? '' : value })}
             >
               <SelectTrigger className="col-span-3 bg-slate-700 border-slate-600">
                 <SelectValue placeholder="Select a user (optional)" />
               </SelectTrigger>
               <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="">No specific user</SelectItem>
+                <SelectItem value="no-user-selected">No specific user</SelectItem>
                 {filteredMembers.map((member) => (
                   <SelectItem key={member.user_id} value={member.user_id}>
                     {member.user?.username || member.user?.full_name || 'Unknown User'} ({member.role})
