@@ -1,10 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Filter, Plus, Users, Calendar, Star, Github, ExternalLink } from 'lucide-react';
+import { Search, Filter, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -14,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectJoin } from '@/hooks/useProjectJoin';
 import { toast } from '@/components/ui/use-toast';
+import ProjectCard from '@/components/ProjectCard';
+import ProjectDetailsDialog from '@/components/ProjectDetailsDialog';
 
 interface Project {
   id: string;
@@ -35,16 +33,6 @@ interface Project {
     avatar: string;
   };
 }
-
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty) {
-    case 'Beginner': return 'bg-teal-500';
-    case 'Intermediate': return 'bg-blue-500';
-    case 'Advanced': return 'bg-indigo-600';
-    case 'Expert': return 'bg-violet-700';
-    default: return 'bg-teal-500';
-  }
-};
 
 interface CreateProjectForm {
   title: string;
@@ -217,8 +205,8 @@ const FindProject = () => {
     }
   };
 
-  const handleJoinProject = async (projectId: string) => {
-    const success = await joinProject(projectId);
+  const handleJoinProject = async (projectId: string, role: string) => {
+    const success = await joinProject(projectId, role);
     if (success) {
       // Refresh the user's joined projects list
       fetchUserJoinedProjects();
@@ -579,187 +567,27 @@ const FindProject = () => {
             </div>
           ) : (
             filteredProjects.map((project) => (
-              <Card key={project.id} className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all cursor-pointer group">
-                <CardHeader className="pb-4" onClick={() => setSelectedProject(project)}>
-                  <div className="flex justify-between items-start mb-2">
-                    <CardTitle className="text-lg text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
-                      {project.title}
-                    </CardTitle>
-                    <Badge className={`${getDifficultyColor(project.difficulty)} text-white text-xs flex-shrink-0 ml-2`}>
-                      {project.difficulty}
-                    </Badge>
-                  </div>
-                  <p className="text-slate-300 text-sm line-clamp-3 mb-4">
-                    {project.description}
-                  </p>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="space-y-4">
-                    {/* Categories */}
-                    <div className="flex flex-wrap gap-1">
-                      {project.categories.slice(0, 3).map((category) => (
-                        <Badge key={category} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                          {category}
-                        </Badge>
-                      ))}
-                      {project.categories.length > 3 && (
-                        <Badge variant="outline" className="text-xs text-slate-400 border-slate-600">
-                          +{project.categories.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Creator Info */}
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={project.creator.avatar} />
-                        <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                          {project.creator.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-slate-400">by @{project.creator.username}</span>
-                    </div>
-
-                    {/* Rewards */}
-                    <div className="flex justify-between items-center text-sm text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-cyan-400" />
-                        <span className="text-cyan-400">{project.xpReward} XP</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{new Date(project.createdAt!).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    {/* Join Button */}
-                    <div className="pt-2">
-                      {isUserMember(project.id) ? (
-                        <Button disabled className="w-full bg-green-600 text-white">
-                          <Users className="mr-2 h-4 w-4" />
-                          Already Joined
-                        </Button>
-                      ) : (
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleJoinProject(project.id);
-                          }}
-                          disabled={joinLoading}
-                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          {joinLoading ? 'Joining...' : 'Join Project'}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProjectCard
+                key={project.id}
+                project={project}
+                isUserMember={isUserMember(project.id)}
+                onJoinProject={handleJoinProject}
+                onProjectClick={setSelectedProject}
+                joinLoading={joinLoading}
+              />
             ))
           )}
         </div>
 
         {/* Project Details Dialog */}
-        <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
-          <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-cyan-400 flex items-center gap-2">
-                {selectedProject?.title}
-                <Badge className={selectedProject && `${getDifficultyColor(selectedProject.difficulty)} ml-2 text-white`}>
-                  {selectedProject?.difficulty}
-                </Badge>
-              </DialogTitle>
-              <DialogDescription className="text-slate-300">
-                {selectedProject?.description}
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedProject && (
-              <div className="space-y-6 mt-4">
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div className="bg-slate-700 p-4 rounded-lg">
-                    <p className="text-slate-300 font-semibold mb-1">Creator</p>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={selectedProject.creator.avatar} />
-                        <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                          {selectedProject.creator.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-cyan-300">@{selectedProject.creator.username}</span>
-                    </div>
-                  </div>
-                  <div className="bg-slate-700 p-4 rounded-lg">
-                    <p className="text-slate-300 font-semibold mb-1">Created Date</p>
-                    <p className="text-white">{new Date(selectedProject.createdAt!).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                
-                {/* Categories */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Categories</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.categories.map((category: string) => (
-                      <Badge key={category} className="bg-slate-700 text-cyan-300">
-                        {category}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Roles Needed */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Roles Needed</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.rolesNeeded.map((role: string) => (
-                      <Badge key={role} className="bg-slate-700 text-cyan-300">
-                        {role}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* GitHub Link */}
-                {selectedProject.githubUrl && (
-                  <div className="flex items-center gap-2">
-                    <Github className="h-5 w-5 text-white" />
-                    <a 
-                      href={selectedProject.githubUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-cyan-400 hover:underline flex items-center"
-                    >
-                      GitHub Repository
-                      <ExternalLink className="h-3 w-3 ml-1" />
-                    </a>
-                  </div>
-                )}
-                
-                {/* Project Actions */}
-                <div className="flex justify-end gap-3 mt-4">
-                  {isUserMember(selectedProject.id) ? (
-                    <Button disabled className="bg-green-600 text-white">
-                      Already Joined
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => handleJoinProject(selectedProject.id)}
-                      disabled={joinLoading}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
-                    >
-                      {joinLoading ? 'Joining...' : 'Join Project'}
-                    </Button>
-                  )}
-                  <Button variant="outline" className="border-slate-600 text-slate-300" onClick={() => setSelectedProject(null)}>
-                    Close
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        <ProjectDetailsDialog
+          project={selectedProject}
+          isOpen={!!selectedProject}
+          onClose={() => setSelectedProject(null)}
+          isUserMember={selectedProject ? isUserMember(selectedProject.id) : false}
+          onJoinProject={handleJoinProject}
+          joinLoading={joinLoading}
+        />
       </div>
     </div>
   );
