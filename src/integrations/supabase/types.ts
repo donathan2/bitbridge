@@ -288,6 +288,10 @@ export type Database = {
           bytes_reward: number
         }[]
       }
+      check_user_can_access_project_member: {
+        Args: { member_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       achievement_category:
