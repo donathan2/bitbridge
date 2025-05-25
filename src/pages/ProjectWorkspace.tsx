@@ -346,10 +346,14 @@ const ProjectWorkspace = () => {
                           <span className="text-white">{task.title}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-slate-300">{task.assignee}</span>
-                          <span className="text-xs text-slate-400">
-                            Due: {new Date(task.dueDate).toLocaleDateString()}
-                          </span>
+                          {task.assigned_role && (
+                            <span className="text-sm text-slate-300">{task.assigned_role}</span>
+                          )}
+                          {task.due_date && (
+                            <span className="text-xs text-slate-400">
+                              Due: {new Date(task.due_date).toLocaleDateString()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
