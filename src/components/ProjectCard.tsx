@@ -64,8 +64,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const handleJoinClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('🎯 ProjectCard handleJoinClick:', { selectedRole, projectId: project.id });
+    
     if (selectedRole) {
-      await onJoinProject(project.id, selectedRole);
+      try {
+        await onJoinProject(project.id, selectedRole);
+      } catch (error) {
+        console.error('❌ Error in handleJoinClick:', error);
+      }
+    } else {
+      console.log('⚠️ No role selected');
     }
   };
 

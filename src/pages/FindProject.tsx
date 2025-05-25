@@ -188,29 +188,41 @@ const FindProject = () => {
     if (!user) return;
     
     try {
+      console.log('🔍 Fetching user joined projects for:', user.id);
       const { data, error } = await supabase
         .from('project_members')
         .select('project_id')
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching user projects:', error);
+        console.error('❌ Error fetching user projects:', error);
         return;
       }
 
       const joinedProjectIds = data?.map(item => item.project_id) || [];
+      console.log('📋 User joined projects:', joinedProjectIds);
       setUserJoinedProjects(joinedProjectIds);
     } catch (error) {
-      console.error('Error fetching user projects:', error);
+      console.error('💥 Error fetching user projects:', error);
     }
   };
 
   const handleJoinProject = async (projectId: string, role: string) => {
+    console.log('🎯 HandleJoinProject called:', { projectId, role });
+    
     const success = await joinProject(projectId, role);
+    console.log('📝 Join result:', { success });
+    
     if (success) {
-      // Refresh the user's joined projects list
-      fetchUserJoinedProjects();
+      console.log('✅ Join successful, refreshing data...');
+      // Refresh both the user's joined projects list and close dialog
+      await fetchUserJoinedProjects();
       setSelectedProject(null);
+      
+      // Also refresh projects to get updated member counts
+      await fetchProjects();
+    } else {
+      console.log('❌ Join failed');
     }
   };
 
