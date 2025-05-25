@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +13,7 @@ import { useProject } from '@/hooks/useProject';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { useProjectTasks } from '@/hooks/useProjectTasks';
 import { useProjectMessages } from '@/hooks/useProjectMessages';
+import { useProjectCompletion } from '@/hooks/useProjectCompletion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -27,6 +27,7 @@ const ProjectWorkspace = () => {
   const { members } = useProjectMembers(projectId || '');
   const { tasks, createTask, updateTask, deleteTask } = useProjectTasks(projectId || '');
   const { messages, sendMessage } = useProjectMessages(projectId || '');
+  const { completeProject, loading: completingProject } = useProjectCompletion();
   
   const [newMessage, setNewMessage] = useState('');
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
@@ -101,29 +102,13 @@ const ProjectWorkspace = () => {
   };
 
   const handleCompleteProject = async () => {
-    if (!confirm('Are you sure you want to mark this project as completed?')) return;
+    if (!confirm('Are you sure you want to mark this project as completed? This will distribute rewards to all team members.')) return;
 
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ status: 'completed' })
-        .eq('id', projectId);
+    if (!projectId) return;
 
-      if (error) throw error;
-
-      toast({
-        title: "Project Completed",
-        description: "The project has been marked as completed.",
-      });
-      
+    const success = await completeProject(projectId);
+    if (success) {
       navigate('/profile');
-    } catch (error) {
-      console.error('Error completing project:', error);
-      toast({
-        title: "Error",
-        description: "Failed to complete project. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -219,9 +204,10 @@ const ProjectWorkspace = () => {
                   onClick={handleCompleteProject}
                   className="bg-green-600 hover:bg-green-700"
                   size="sm"
+                  disabled={completingProject}
                 >
                   <Check size={16} className="mr-1" />
-                  Complete Project
+                  {completingProject ? 'Completing...' : 'Complete Project'}
                 </Button>
                 <Button 
                   onClick={handleDeleteProject}
@@ -372,13 +358,13 @@ const ProjectWorkspace = () => {
                     {members.map((member) => (
                       <div key={member.id} className="flex items-center gap-3 p-3 bg-slate-700 rounded-md">
                         <Avatar>
-                          <AvatarImage src={member.user.avatar_url || ''} alt={member.user.username || ''} />
+                          <AvatarImage src={member.user?.avatar_url || ''} alt={member.user?.username || ''} />
                           <AvatarFallback>
-                            {(member.user.full_name || member.user.username || 'U').charAt(0).toUpperCase()}
+                            {(member.user?.full_name || member.user?.username || 'U').charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-white">{member.user.username || member.user.full_name || 'Unknown'}</p>
+                          <p className="text-white">{member.user?.username || member.user?.full_name || 'Unknown'}</p>
                           <p className="text-xs text-slate-400">{member.role}</p>
                         </div>
                       </div>
@@ -481,13 +467,13 @@ const ProjectWorkspace = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         <Avatar className="h-16 w-16">
-                          <AvatarImage src={member.user.avatar_url || ''} alt={member.user.username || ''} />
+                          <AvatarImage src={member.user?.avatar_url || ''} alt={member.user?.username || ''} />
                           <AvatarFallback className="bg-cyan-600 text-white text-xl">
-                            {(member.user.full_name || member.user.username || 'U').charAt(0).toUpperCase()}
+                            {(member.user?.full_name || member.user?.username || 'U').charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="text-lg font-medium text-white">{member.user.username || member.user.full_name || 'Unknown'}</h3>
+                          <h3 className="text-lg font-medium text-white">{member.user?.username || member.user?.full_name || 'Unknown'}</h3>
                           <p className="text-cyan-400">{member.role}</p>
                           <div className="flex items-center gap-2 mt-2">
                             <Button size="sm" variant="outline" className="h-8 px-3 py-1">
@@ -523,15 +509,15 @@ const ProjectWorkspace = () => {
                     messages.map((message) => (
                       <div key={message.id} className="flex gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={message.user.avatar_url || ''} alt={message.user.username || ''} />
+                          <AvatarImage src={message.user?.avatar_url || ''} alt={message.user?.username || ''} />
                           <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                            {(message.user.username || message.user.full_name || 'U').charAt(0).toUpperCase()}
+                            {(message.user?.username || message.user?.full_name || 'U').charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-cyan-400">
-                              {message.user.username || message.user.full_name || 'Unknown User'}
+                              {message.user?.username || message.user?.full_name || 'Unknown User'}
                             </p>
                             <p className="text-xs text-slate-400">
                               {new Date(message.created_at).toLocaleString()}

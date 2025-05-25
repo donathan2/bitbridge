@@ -135,7 +135,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
                 <SelectItem value="">No specific user</SelectItem>
                 {filteredMembers.map((member) => (
                   <SelectItem key={member.user_id} value={member.user_id}>
-                    {member.user.username || member.user.full_name || 'Unknown User'} ({member.role})
+                    {member.user?.username || member.user?.full_name || 'Unknown User'} ({member.role})
                   </SelectItem>
                 ))}
               </SelectContent>
