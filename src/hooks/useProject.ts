@@ -11,9 +11,9 @@ export interface Project {
   githubUrl: string | null;
   endDate: string | null;
   difficulty: string;
-  xpReward: number;
-  bitsReward: number;
-  bytesReward: number;
+  xp_reward: number;
+  bits_reward: number;
+  bytes_reward: number;
   creatorId: string;
   createdAt: string | null;
   creator: {
@@ -79,9 +79,9 @@ export const useProject = (projectId: string) => {
         githubUrl: projectData.github_url,
         endDate: projectData.end_date,
         difficulty: projectData.difficulty,
-        xpReward: projectData.xp_reward || 0,
-        bitsReward: projectData.bits_reward || 0,
-        bytesReward: projectData.bytes_reward || 0,
+        xp_reward: projectData.xp_reward || 0,
+        bits_reward: projectData.bits_reward || 0,
+        bytes_reward: projectData.bytes_reward || 0,
         creatorId: projectData.creator_id,
         createdAt: projectData.created_at,
         creator: {
