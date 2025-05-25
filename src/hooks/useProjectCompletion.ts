@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { getLevelFromExperience } from '@/utils/xpUtils';
 
 const getStandardRewardsByDifficulty = (difficulty: string) => {
   switch (difficulty) {
@@ -116,12 +117,14 @@ export const useProjectCompletion = () => {
           const newXP = (currentProfile.experience_points || 0) + finalRewards.xp;
           const newBits = (currentProfile.bits_currency || 0) + finalRewards.bits;
           const newBytes = (currentProfile.bytes_currency || 0) + finalRewards.bytes;
+          const newLevel = getLevelFromExperience(newXP);
 
-          // Update user profile with new rewards
+          // Update user profile with new rewards and recalculated level
           const { error: rewardError } = await supabase
             .from('user_profiles')
             .update({
               experience_points: newXP,
+              experience_level: newLevel,
               bits_currency: newBits,
               bytes_currency: newBytes,
               updated_at: new Date().toISOString()
@@ -131,7 +134,7 @@ export const useProjectCompletion = () => {
           if (rewardError) {
             console.error('❌ Error rewarding user:', member.user_id, rewardError);
           } else {
-            console.log('✅ Rewarded user:', member.user_id, finalRewards);
+            console.log('✅ Rewarded user:', member.user_id, { ...finalRewards, newLevel });
           }
         }
       }

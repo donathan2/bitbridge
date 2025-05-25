@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProfile } from '@/hooks/useProfile';
+import { getProgressToNextLevel } from '@/utils/xpUtils';
+import ProjectRewards from '@/components/ProjectRewards';
 
 // Icon mapping for achievements
 const iconMap: { [key: string]: any } = {
@@ -84,13 +86,8 @@ const Profile = () => {
   const userEmail = user.email || '';
   const avatarUrl = profileData?.avatar_url || user.user_metadata?.avatar_url || "/placeholder.svg";
   
-  // Calculate experience progress for the next level - same logic as NavBar
-  const getExperienceForLevel = (level: number) => level * 1000; // 1000 XP per level
-  const currentLevelXP = getExperienceForLevel((userProfile?.experience_level || 1) - 1);
-  const nextLevelXP = getExperienceForLevel(userProfile?.experience_level || 1);
-  const progressInCurrentLevel = (userProfile?.experience_points || 0) - currentLevelXP;
-  const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
-  const experiencePercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
+  // Calculate experience progress using the new scaling system
+  const xpProgress = getProgressToNextLevel(userProfile?.experience_points || 0);
   
   // Use real profile data or defaults with updated username
   const userProfileData = {
@@ -101,8 +98,8 @@ const Profile = () => {
     skillLevel: userProfile?.skill_level || "Beginner Developer",
     experience: {
       current: userProfile?.experience_points || 0,
-      nextLevel: nextLevelXP,
-      level: userProfile?.experience_level || 1
+      nextLevel: xpProgress.nextLevelXP,
+      level: xpProgress.currentLevel
     },
     currency: {
       bits: userProfile?.bits_currency || 100,
@@ -122,6 +119,8 @@ const Profile = () => {
     description: project.description,
     tech: project.technologies,
     xp: project.xp_reward || 0,
+    bits: project.bits_reward || 0,
+    bytes: project.bytes_reward || 0,
     completedDate: project.completed_date || new Date().toISOString(),
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
@@ -223,9 +222,9 @@ const Profile = () => {
                       <span>Level {userProfileData.experience.level}</span>
                       <span>{userProfileData.experience.current} / {userProfileData.experience.nextLevel} XP</span>
                     </div>
-                    <Progress value={experiencePercentage} className="h-3 bg-slate-700" />
+                    <Progress value={xpProgress.progressPercentage} className="h-3 bg-slate-700" />
                     <p className="text-sm text-slate-400 font-light">
-                      {userProfileData.experience.nextLevel - userProfileData.experience.current} XP to next level
+                      {xpProgress.xpNeededForNextLevel - xpProgress.progressInCurrentLevel} XP to next level
                     </p>
                   </div>
                   
@@ -322,14 +321,18 @@ const Profile = () => {
                               </Badge>
                             ))}
                           </div>
+                          <div className="mb-4">
+                            <ProjectRewards 
+                              difficulty={project.difficulty}
+                              xpReward={project.xp}
+                              bitsReward={project.bits}
+                              bytesReward={project.bytes}
+                            />
+                          </div>
                           <div className="flex justify-between items-center text-sm text-slate-400">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
                               {new Date(project.completedDate).toLocaleDateString()}
-                            </div>
-                            <div className="flex items-center gap-1 text-cyan-400 font-medium">
-                              <Star className="w-4 h-4" />
-                              +{project.xp} XP
                             </div>
                           </div>
                         </div>
@@ -557,6 +560,19 @@ const Profile = () => {
                     </p>
                   </div>
                 </div>
+                
+                {/* Project Rewards */}
+                {selectedProject.completedDate && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Rewards Earned</h3>
+                    <ProjectRewards 
+                      difficulty={selectedProject.difficulty}
+                      xpReward={selectedProject.xp}
+                      bitsReward={selectedProject.bits}
+                      bytesReward={selectedProject.bytes}
+                    />
+                  </div>
+                )}
                 
                 {/* Technologies */}
                 <div>

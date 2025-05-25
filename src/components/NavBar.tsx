@@ -1,16 +1,44 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { getProgressToNextLevel } from '@/utils/xpUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 const NavBar = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
+  
+  // Set up real-time subscription for profile updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_profiles',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Trigger a re-fetch of profile data
+          window.location.reload();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
   
   // Use profile data or fallback to defaults
   const displayProfile = profile || {
@@ -20,13 +48,8 @@ const NavBar = () => {
     bytes_currency: 5
   };
   
-  // Calculate experience progress for the next level
-  const getExperienceForLevel = (level: number) => level * 1000; // 1000 XP per level
-  const currentLevelXP = getExperienceForLevel(displayProfile.experience_level - 1);
-  const nextLevelXP = getExperienceForLevel(displayProfile.experience_level);
-  const progressInCurrentLevel = displayProfile.experience_points - currentLevelXP;
-  const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
-  const experiencePercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
+  // Calculate experience progress using the new scaling system
+  const xpProgress = getProgressToNextLevel(displayProfile.experience_points);
   
   return (
     <nav className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
@@ -47,16 +70,16 @@ const NavBar = () => {
             <div className="hidden lg:flex items-center space-x-4 bg-slate-700 px-4 py-2 rounded-lg">
               {/* Level Badge */}
               <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                {displayProfile.experience_level}
+                {xpProgress.currentLevel}
               </div>
               
               {/* XP Bar */}
               <div className="flex items-center space-x-2">
                 <div className="w-24">
-                  <Progress value={Math.max(0, experiencePercentage)} className="h-2 bg-slate-600" />
+                  <Progress value={xpProgress.progressPercentage} className="h-2 bg-slate-600" />
                 </div>
                 <span className="text-xs text-slate-300">
-                  {displayProfile.experience_points}/{nextLevelXP}
+                  {displayProfile.experience_points}/{xpProgress.nextLevelXP}
                   {profileLoading && !profile && <span className="opacity-50"> (loading...)</span>}
                 </span>
               </div>

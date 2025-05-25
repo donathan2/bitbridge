@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Star, DollarSign, Zap } from 'lucide-react';
+import { Star, Bitcoin, DollarSign } from 'lucide-react';
 
 interface ProjectRewardsProps {
   difficulty: string;
@@ -41,15 +41,15 @@ const ProjectRewards: React.FC<ProjectRewardsProps> = ({
 
   return (
     <div className="flex items-center gap-2 text-xs">
-      <Badge variant="outline" className="border-yellow-500 text-yellow-400 bg-yellow-500/10 flex items-center gap-1">
+      <Badge variant="outline" className="border-cyan-400 text-cyan-400 bg-cyan-400/10 flex items-center gap-1">
         <Star className="w-3 h-3" />
         {rewards.xp} XP
       </Badge>
-      <Badge variant="outline" className="border-blue-500 text-blue-400 bg-blue-500/10 flex items-center gap-1">
-        <Zap className="w-3 h-3" />
+      <Badge variant="outline" className="border-yellow-400 text-yellow-400 bg-yellow-400/10 flex items-center gap-1">
+        <Bitcoin className="w-3 h-3" />
         {rewards.bits} Bits
       </Badge>
-      <Badge variant="outline" className="border-purple-500 text-purple-400 bg-purple-500/10 flex items-center gap-1">
+      <Badge variant="outline" className="border-purple-400 text-purple-400 bg-purple-400/10 flex items-center gap-1">
         <DollarSign className="w-3 h-3" />
         {rewards.bytes} Bytes
       </Badge>
