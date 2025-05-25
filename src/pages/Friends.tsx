@@ -85,8 +85,8 @@ const Friends = () => {
         .from('friendships')
         .select(`
           *,
-          user1:profiles!friendships_user1_id_fkey(id, full_name, username, avatar_url),
-          user2:profiles!friendships_user2_id_fkey(id, full_name, username, avatar_url)
+          user1:user1_id(id, full_name, username, avatar_url),
+          user2:user2_id(id, full_name, username, avatar_url)
         `)
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
@@ -121,7 +121,7 @@ const Friends = () => {
         .from('friend_requests')
         .select(`
           *,
-          sender:profiles!friend_requests_sender_id_fkey(id, full_name, username, avatar_url)
+          sender:sender_id(id, full_name, username, avatar_url)
         `)
         .eq('receiver_id', user.id)
         .eq('status', 'pending');
