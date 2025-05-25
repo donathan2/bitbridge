@@ -9,6 +9,7 @@ export interface UserProfile {
   experience_level: number;
   bits_currency: number;
   bytes_currency: number;
+  active_title: string | null;
 }
 
 export interface Achievement {
@@ -69,11 +70,11 @@ export const useUserProfile = () => {
         setError(null);
         console.log('Fetching user data for:', user.id);
         
-        // Fetch user profile
+        // Fetch user profile with active title
         console.log('Fetching user profile...');
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
-          .select('*')
+          .select('*, active_title')
           .eq('user_id', user.id)
           .single();
 
@@ -265,11 +266,36 @@ export const useUserProfile = () => {
     fetchUserData();
   }, [user]);
 
+  const updateActiveTitle = async (titleName: string) => {
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ active_title: titleName })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setProfile(prev => prev ? { ...prev, active_title: titleName } : null);
+      
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating active title:', err);
+      return { 
+        success: false, 
+        error: err instanceof Error ? err.message : 'Failed to update title' 
+      };
+    }
+  };
+
   return {
     profile,
     achievements,
     projects,
     loading,
-    error
+    error,
+    updateActiveTitle
   };
 };

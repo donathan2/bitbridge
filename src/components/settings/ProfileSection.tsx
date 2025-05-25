@@ -10,22 +10,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, User, Mail } from 'lucide-react';
+import { Check, User, Mail, Crown } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserTitles } from '@/hooks/useUserTitles';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSection = () => {
   const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile, updateActiveTitle } = useUserProfile();
+  const { userTitles } = useUserTitles();
 
   const [profileData, setProfileData] = useState({
     name: '',
     username: '',
     email: '',
     bio: '',
+    activeTitle: '',
   });
 
   useEffect(() => {
@@ -47,6 +57,7 @@ const ProfileSection = () => {
             username: profilesData?.username || user.user_metadata?.user_name || '',
             email: user.email || '',
             bio: profile?.bio || '',
+            activeTitle: profile?.active_title || 'Beginner Developer',
           });
         } catch (err) {
           console.error('Error in fetchUserProfile:', err);
@@ -55,6 +66,7 @@ const ProfileSection = () => {
             username: user.user_metadata?.user_name || '',
             email: user.email || '',
             bio: profile?.bio || '',
+            activeTitle: profile?.active_title || 'Beginner Developer',
           });
         }
       };
@@ -79,7 +91,10 @@ const ProfileSection = () => {
       if (profile) {
         const { error: profileError } = await supabase
           .from('user_profiles')
-          .update({ bio: profileData.bio })
+          .update({ 
+            bio: profileData.bio,
+            active_title: profileData.activeTitle
+          })
           .eq('user_id', user.id);
 
         if (profileError) throw profileError;
@@ -96,6 +111,9 @@ const ProfileSection = () => {
 
       if (publicProfileError) throw publicProfileError;
 
+      // Update active title
+      await updateActiveTitle(profileData.activeTitle);
+
       toast({
         title: "Profile updated",
         description: "Your profile information has been updated successfully.",
@@ -110,6 +128,9 @@ const ProfileSection = () => {
       });
     }
   };
+
+  // Available titles (owned titles + default title)
+  const availableTitles = ['Beginner Developer', ...userTitles];
 
   return (
     <Card className="bg-slate-800 border-slate-700">
@@ -173,6 +194,35 @@ const ProfileSection = () => {
             />
           </div>
           <p className="text-sm text-slate-400">Email cannot be changed here. Contact support if needed.</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="activeTitle" className="text-white">Active Title</Label>
+          <div className="relative">
+            <Crown className="absolute left-2 top-2.5 h-4 w-4 text-slate-400 z-10" />
+            <Select 
+              value={profileData.activeTitle} 
+              onValueChange={(value) => setProfileData({...profileData, activeTitle: value})}
+            >
+              <SelectTrigger className="pl-8 bg-slate-700 border-slate-600 text-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                {availableTitles.map((title) => (
+                  <SelectItem 
+                    key={title} 
+                    value={title}
+                    className="text-slate-200 focus:bg-slate-600 focus:text-white"
+                  >
+                    {title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-sm text-slate-400">
+            Purchase new titles in the BitVault to unlock more options.
+          </p>
         </div>
         
         <div className="space-y-2">

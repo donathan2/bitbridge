@@ -333,6 +333,30 @@ export type Database = {
         }
         Relationships: []
       }
+      titles: {
+        Row: {
+          bits_price: number
+          bytes_price: number
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          bits_price?: number
+          bytes_price?: number
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          bits_price?: number
+          bytes_price?: number
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -403,6 +427,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          active_title: string | null
           bio: string | null
           bits_currency: number | null
           bytes_currency: number | null
@@ -415,6 +440,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_title?: string | null
           bio?: string | null
           bits_currency?: number | null
           bytes_currency?: number | null
@@ -427,6 +453,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_title?: string | null
           bio?: string | null
           bits_currency?: number | null
           bytes_currency?: number | null
@@ -463,6 +490,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_titles: {
+        Row: {
+          id: string
+          purchased_at: string
+          title_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          purchased_at?: string
+          title_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          purchased_at?: string
+          title_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_titles_title_id_fkey"
+            columns: ["title_id"]
+            isOneToOne: false
+            referencedRelation: "titles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
