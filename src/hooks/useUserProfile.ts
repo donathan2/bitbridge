@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -188,7 +187,7 @@ export const useUserProfile = () => {
                     id: project.id,
                     title: project.title,
                     description: project.description,
-                    status: project.status === 'completed' ? 'completed' : 'ongoing' as const,
+                    status: (project.status === 'completed' ? 'completed' : 'ongoing') as 'ongoing' | 'completed',
                     difficulty: project.difficulty,
                     technologies: project.categories || [],
                     progress: project.status === 'completed' ? 100 : 50,
@@ -227,7 +226,7 @@ export const useUserProfile = () => {
                   id: project.id,
                   title: project.title,
                   description: project.description,
-                  status: project.status === 'completed' ? 'completed' : 'ongoing' as const,
+                  status: (project.status === 'completed' ? 'completed' : 'ongoing') as 'ongoing' | 'completed',
                   difficulty: project.difficulty,
                   technologies: project.categories || [],
                   progress: project.status === 'completed' ? 100 : 50,
