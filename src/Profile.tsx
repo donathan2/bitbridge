@@ -1,433 +1,269 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  User, 
+  Calendar, 
+  Trophy, 
+  Target, 
+  Users, 
+  Github,
+  ExternalLink,
+  Crown
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useProfile } from '@/hooks/useProfile';
+import { getProgressToNextLevel } from '@/utils/xpUtils';
 
 const Profile = () => {
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  
-  // Mock user data
-  const user = {
-    name: "Alex Chen",
-    username: "@alexchen",
-    bio: "Full-stack developer passionate about React, TypeScript and building beautiful user experiences. 5+ years of experience in web development, currently exploring WebAssembly and AI applications. 5+ years of experience in web development, currently exploring WebAssembly and AI applications.",
-    avatar: "/placeholder.svg",
-    skillLevel: "Advanced Developer",
-    experience: {
-      current: 7500,
-      nextLevel: 10000,
-      level: 8
-    },
-    stats: {
-      totalProjects: 24,
-      completedProjects: 18,
-      ongoingProjects: 6,
-      totalXP: 7500
-    }
+  const { user } = useAuth();
+  const { profile, achievements, projects, loading } = useUserProfile();
+  const { profile: publicProfile } = useProfile();
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-cyan-400 mb-2">Loading Profile...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-cyan-400 mb-2">Please sign in to view your profile</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayProfile = profile || {
+    experience_level: 1,
+    experience_points: 0,
+    bits_currency: 100,
+    bytes_currency: 5,
+    bio: 'Welcome to BitBridge!',
+    active_title: 'Beginner Developer'
   };
 
-  const completedProjects = [
-    {
-      id: 1,
-      title: "E-commerce Dashboard",
-      description: "Modern React dashboard with analytics",
-      tech: ["React", "TypeScript", "Tailwind"],
-      xp: 850,
-      completedDate: "2024-05-15",
-      difficulty: "Advanced",
-      githubUrl: "https://github.com/alexchen/ecommerce-dashboard",
-      teamMembers: [
-        { role: "Frontend Developer", username: "@alexchen", avatar: "/placeholder.svg" },
-        { role: "Backend Developer", username: "@sarahj", avatar: "/placeholder.svg" },
-        { role: "UI/UX Designer", username: "@mwong", avatar: "/placeholder.svg" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Task Management App",
-      description: "Full-stack productivity application",
-      tech: ["Next.js", "Prisma", "PostgreSQL"],
-      xp: 1200,
-      completedDate: "2024-05-10",
-      difficulty: "Expert",
-      githubUrl: "https://github.com/alexchen/task-manager",
-      teamMembers: [
-        { role: "Full-stack Developer", username: "@alexchen", avatar: "/placeholder.svg" },
-        { role: "Backend Developer", username: "@priyap", avatar: "/placeholder.svg" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Weather Widget",
-      description: "Real-time weather component",
-      tech: ["React", "API Integration"],
-      xp: 450,
-      completedDate: "2024-05-05",
-      difficulty: "Intermediate",
-      githubUrl: "https://github.com/alexchen/weather-widget",
-      teamMembers: [
-        { role: "Frontend Developer", username: "@alexchen", avatar: "/placeholder.svg" }
-      ]
-    }
-  ];
+  const xpProgress = getProgressToNextLevel(displayProfile.experience_points);
+  const earnedAchievements = achievements.filter(a => a.earned_at);
+  const ongoingProjects = projects.filter(p => p.status === 'ongoing');
+  const completedProjects = projects.filter(p => p.status === 'completed');
 
-  const ongoingProjects = [
-    {
-      id: 1,
-      title: "AI Chat Interface",
-      description: "Modern chat UI with AI integration",
-      tech: ["React", "TypeScript", "OpenAI"],
-      progress: 75,
-      startDate: "2024-05-20",
-      difficulty: "Advanced",
-      githubUrl: "https://github.com/alexchen/ai-chat",
-      teamMembers: [
-        { role: "Frontend Developer", username: "@alexchen", avatar: "/placeholder.svg" },
-        { role: "AI Engineer", username: "@jwilson", avatar: "/placeholder.svg" },
-        { role: "UX Designer", username: "@echen", avatar: "/placeholder.svg" }
-      ],
-      messages: [
-        { username: "@alexchen", avatar: "/placeholder.svg", text: "Just pushed the new chat components", timestamp: "2024-05-22 10:30 AM" },
-        { username: "@jwilson", avatar: "/placeholder.svg", text: "Great! I'll update the API integration tomorrow", timestamp: "2024-05-22 11:45 AM" },
-        { username: "@echen", avatar: "/placeholder.svg", text: "I've uploaded the new design mockups to Figma", timestamp: "2024-05-23 09:15 AM" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Portfolio Website",
-      description: "Personal portfolio with animations",
-      tech: ["React", "Framer Motion"],
-      progress: 60,
-      startDate: "2024-05-18",
-      difficulty: "Intermediate",
-      githubUrl: "https://github.com/alexchen/portfolio",
-      teamMembers: [
-        { role: "Developer", username: "@alexchen", avatar: "/placeholder.svg" },
-        { role: "Designer", username: "@sarahj", avatar: "/placeholder.svg" }
-      ],
-      messages: [
-        { username: "@alexchen", avatar: "/placeholder.svg", text: "Homepage animations are complete", timestamp: "2024-05-21 09:30 AM" },
-        { username: "@sarahj", avatar: "/placeholder.svg", text: "New color scheme looks great!", timestamp: "2024-05-22 14:20 PM" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Mobile Game",
-      description: "Puzzle game with React Native",
-      tech: ["React Native", "Expo"],
-      progress: 30,
-      startDate: "2024-05-22",
-      difficulty: "Expert",
-      githubUrl: "https://github.com/alexchen/puzzle-game",
-      teamMembers: [
-        { role: "Mobile Developer", username: "@alexchen", avatar: "/placeholder.svg" },
-        { role: "Game Designer", username: "@mwong", avatar: "/placeholder.svg" },
-        { role: "Sound Engineer", username: "@dsmith", avatar: "/placeholder.svg" },
-        { role: "Animator", username: "@akhan", avatar: "/placeholder.svg" }
-      ],
-      messages: [
-        { username: "@alexchen", avatar: "/placeholder.svg", text: "Basic game mechanics implemented", timestamp: "2024-05-22 16:30 PM" },
-        { username: "@mwong", avatar: "/placeholder.svg", text: "Level designs ready for review", timestamp: "2024-05-23 08:40 AM" }
-      ]
-    }
-  ];
-
-  const experiencePercentage = (user.experience.current / user.experience.nextLevel) * 100;
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-teal-500';
-      case 'Intermediate': return 'bg-blue-500';
-      case 'Advanced': return 'bg-indigo-600';
-      case 'Expert': return 'bg-violet-700';
-      default: return 'bg-teal-500';
-    }
+  // Truncate title if it's too long
+  const truncateTitle = (title: string, maxLength: number = 20) => {
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength - 3) + '...';
   };
 
   return (
     <div className="p-6">
-      <div className="max-w-7xl mx-auto space-y-10">
-        {/* Header Section - Remove since we now have NavBar */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">BitBridge Profile</h1>
-          <p className="text-lg text-slate-300 font-light">Track your coding journey and achievements</p>
-        </div>
-
-        {/* Profile Overview */}
-        <Card className="overflow-hidden bg-slate-800 border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-10">
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              <div className="relative">
-                <Avatar className="w-36 h-36 border-4 border-slate-700 shadow-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                    {user.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg shadow-cyan-500/20">
-                  {user.experience.level}
-                </div>
-              </div>
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header Section */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+              <Avatar className="w-24 h-24 border-4 border-cyan-500">
+                <AvatarImage src={publicProfile?.profile_picture_url || user?.user_metadata?.avatar_url || "/placeholder.svg"} />
+                <AvatarFallback className="bg-slate-700 text-2xl">
+                  {(publicProfile?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               
-              <div className="flex-1 text-center md:text-left space-y-5">
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-1 font-sans">{user.name}</h2>
-                  <p className="text-lg text-slate-300 mb-2 font-light">{user.username}</p>
-                  <Badge className="mt-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-3 py-1 shadow-glow">
-                    {user.skillLevel}
-                  </Badge>
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  {publicProfile?.full_name || user?.user_metadata?.full_name || 'User'}
+                </h1>
+                <div className="flex items-center justify-center md:justify-start space-x-2 mb-3">
+                  <Crown className="w-4 h-4 text-cyan-400" />
+                  <span 
+                    className="text-lg text-cyan-400 font-medium"
+                    title={displayProfile.active_title}
+                  >
+                    {truncateTitle(displayProfile.active_title || 'Beginner Developer')}
+                  </span>
                 </div>
-                
-                {/* Bio */}
-                <div className="max-w-2xl">
-                  <p className="text-slate-300 font-light leading-relaxed">
-                    {user.bio}
-                  </p>
-                </div>
-                
-                {/* Experience Bar */}
-                <div className="space-y-2 max-w-md">
-                  <div className="flex justify-between text-sm font-medium text-slate-300">
-                    <span>Level {user.experience.level}</span>
-                    <span>{user.experience.current} / {user.experience.nextLevel} XP</span>
-                  </div>
-                  <Progress value={experiencePercentage} className="h-3 bg-slate-700" />
-                  <p className="text-sm text-slate-400 font-light">
-                    {user.experience.nextLevel - user.experience.current} XP to next level
-                  </p>
-                </div>
+                {publicProfile?.username && (
+                  <p className="text-slate-400 mb-3">@{publicProfile.username}</p>
+                )}
+                <p className="text-slate-300 max-w-2xl">
+                  {displayProfile.bio || 'No bio available'}
+                </p>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-5 text-center">
-                <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
-                  <Trophy className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.completedProjects}</p>
-                  <p className="text-sm text-slate-300 font-light">Completed</p>
+              <div className="flex flex-col items-center space-y-2">
+                <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-xl">
+                  {xpProgress.currentLevel}
                 </div>
-                <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
-                  <Code className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.ongoingProjects}</p>
-                  <p className="text-sm text-slate-300 font-light">Ongoing</p>
-                </div>
-                <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
-                  <Star className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.totalXP}</p>
-                  <p className="text-sm text-slate-300 font-light">Total XP</p>
-                </div>
-                <div className="bg-slate-700 p-5 rounded-xl shadow-md hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
-                  <Zap className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-white">{user.stats.totalProjects}</p>
-                  <p className="text-sm text-slate-300 font-light">Total Projects</p>
-                </div>
+                <span className="text-slate-400 text-sm">Level</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Completed Projects */}
-          <Card className="bg-slate-800 border-slate-700 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
-              <CardTitle className="flex items-center gap-2 font-sans">
-                <Trophy className="w-6 h-6" />
-                Completed Projects ({completedProjects.length})
-              </CardTitle>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-400">Experience Points</CardTitle>
+              <Target className="h-4 w-4 text-cyan-400" />
             </CardHeader>
-            <CardContent className="p-8">
-              <div className="space-y-6 max-h-96 overflow-y-auto">
-                {completedProjects.map((project) => (
-                  <div 
-                    key={project.id} 
-                    className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold text-lg text-white">{project.title}</h3>
-                      <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
-                        {project.difficulty}
-                      </Badge>
-                    </div>
-                    <p className="text-slate-300 mb-4 font-light">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.tech.map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(project.completedDate).toLocaleDateString()}
-                      </div>
-                      <div className="flex items-center gap-1 text-cyan-400 font-medium">
-                        <Star className="w-4 h-4" />
-                        +{project.xp} XP
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{displayProfile.experience_points.toLocaleString()}</div>
+              <div className="mt-2">
+                <Progress value={xpProgress.progressPercentage} className="h-2 bg-slate-600" />
+                <p className="text-xs text-slate-400 mt-1">
+                  {xpProgress.pointsToNext} XP to level {xpProgress.currentLevel + 1}
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Ongoing Projects */}
-          <Card className="bg-slate-800 border-slate-700 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
-              <CardTitle className="flex items-center gap-2 font-sans">
-                <Code className="w-6 h-6" />
-                Ongoing Projects ({ongoingProjects.length})
-              </CardTitle>
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-400">Achievements</CardTitle>
+              <Trophy className="h-4 w-4 text-yellow-400" />
             </CardHeader>
-            <CardContent className="p-8">
-              <div className="space-y-6 max-h-96 overflow-y-auto">
-                {ongoingProjects.map((project) => (
-                  <div 
-                    key={project.id} 
-                    className="border border-slate-700 rounded-lg p-5 hover:shadow-md hover:shadow-cyan-900/10 transition-shadow bg-slate-800 cursor-pointer"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold text-lg text-white">{project.title}</h3>
-                      <Badge className={`${getDifficultyColor(project.difficulty)} text-white shadow-sm`}>
-                        {project.difficulty}
-                      </Badge>
-                    </div>
-                    <p className="text-slate-300 mb-4 font-light">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.tech.map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs text-slate-300 border-slate-600">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm font-medium text-slate-300">
-                        <span>Progress</span>
-                        <span>{project.progress}%</span>
-                      </div>
-                      <Progress value={project.progress} className="h-2 bg-slate-700" />
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-slate-400">
-                      <Clock className="w-4 h-4" />
-                      Started {new Date(project.startDate).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{earnedAchievements.length}</div>
+              <p className="text-xs text-slate-400">
+                of {achievements.length} total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-400">Active Projects</CardTitle>
+              <Users className="h-4 w-4 text-blue-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{ongoingProjects.length}</div>
+              <p className="text-xs text-slate-400">
+                in progress
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-400">Completed</CardTitle>
+              <Calendar className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{completedProjects.length}</div>
+              <p className="text-xs text-slate-400">
+                projects done
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Project Details Dialog */}
-        <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
-          <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-cyan-400 flex items-center gap-2">
-                {selectedProject?.title}
-                <Badge className={selectedProject && `${getDifficultyColor(selectedProject.difficulty)} ml-2 text-white`}>
-                  {selectedProject?.difficulty}
-                </Badge>
-              </DialogTitle>
-              <DialogDescription className="text-slate-300">
-                {selectedProject?.description}
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedProject && (
-              <div className="space-y-6 mt-4">
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div className="bg-slate-700 p-4 rounded-lg">
-                    <p className="text-slate-300 font-semibold mb-1">Status</p>
-                    <p className="text-white">
-                      {selectedProject.progress !== undefined ? `In Progress (${selectedProject.progress}%)` : 'Completed'}
-                    </p>
-                  </div>
-                  <div className="bg-slate-700 p-4 rounded-lg">
-                    <p className="text-slate-300 font-semibold mb-1">Date</p>
-                    <p className="text-white">
-                      {selectedProject.completedDate 
-                        ? `Completed on ${new Date(selectedProject.completedDate).toLocaleDateString()}` 
-                        : `Started on ${new Date(selectedProject.startDate).toLocaleDateString()}`
-                      }
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Technologies */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Technologies</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.tech.map((tech: string) => (
-                      <Badge key={tech} className="bg-slate-700 text-cyan-300">
-                        {tech}
+        {/* Achievements Section */}
+        {earnedAchievements.length > 0 && (
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Trophy className="mr-2 h-5 w-5 text-yellow-400" />
+                Recent Achievements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {earnedAchievements.slice(0, 6).map((achievement) => (
+                  <div key={achievement.id} className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg">
+                    <div className="text-2xl">{achievement.icon_name || '🏆'}</div>
+                    <div>
+                      <h4 className="font-medium text-white">{achievement.title}</h4>
+                      <p className="text-sm text-slate-400">{achievement.description}</p>
+                      <Badge 
+                        variant="outline" 
+                        className={`mt-1 text-xs ${
+                          achievement.rarity === 'legendary' ? 'border-yellow-500 text-yellow-400' :
+                          achievement.rarity === 'epic' ? 'border-purple-500 text-purple-400' :
+                          achievement.rarity === 'rare' ? 'border-blue-500 text-blue-400' :
+                          'border-gray-500 text-gray-400'
+                        }`}
+                      >
+                        {achievement.rarity}
                       </Badge>
-                    ))}
+                    </div>
                   </div>
-                </div>
-                
-                {/* Team Members */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Team Members</h3>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {selectedProject.teamMembers.map((member: any, index: number) => (
-                      <div key={index} className="flex items-center gap-3 bg-slate-700 p-3 rounded-lg">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback className="bg-cyan-600 text-white">
-                            {member.username.substring(1, 3).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-cyan-300">{member.username}</p>
-                          <p className="text-xs text-slate-300">{member.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* GitHub Link */}
-                <div className="flex items-center gap-2">
-                  <Github className="h-5 w-5 text-white" />
-                  <a 
-                    href={selectedProject.githubUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-cyan-400 hover:underline flex items-center"
-                  >
-                    GitHub Repository
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </div>
-                
-                {/* Project Actions */}
-                <div className="flex justify-end gap-3 mt-4">
-                  {selectedProject.progress !== undefined && (
-                    <Button className="bg-cyan-600 hover:bg-cyan-700" asChild>
-                      <Link to="/chat">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Team Chat
-                      </Link>
-                    </Button>
-                  )}
-                  <Button variant="outline" className="border-slate-600 text-slate-300" onClick={() => setSelectedProject(null)}>
-                    Close
-                  </Button>
-                </div>
+                ))}
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Projects Section */}
+        {projects.length > 0 && (
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Users className="mr-2 h-5 w-5 text-blue-400" />
+                My Projects
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {projects.slice(0, 3).map((project) => (
+                  <div key={project.id} className="border border-slate-600 rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="text-lg font-medium text-white">{project.title}</h4>
+                        <p className="text-slate-400 text-sm mt-1">{project.description}</p>
+                      </div>
+                      <Badge 
+                        variant="outline"
+                        className={`${
+                          project.status === 'completed' 
+                            ? 'border-green-500 text-green-400' 
+                            : 'border-blue-500 text-blue-400'
+                        }`}
+                      >
+                        {project.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {project.technologies.map((tech, index) => (
+                        <Badge key={index} variant="secondary" className="bg-slate-600 text-slate-300">
+                          {tech}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    {project.github_url && (
+                      <div className="flex items-center text-sm text-slate-400">
+                        <Github className="h-4 w-4 mr-1" />
+                        <a 
+                          href={project.github_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-cyan-400 transition-colors"
+                        >
+                          View Repository
+                          <ExternalLink className="h-3 w-3 ml-1 inline" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

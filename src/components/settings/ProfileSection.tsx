@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,17 +17,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, User, Mail, Crown } from 'lucide-react';
+import { Check, User, Mail, Crown, Upload } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useUserTitles } from '@/hooks/useUserTitles';
+import { useProfile } from '@/hooks/useProfile';
+import { useProfilePicture } from '@/hooks/useProfilePicture';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSection = () => {
   const { user } = useAuth();
-  const { profile, updateActiveTitle } = useUserProfile();
+  const { profile: userProfile, updateActiveTitle } = useUserProfile();
   const { userTitles } = useUserTitles();
+  const { profile: publicProfile } = useProfile();
+  const { uploadProfilePicture, uploading } = useProfilePicture();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profileData, setProfileData] = useState({
     name: '',
@@ -56,8 +60,8 @@ const ProfileSection = () => {
             name: profilesData?.full_name || user.user_metadata?.full_name || '',
             username: profilesData?.username || user.user_metadata?.user_name || '',
             email: user.email || '',
-            bio: profile?.bio || '',
-            activeTitle: profile?.active_title || 'Beginner Developer',
+            bio: userProfile?.bio || '',
+            activeTitle: userProfile?.active_title || 'Beginner Developer',
           });
         } catch (err) {
           console.error('Error in fetchUserProfile:', err);
@@ -65,15 +69,15 @@ const ProfileSection = () => {
             name: user.user_metadata?.full_name || '',
             username: user.user_metadata?.user_name || '',
             email: user.email || '',
-            bio: profile?.bio || '',
-            activeTitle: profile?.active_title || 'Beginner Developer',
+            bio: userProfile?.bio || '',
+            activeTitle: userProfile?.active_title || 'Beginner Developer',
           });
         }
       };
 
       fetchUserProfile();
     }
-  }, [user, profile]);
+  }, [user, userProfile]);
 
   const handleProfileUpdate = async () => {
     if (!user) return;
@@ -88,7 +92,7 @@ const ProfileSection = () => {
 
       if (authError) throw authError;
 
-      if (profile) {
+      if (userProfile) {
         const { error: profileError } = await supabase
           .from('user_profiles')
           .update({ 
@@ -119,6 +123,9 @@ const ProfileSection = () => {
         description: "Your profile information has been updated successfully.",
         variant: "default",
       });
+
+      // Force a page reload to update all profile instances
+      window.location.reload();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -126,6 +133,17 @@ const ProfileSection = () => {
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await uploadProfilePicture(file);
+      // Reset the input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -143,13 +161,26 @@ const ProfileSection = () => {
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center space-y-4 mb-6">
           <Avatar className="w-24 h-24 border-4 border-cyan-500">
-            <AvatarImage src={user?.user_metadata?.avatar_url || "/placeholder.svg"} />
+            <AvatarImage src={publicProfile?.profile_picture_url || user?.user_metadata?.avatar_url || "/placeholder.svg"} />
             <AvatarFallback className="bg-slate-700 text-xl">
               {(profileData.name || profileData.username || user?.email || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <Button variant="outline" className="border-cyan-500 text-cyan-400">
-            Change Avatar
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button 
+            variant="outline" 
+            className="border-cyan-500 text-cyan-400"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            {uploading ? 'Uploading...' : 'Change Avatar'}
           </Button>
         </div>
         
