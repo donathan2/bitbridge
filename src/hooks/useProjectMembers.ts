@@ -22,27 +22,27 @@ export const useProjectMembers = (projectId: string) => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      console.log('Fetching members for project:', projectId);
+      console.log('🔍 Fetching members for project:', projectId);
 
-      // First fetch project members
+      // Fetch project members with the simplified RLS policies
       const { data: memberData, error: memberError } = await supabase
         .from('project_members')
         .select('id, role, user_id, joined_at')
         .eq('project_id', projectId);
 
       if (memberError) {
-        console.error('Error fetching project members:', memberError);
+        console.error('❌ Error fetching project members:', memberError);
         throw memberError;
       }
 
       if (!memberData || memberData.length === 0) {
-        console.log('No members found for project');
+        console.log('📭 No members found for project');
         setMembers([]);
         setError(null);
         return;
       }
 
-      // Then fetch user profiles separately
+      // Fetch user profiles separately
       const userIds = memberData.map(member => member.user_id);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -50,7 +50,7 @@ export const useProjectMembers = (projectId: string) => {
         .in('id', userIds);
 
       if (profileError) {
-        console.error('Error fetching profiles:', profileError);
+        console.error('⚠️ Error fetching profiles:', profileError);
         // Continue with member data but without profile info
       }
 
@@ -70,11 +70,11 @@ export const useProjectMembers = (projectId: string) => {
         };
       });
 
-      console.log('Transformed members:', transformedMembers);
+      console.log('✅ Successfully fetched and transformed members:', transformedMembers);
       setMembers(transformedMembers);
       setError(null);
     } catch (err) {
-      console.error('Error in fetchMembers:', err);
+      console.error('💥 Error in fetchMembers:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch members');
       setMembers([]);
     } finally {
