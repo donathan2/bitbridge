@@ -18,6 +18,7 @@ export const useProjectJoin = () => {
     setLoading(true);
     try {
       const result = await projectService.joinProject(projectId, user.id, role);
+      console.log('📋 Join project result:', result);
       return result.success;
     } finally {
       setLoading(false);
@@ -35,6 +36,7 @@ export const useProjectJoin = () => {
     setLoading(true);
     try {
       const result = await projectService.leaveProject(projectId, user.id);
+      console.log('📋 Leave project result:', result);
       return result.success;
     } finally {
       setLoading(false);

@@ -215,12 +215,20 @@ const FindProject = () => {
     
     if (success) {
       console.log('✅ Join successful, refreshing data...');
-      // Refresh both the user's joined projects list and close dialog
-      await fetchUserJoinedProjects();
+      
+      // Immediately update the local state to show the user has joined
+      setUserJoinedProjects(prev => [...prev, projectId]);
+      
+      // Close any open dialogs
       setSelectedProject(null);
       
-      // Also refresh projects to get updated member counts
-      await fetchProjects();
+      // Refresh data in the background
+      await Promise.all([
+        fetchUserJoinedProjects(),
+        fetchProjects()
+      ]);
+      
+      console.log('🔄 Data refresh completed');
     } else {
       console.log('❌ Join failed');
     }

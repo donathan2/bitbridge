@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 export interface JoinProjectResult {
   success: boolean;
@@ -23,6 +23,11 @@ export const projectService = {
 
       if (checkError) {
         console.error('❌ Error checking membership:', checkError);
+        toast({
+          title: "Error",
+          description: `Failed to check membership: ${checkError.message}`,
+          variant: "destructive",
+        });
         return { success: false, error: `Membership check failed: ${checkError.message}` };
       }
 
@@ -51,6 +56,11 @@ export const projectService = {
 
       if (insertError) {
         console.error('❌ Error inserting member:', insertError);
+        toast({
+          title: "Error",
+          description: `Failed to join project: ${insertError.message}`,
+          variant: "destructive",
+        });
         return { success: false, error: `Failed to join project: ${insertError.message}` };
       }
 
@@ -90,6 +100,11 @@ export const projectService = {
 
       if (error) {
         console.error('❌ Error leaving project:', error);
+        toast({
+          title: "Error",
+          description: `Failed to leave project: ${error.message}`,
+          variant: "destructive",
+        });
         return { success: false, error: `Failed to leave project: ${error.message}` };
       }
 
