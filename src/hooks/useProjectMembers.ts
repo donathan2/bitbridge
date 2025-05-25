@@ -19,58 +19,74 @@ export const useProjectMembers = (projectId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching members for project:', projectId);
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching members for project:', projectId);
 
-        const { data, error } = await supabase
-          .from('project_members')
-          .select(`
-            id,
-            role,
-            user_id,
-            joined_at,
-            profiles!inner(
-              full_name,
-              username,
-              avatar_url
-            )
-          `)
-          .eq('project_id', projectId);
+      // First fetch project members
+      const { data: memberData, error: memberError } = await supabase
+        .from('project_members')
+        .select('id, role, user_id, joined_at')
+        .eq('project_id', projectId);
 
-        if (error) {
-          console.error('Error fetching project members:', error);
-          throw error;
-        }
+      if (memberError) {
+        console.error('Error fetching project members:', memberError);
+        throw memberError;
+      }
 
-        const transformedMembers = data?.map(member => ({
+      if (!memberData || memberData.length === 0) {
+        console.log('No members found for project');
+        setMembers([]);
+        setError(null);
+        return;
+      }
+
+      // Then fetch user profiles separately
+      const userIds = memberData.map(member => member.user_id);
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url')
+        .in('id', userIds);
+
+      if (profileError) {
+        console.error('Error fetching profiles:', profileError);
+        // Continue with member data but without profile info
+      }
+
+      // Combine the data
+      const transformedMembers = memberData.map(member => {
+        const profile = profileData?.find(p => p.id === member.user_id);
+        return {
           id: member.id,
           role: member.role,
           user_id: member.user_id,
           joined_at: member.joined_at,
           user: {
-            full_name: member.profiles?.full_name || null,
-            username: member.profiles?.username || null,
-            avatar_url: member.profiles?.avatar_url || null,
+            full_name: profile?.full_name || null,
+            username: profile?.username || null,
+            avatar_url: profile?.avatar_url || null,
           }
-        })) || [];
+        };
+      });
 
-        console.log('Transformed members:', transformedMembers);
-        setMembers(transformedMembers);
-      } catch (err) {
-        console.error('Error in fetchMembers:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch members');
-      } finally {
-        setLoading(false);
-      }
-    };
+      console.log('Transformed members:', transformedMembers);
+      setMembers(transformedMembers);
+      setError(null);
+    } catch (err) {
+      console.error('Error in fetchMembers:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch members');
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (projectId) {
       fetchMembers();
     }
   }, [projectId]);
 
-  return { members, loading, error, refetch: () => fetchMembers() };
+  return { members, loading, error, refetch: fetchMembers };
 };

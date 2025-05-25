@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Calendar, Star, Github, ExternalLink } from 'lucide-react';
+import { Users, Calendar, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 
 interface Project {
@@ -56,6 +56,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const { members } = useProjectMembers(project.id);
   const [selectedRole, setSelectedRole] = useState<string>('');
+  const [showAllRoles, setShowAllRoles] = useState(false);
 
   const getMembersForRole = (role: string) => {
     return members.filter(member => member.role === role);
@@ -67,6 +68,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       await onJoinProject(project.id, selectedRole);
     }
   };
+
+  const visibleRoles = showAllRoles ? project.rolesNeeded : project.rolesNeeded.slice(0, 2);
+  const hiddenRolesCount = project.rolesNeeded.length - 2;
 
   return (
     <Card className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all cursor-pointer group">
@@ -100,38 +104,57 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             )}
           </div>
 
-          {/* Roles and Members */}
+          {/* Compact Team Members */}
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-slate-300">Team Members:</h4>
-            {project.rolesNeeded.slice(0, 3).map((role) => {
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium text-slate-300">Team:</h4>
+              {project.rolesNeeded.length > 2 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAllRoles(!showAllRoles);
+                  }}
+                  className="h-6 px-2 text-slate-400 hover:text-slate-300"
+                >
+                  {showAllRoles ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  {showAllRoles ? 'Less' : `+${hiddenRolesCount} more`}
+                </Button>
+              )}
+            </div>
+            
+            {visibleRoles.map((role) => {
               const roleMembers = getMembersForRole(role);
               return (
-                <div key={role} className="text-xs">
+                <div key={role} className="text-xs bg-slate-700/50 rounded p-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-cyan-400 font-medium">{role}</span>
-                    <span className="text-slate-400">({roleMembers.length})</span>
+                    <span className="text-cyan-400 font-medium truncate">{role}</span>
+                    <span className="text-slate-400 text-xs">({roleMembers.length})</span>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {roleMembers.slice(0, 3).map((member) => (
-                      <div key={member.id} className="flex items-center gap-1 bg-slate-700 rounded-full px-2 py-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={member.user.avatar_url || ''} />
-                          <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                            {(member.user.full_name || member.user.username || 'U').charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-slate-300">
-                          {member.user.username || member.user.full_name || 'Unknown'}
-                        </span>
-                      </div>
-                    ))}
-                    {roleMembers.length > 3 && (
-                      <span className="text-slate-400 px-2 py-1">+{roleMembers.length - 3} more</span>
-                    )}
-                    {roleMembers.length === 0 && (
-                      <span className="text-slate-500 italic px-2 py-1">No members yet</span>
-                    )}
-                  </div>
+                  
+                  {roleMembers.length > 0 ? (
+                    <div className="flex items-center gap-1 overflow-hidden">
+                      {roleMembers.slice(0, 2).map((member) => (
+                        <div key={member.id} className="flex items-center gap-1 bg-slate-600 rounded px-1.5 py-0.5 min-w-0">
+                          <Avatar className="h-3 w-3 flex-shrink-0">
+                            <AvatarImage src={member.user.avatar_url || ''} />
+                            <AvatarFallback className="bg-cyan-600 text-white text-[8px]">
+                              {(member.user.full_name || member.user.username || 'U').charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-slate-300 text-xs truncate">
+                            {member.user.username || member.user.full_name || 'Unknown'}
+                          </span>
+                        </div>
+                      ))}
+                      {roleMembers.length > 2 && (
+                        <span className="text-slate-400 text-xs">+{roleMembers.length - 2}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-500 italic text-xs">Open</span>
+                  )}
                 </div>
               );
             })}
@@ -139,23 +162,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
           {/* Creator Info */}
           <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
+            <Avatar className="h-5 w-5">
               <AvatarImage src={project.creator.avatar} />
               <AvatarFallback className="bg-cyan-600 text-white text-xs">
                 {project.creator.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm text-slate-400">by @{project.creator.username}</span>
+            <span className="text-xs text-slate-400">by @{project.creator.username}</span>
           </div>
 
           {/* Rewards */}
-          <div className="flex justify-between items-center text-sm text-slate-400">
+          <div className="flex justify-between items-center text-xs text-slate-400">
             <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 text-cyan-400" />
+              <Star className="h-3 w-3 text-cyan-400" />
               <span className="text-cyan-400">{project.xpReward} XP</span>
             </div>
             <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-3 w-3" />
               <span>{new Date(project.createdAt!).toLocaleDateString()}</span>
             </div>
           </div>

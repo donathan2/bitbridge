@@ -10,6 +10,7 @@ export const useProjectJoin = () => {
 
   const joinProject = async (projectId: string, role: string = 'Developer') => {
     if (!user) {
+      console.log('No user found, cannot join project');
       toast({
         title: "Authentication required",
         description: "Please log in to join a project.",
@@ -20,19 +21,23 @@ export const useProjectJoin = () => {
 
     setLoading(true);
     try {
+      console.log('Attempting to join project:', { projectId, role, userId: user.id });
+
       // Check if user is already a member
       const { data: existingMember, error: checkError } = await supabase
         .from('project_members')
         .select('id')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError) {
+        console.error('Error checking existing membership:', checkError);
         throw checkError;
       }
 
       if (existingMember) {
+        console.log('User is already a member');
         toast({
           title: "Already a member",
           description: "You are already a member of this project.",
@@ -42,27 +47,32 @@ export const useProjectJoin = () => {
       }
 
       // Join the project
-      const { error: joinError } = await supabase
+      console.log('Inserting new project member');
+      const { data: newMember, error: joinError } = await supabase
         .from('project_members')
         .insert({
           project_id: projectId,
           user_id: user.id,
           role: role
-        });
+        })
+        .select()
+        .single();
 
       if (joinError) {
+        console.error('Error joining project:', joinError);
         throw joinError;
       }
 
+      console.log('Successfully joined project:', newMember);
       toast({
         title: "Project joined!",
-        description: "You have successfully joined the project.",
+        description: `You have successfully joined as ${role}.`,
         variant: "default",
       });
 
       return true;
     } catch (error) {
-      console.error('Error joining project:', error);
+      console.error('Error in joinProject:', error);
       toast({
         title: "Error",
         description: "Failed to join project. Please try again.",
@@ -79,6 +89,8 @@ export const useProjectJoin = () => {
 
     setLoading(true);
     try {
+      console.log('Attempting to leave project:', { projectId, userId: user.id });
+
       const { error } = await supabase
         .from('project_members')
         .delete()
@@ -86,9 +98,11 @@ export const useProjectJoin = () => {
         .eq('user_id', user.id);
 
       if (error) {
+        console.error('Error leaving project:', error);
         throw error;
       }
 
+      console.log('Successfully left project');
       toast({
         title: "Left project",
         description: "You have left the project.",
