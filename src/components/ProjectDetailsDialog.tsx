@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Github, ExternalLink, Users } from 'lucide-react';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import ProjectRewards from './ProjectRewards';
 
 interface Project {
   id: string;
@@ -86,6 +87,17 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
         <div className="space-y-6 mt-4">
           <div className="text-slate-300">
             {project.description}
+          </div>
+
+          {/* Rewards Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-2">Rewards</h3>
+            <ProjectRewards 
+              difficulty={project.difficulty}
+              xpReward={project.xpReward}
+              bitsReward={project.bitsReward}
+              bytesReward={project.bytesReward}
+            />
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 text-sm">

@@ -30,8 +30,13 @@ const ProjectRewards: React.FC<ProjectRewardsProps> = ({
   bitsReward, 
   bytesReward 
 }) => {
-  // Always use standard rewards based on difficulty for consistency
-  const rewards = getStandardRewardsByDifficulty(difficulty);
+  // Use passed rewards if available, otherwise use standard rewards
+  const standardRewards = getStandardRewardsByDifficulty(difficulty);
+  const rewards = {
+    xp: xpReward || standardRewards.xp,
+    bits: bitsReward || standardRewards.bits,
+    bytes: bytesReward || standardRewards.bytes
+  };
 
   return (
     <div className="flex items-center gap-2 text-xs">

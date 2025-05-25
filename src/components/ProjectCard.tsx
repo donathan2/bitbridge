@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Calendar, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import ProjectRewards from './ProjectRewards';
 
 interface Project {
   id: string;
@@ -112,6 +113,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             )}
           </div>
 
+          {/* Rewards */}
+          <div>
+            <ProjectRewards 
+              difficulty={project.difficulty}
+              xpReward={project.xpReward}
+              bitsReward={project.bitsReward}
+              bytesReward={project.bytesReward}
+            />
+          </div>
+
           {/* Compact Team Members */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -179,12 +190,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <span className="text-xs text-slate-400">by @{project.creator.username}</span>
           </div>
 
-          {/* Rewards */}
+          {/* Created Date */}
           <div className="flex justify-between items-center text-xs text-slate-400">
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 text-cyan-400" />
-              <span className="text-cyan-400">{project.xpReward} XP</span>
-            </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               <span>{new Date(project.createdAt!).toLocaleDateString()}</span>

@@ -1,20 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectJoin } from '@/hooks/useProjectJoin';
 import { toast } from '@/components/ui/use-toast';
 import ProjectCard from '@/components/ProjectCard';
 import ProjectDetailsDialog from '@/components/ProjectDetailsDialog';
+import MultiSelectFilter from '@/components/MultiSelectFilter';
 
 interface Project {
   id: string;
@@ -75,8 +75,8 @@ const FindProject = () => {
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [userJoinedProjects, setUserJoinedProjects] = useState<string[]>([]);
@@ -99,14 +99,6 @@ const FindProject = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleDifficultyChange = (value: string) => {
-    setDifficultyFilter(value);
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setCategoryFilter(value);
-  };
-
   const filterProjects = () => {
     let filtered = [...projects];
 
@@ -117,12 +109,14 @@ const FindProject = () => {
       );
     }
 
-    if (difficultyFilter && difficultyFilter !== 'all') {
-      filtered = filtered.filter(project => project.difficulty === difficultyFilter);
+    if (selectedDifficulties.length > 0) {
+      filtered = filtered.filter(project => selectedDifficulties.includes(project.difficulty));
     }
 
-    if (categoryFilter && categoryFilter !== 'all') {
-      filtered = filtered.filter(project => project.categories.includes(categoryFilter));
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(project => 
+        project.categories.some(category => selectedCategories.includes(category))
+      );
     }
 
     setFilteredProjects(filtered);
@@ -130,7 +124,7 @@ const FindProject = () => {
 
   useEffect(() => {
     filterProjects();
-  }, [searchTerm, difficultyFilter, categoryFilter, projects]);
+  }, [searchTerm, selectedDifficulties, selectedCategories, projects]);
 
   useEffect(() => {
     fetchProjects();
@@ -411,6 +405,10 @@ const FindProject = () => {
     return user && project.creatorId === user.id;
   };
 
+  // Get unique categories from all projects for the filter
+  const allCategories = [...new Set(projects.flatMap(project => project.categories))].sort();
+  const difficultyOptions = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -438,49 +436,42 @@ const FindProject = () => {
               </div>
 
               <div className="flex items-center space-x-4">
-                <Select onValueChange={handleDifficultyChange}>
-                  <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectValue placeholder="Difficulty" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectItem value="all">All Difficulties</SelectItem>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
-                    <SelectItem value="Expert">Expert</SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelectFilter
+                  options={difficultyOptions}
+                  selectedValues={selectedDifficulties}
+                  onSelectionChange={setSelectedDifficulties}
+                  placeholder="Difficulty"
+                  label="Select Difficulties"
+                />
 
-                <Select onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="w-[180px] bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {[...TECH_STACK_OPTIONS, ...TRACK_OPTIONS].map(option => (
-                      <SelectItem key={option} value={option}>{option}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10">
-                      <Filter className="mr-2 h-4 w-4" />
-                      Filters
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-800 text-white border-slate-700">
-                    <DialogHeader>
-                      <DialogTitle>Filter Projects</DialogTitle>
-                      <DialogDescription>
-                        Apply advanced filters to find the perfect project.
-                      </DialogDescription>
-                    </DialogHeader>
-                  </DialogContent>
-                </Dialog>
+                <MultiSelectFilter
+                  options={allCategories}
+                  selectedValues={selectedCategories}
+                  onSelectionChange={setSelectedCategories}
+                  placeholder="Categories"
+                  label="Select Categories"
+                />
               </div>
             </div>
+
+            {/* Active Filters Display */}
+            {(selectedDifficulties.length > 0 || selectedCategories.length > 0) && (
+              <div className="mt-4 pt-4 border-t border-slate-600">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-slate-300 text-sm font-medium">Active filters:</span>
+                  {selectedDifficulties.map((difficulty) => (
+                    <span key={difficulty} className="bg-cyan-600 text-white px-2 py-1 rounded text-xs">
+                      {difficulty}
+                    </span>
+                  ))}
+                  {selectedCategories.map((category) => (
+                    <span key={category} className="bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
