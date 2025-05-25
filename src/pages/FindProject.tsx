@@ -259,7 +259,7 @@ const FindProject = () => {
 
       console.log('Creating project with data:', createProjectForm);
 
-      // Insert the new project into the database
+      // Insert the new project into the database with active status
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert([
@@ -272,6 +272,7 @@ const FindProject = () => {
             end_date: endDate || null,
             difficulty,
             creator_id: user.id,
+            status: 'active' // Explicitly set status to active
           },
         ])
         .select()
@@ -289,7 +290,7 @@ const FindProject = () => {
 
       console.log('Project created:', projectData);
 
-      // Automatically add the creator as a project member
+      // Automatically add the creator as the Project Lead
       const { error: memberError } = await supabase
         .from('project_members')
         .insert({
@@ -299,14 +300,14 @@ const FindProject = () => {
         });
 
       if (memberError) {
-        console.error('Error adding creator as member:', memberError);
+        console.error('Error adding creator as Project Lead:', memberError);
         toast({
           title: "Warning",
-          description: "Project created but failed to add you as a member. You can join manually.",
+          description: "Project created but failed to add you as Project Lead. You can join manually.",
           variant: "default",
         });
       } else {
-        console.log('Creator added as project member');
+        console.log('Creator added as Project Lead');
       }
 
       // Reset form and close dialog
@@ -329,7 +330,7 @@ const FindProject = () => {
 
       toast({
         title: "Project created!",
-        description: "Your project has been created successfully and you've been added as a member.",
+        description: "Your project has been created successfully and you've been added as the Project Lead.",
         variant: "default",
       });
     } catch (error) {

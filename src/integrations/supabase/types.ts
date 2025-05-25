@@ -93,6 +93,72 @@ export type Database = {
         }
         Relationships: []
       }
+      project_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      project_tasks: {
+        Row: {
+          assigned_role: string | null
+          assigned_user_id: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          project_id: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_role?: string | null
+          assigned_user_id?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_role?: string | null
+          assigned_user_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           bits_reward: number
@@ -106,6 +172,7 @@ export type Database = {
           github_url: string | null
           id: string
           roles_needed: string[]
+          status: string | null
           title: string
           updated_at: string | null
           xp_reward: number
@@ -122,6 +189,7 @@ export type Database = {
           github_url?: string | null
           id?: string
           roles_needed?: string[]
+          status?: string | null
           title: string
           updated_at?: string | null
           xp_reward?: number
@@ -138,6 +206,7 @@ export type Database = {
           github_url?: string | null
           id?: string
           roles_needed?: string[]
+          status?: string | null
           title?: string
           updated_at?: string | null
           xp_reward?: number
