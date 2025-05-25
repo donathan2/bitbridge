@@ -11,16 +11,18 @@ export const useProjectCompletion = () => {
     try {
       console.log('🎯 Completing project:', projectId);
 
-      const { error } = await supabase
+      // Update project status to completed
+      const { error: projectError } = await supabase
         .from('projects')
         .update({ 
           status: 'completed',
+          completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
 
-      if (error) {
-        console.error('❌ Error completing project:', error);
+      if (projectError) {
+        console.error('❌ Error completing project:', projectError);
         toast({
           title: "Error",
           description: "Failed to complete project.",
@@ -29,7 +31,9 @@ export const useProjectCompletion = () => {
         return false;
       }
 
-      console.log('✅ Project completed successfully');
+      console.log('✅ Project marked as completed successfully');
+      
+      // The database trigger will automatically distribute rewards to all project members
       toast({
         title: "Project Completed!",
         description: "Rewards have been distributed to all team members.",

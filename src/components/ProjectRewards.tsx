@@ -9,7 +9,7 @@ interface ProjectRewardsProps {
   bytesReward?: number;
 }
 
-const getRewardsByDifficulty = (difficulty: string) => {
+const getStandardRewardsByDifficulty = (difficulty: string) => {
   switch (difficulty) {
     case 'Beginner':
       return { xp: 300, bits: 200, bytes: 3 };
@@ -30,14 +30,8 @@ const ProjectRewards: React.FC<ProjectRewardsProps> = ({
   bitsReward, 
   bytesReward 
 }) => {
-  const standardRewards = getRewardsByDifficulty(difficulty);
-  
-  // Use provided rewards or fall back to standard rewards
-  const rewards = {
-    xp: xpReward || standardRewards.xp,
-    bits: bitsReward || standardRewards.bits,
-    bytes: bytesReward || standardRewards.bytes
-  };
+  // Always use standard rewards based on difficulty for consistency
+  const rewards = getStandardRewardsByDifficulty(difficulty);
 
   return (
     <div className="flex items-center gap-2 text-xs">

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -165,10 +166,10 @@ const Index = () => {
               <Link to="/auth">
                 <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 border-0">
                   <UserPlus className="w-5 h-5 mr-2" />
-                  Sign Up
+                  Get Started
                 </Button>
               </Link>
-              <Link to="/explore">
+              <Link to="/find-project">
                 <Button size="lg" variant="outline" className="bg-slate-700 border-slate-600 hover:bg-slate-600 text-slate-200 px-8 py-3 text-lg shadow-lg transition-all duration-300">
                   <Search className="w-5 h-5 mr-2" />
                   Explore Projects
