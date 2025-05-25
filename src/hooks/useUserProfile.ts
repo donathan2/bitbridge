@@ -42,6 +42,8 @@ export interface Project {
   technologies: string[];
   progress?: number;
   xp_reward?: number;
+  bits_reward?: number;
+  bytes_reward?: number;
   github_url?: string;
   started_date?: string;
   completed_date?: string;
@@ -191,6 +193,8 @@ export const useUserProfile = () => {
                     technologies: project.categories || [],
                     progress: 50,
                     xp_reward: project.xp_reward,
+                    bits_reward: project.bits_reward,
+                    bytes_reward: project.bytes_reward,
                     github_url: project.github_url,
                     started_date: membershipData.find(m => m.project_id === project.id)?.joined_at || project.created_at,
                     members: []
@@ -227,6 +231,8 @@ export const useUserProfile = () => {
                   technologies: project.categories || [],
                   progress: 50, // Default progress for now
                   xp_reward: project.xp_reward,
+                  bits_reward: project.bits_reward,
+                  bytes_reward: project.bytes_reward,
                   github_url: project.github_url,
                   started_date: userMembership?.joined_at || project.created_at,
                   members: membersWithProfiles
