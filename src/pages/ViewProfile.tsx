@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FolderOpen, Clock } from 'lucide-react';
+import { ArrowLeft, Star, FolderOpen, Clock } from 'lucide-react';
 import { useViewProfile } from '@/hooks/useViewProfile';
 import { useAvatar } from '@/hooks/useAvatar';
 
@@ -72,9 +72,12 @@ const ViewProfile = () => {
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">{name}</h1>
                   <p className="text-lg text-slate-300">@{profile.username || 'unknown'}</p>
-                  <Badge variant="secondary" className="mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-0">
-                    Developer
-                  </Badge>
+                  {profile.active_title && (
+                    <Badge variant="secondary" className="mt-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                      <Star className="w-3 h-3 mr-1" />
+                      {profile.active_title}
+                    </Badge>
+                  )}
                 </div>
               </div>
 

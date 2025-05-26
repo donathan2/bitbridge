@@ -43,7 +43,7 @@ const Profile = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { profile: userProfile, loading: profileLoading, error } = useUserProfile();
+  const { profile: userProfile, projects, loading: profileLoading, error } = useUserProfile();
   const { profile: profileData, loading: profileDataLoading } = useProfile();
   const { avatarUrl, name, username } = useAvatar();
   const { friendsCount, loading: friendsCountLoading } = useFriendsCount();
@@ -100,7 +100,7 @@ const Profile = () => {
     username: `@${username}`,
     bio: userProfile?.bio || "Welcome to BitBridge! Update your bio to tell others about yourself.",
     avatar: avatarUrl,
-    skillLevel: userProfile?.skill_level || "Beginner Developer",
+    skillLevel: userProfile?.active_title || "Beginner Developer",
     experience: {
       current: userProfile?.experience_points || 0,
       nextLevel: xpProgress.nextLevelXP,
@@ -111,17 +111,39 @@ const Profile = () => {
       bytes: userProfile?.bytes_currency || 5
     },
     stats: {
-      totalProjects: 0, // We'll need to fetch this separately if needed
-      completedProjects: 0,
-      ongoingProjects: 0,
+      totalProjects: projects.length,
+      completedProjects: projects.filter(p => p.status === 'completed').length,
+      ongoingProjects: projects.filter(p => p.status === 'ongoing').length,
       totalXP: userProfile?.experience_points || 0,
       friends: friendsCountLoading ? 0 : friendsCount
     }
   };
 
-  // For now, use empty arrays for projects since we removed the projects from useUserProfile
-  const completedProjects: any[] = [];
-  const ongoingProjects: any[] = [];
+  const completedProjects = projects.filter(p => p.status === 'completed').map(project => ({
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    tech: project.technologies,
+    xp: project.xp_reward || 0,
+    bits: project.bits_reward || 0,
+    bytes: project.bytes_reward || 0,
+    completedDate: project.completed_date || new Date().toISOString(),
+    difficulty: project.difficulty,
+    githubUrl: project.github_url || "",
+    teamMembers: project.members
+  }));
+
+  const ongoingProjects = projects.filter(p => p.status === 'ongoing').map(project => ({
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    tech: project.technologies,
+    startDate: project.started_date || new Date().toISOString(),
+    difficulty: project.difficulty,
+    githubUrl: project.github_url || "",
+    teamMembers: project.members,
+    messages: [] // No messages for now since we don't have a messages table
+  }));
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -298,7 +320,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Ongoing Projects */}
+          {/* Ongoing Projects - Progress bars removed */}
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
               <CardTitle className="flex items-center gap-2 font-pixel text-sm">
@@ -347,7 +369,7 @@ const Profile = () => {
           </Card>
         </div>
 
-        {/* Project Details Dialog */}
+        {/* Project Details Dialog - Progress bars removed */}
         <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
           <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
             <DialogHeader>
@@ -399,7 +421,7 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Technologies</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedProject.tech?.map((tech: string) => (
+                    {selectedProject.tech.map((tech: string) => (
                       <Badge key={tech} className="bg-slate-700 text-cyan-300">
                         {tech}
                       </Badge>
@@ -407,11 +429,11 @@ const Profile = () => {
                   </div>
                 </div>
                 
-                {/* Team Members */}
+                {/* Team Members - Now using separate component to avoid hooks in map */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Team Members</h3>
                   <div className="grid md:grid-cols-2 gap-3">
-                    {selectedProject.teamMembers?.map((member: any, index: number) => (
+                    {selectedProject.teamMembers.map((member: any, index: number) => (
                       <TeamMemberAvatar key={index} member={member} />
                     ))}
                   </div>
@@ -433,7 +455,7 @@ const Profile = () => {
                   </div>
                 )}
                 
-                {/* Project workspace button */}
+                {/* Project workspace button - replacing the chat button */}
                 {!selectedProject.completedDate && (
                   <div className="mt-4">
                     <Button 

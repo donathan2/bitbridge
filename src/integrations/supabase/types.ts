@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: Database["public"]["Enums"]["achievement_category"]
+          created_at: string | null
+          description: string
+          icon_name: string
+          id: string
+          rarity: Database["public"]["Enums"]["achievement_rarity"]
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["achievement_category"]
+          created_at?: string | null
+          description: string
+          icon_name: string
+          id?: string
+          rarity: Database["public"]["Enums"]["achievement_rarity"]
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["achievement_category"]
+          created_at?: string | null
+          description?: string
+          icon_name?: string
+          id?: string
+          rarity?: Database["public"]["Enums"]["achievement_rarity"]
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       friend_messages: {
         Row: {
           created_at: string
@@ -303,6 +336,98 @@ export type Database = {
         }
         Relationships: []
       }
+      titles: {
+        Row: {
+          bits_price: number
+          bytes_price: number
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          bits_price?: number
+          bytes_price?: number
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          bits_price?: number
+          bytes_price?: number
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          progress: number | null
+          total: number | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          progress?: number | null
+          total?: number | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          progress?: number | null
+          total?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          language: string | null
+          push_notifications: boolean | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          push_notifications?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          push_notifications?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           active_title: string | null
@@ -345,6 +470,59 @@ export type Database = {
         }
         Relationships: []
       }
+      user_social_connections: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_titles: {
+        Row: {
+          id: string
+          purchased_at: string
+          title_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          purchased_at?: string
+          title_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          purchased_at?: string
+          title_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_titles_title_id_fkey"
+            columns: ["title_id"]
+            isOneToOne: false
+            referencedRelation: "titles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -360,6 +538,14 @@ export type Database = {
       }
     }
     Enums: {
+      achievement_category:
+        | "Milestones"
+        | "Collaboration"
+        | "Skills"
+        | "Development"
+        | "Performance"
+        | "Quality"
+      achievement_rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
       project_difficulty: "Beginner" | "Intermediate" | "Advanced" | "Expert"
       project_status: "ongoing" | "completed"
     }
@@ -477,6 +663,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      achievement_category: [
+        "Milestones",
+        "Collaboration",
+        "Skills",
+        "Development",
+        "Performance",
+        "Quality",
+      ],
+      achievement_rarity: ["Common", "Uncommon", "Rare", "Epic", "Legendary"],
       project_difficulty: ["Beginner", "Intermediate", "Advanced", "Expert"],
       project_status: ["ongoing", "completed"],
     },
