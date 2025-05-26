@@ -13,7 +13,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-6xl font-pixel mb-6 bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
             BitBridge
           </h1>
           <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
@@ -34,7 +34,7 @@ const Index = () => {
           <Card className="bg-slate-800 border-slate-700 text-center">
             <CardHeader>
               <Code className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
-              <CardTitle className="text-white">Collaborate</CardTitle>
+              <CardTitle className="text-white font-pixel text-sm">Collaborate</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-slate-300">
@@ -46,7 +46,7 @@ const Index = () => {
           <Card className="bg-slate-800 border-slate-700 text-center">
             <CardHeader>
               <Users className="w-12 h-12 text-green-400 mx-auto mb-4" />
-              <CardTitle className="text-white">Build Teams</CardTitle>
+              <CardTitle className="text-white font-pixel text-sm">Build Teams</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-slate-300">
@@ -58,7 +58,7 @@ const Index = () => {
           <Card className="bg-slate-800 border-slate-700 text-center">
             <CardHeader>
               <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-              <CardTitle className="text-white">Earn Rewards</CardTitle>
+              <CardTitle className="text-white font-pixel text-sm">Earn Rewards</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-slate-300">
@@ -70,7 +70,7 @@ const Index = () => {
           <Card className="bg-slate-800 border-slate-700 text-center">
             <CardHeader>
               <Zap className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-              <CardTitle className="text-white">Level Up</CardTitle>
+              <CardTitle className="text-white font-pixel text-sm">Level Up</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-slate-300">
@@ -82,7 +82,7 @@ const Index = () => {
 
         {/* Reward System Showcase */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-white">Gamified Development Experience</h2>
+          <h2 className="text-3xl font-pixel mb-8 text-white">Gamified Development Experience</h2>
           <div className="flex justify-center gap-8 flex-wrap">
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
@@ -118,7 +118,7 @@ const Index = () => {
 
         {/* Call to Action */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4 text-white">Ready to Start Your Journey?</h2>
+          <h2 className="text-3xl font-pixel mb-4 text-white">Ready to Start Your Journey?</h2>
           <p className="text-xl text-slate-300 mb-8">
             Join thousands of developers building the future together
           </p>

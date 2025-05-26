@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProfile } from '@/hooks/useProfile';
+import { useAvatar } from '@/hooks/useAvatar';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +17,7 @@ const NavBar = () => {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
   const { profile: publicProfile } = useProfile();
+  const { avatarUrl, name } = useAvatar();
   
   // Set up real-time subscription for profile updates
   useEffect(() => {
@@ -60,10 +63,10 @@ const NavBar = () => {
           {/* Logo and name */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <div className="h-8 w-8 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-md flex items-center justify-center text-white font-bold text-lg mr-2">
-                B
+              <div className="h-8 w-8 mr-2">
+                <img src="/lovable-uploads/d809f725-76cd-4f33-bc68-0c1316f64d94.png" alt="BitBridge" className="h-full w-full object-contain" />
               </div>
-              <span className="text-cyan-400 text-xl font-bold">BitBridge</span>
+              <span className="text-cyan-400 text-xl font-pixel">BitBridge</span>
             </Link>
           </div>
 
@@ -72,9 +75,9 @@ const NavBar = () => {
             <div className="hidden lg:flex items-center space-x-4 bg-slate-700 px-4 py-2 rounded-lg">
               {/* User Avatar */}
               <Avatar className="w-8 h-8">
-                <AvatarImage src={publicProfile?.profile_picture_url || user?.user_metadata?.avatar_url || "/placeholder.svg"} />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-slate-600 text-sm">
-                  {(publicProfile?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+                  {name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               

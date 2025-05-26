@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useUserTitles } from '@/hooks/useUserTitles';
 import { useProfile } from '@/hooks/useProfile';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
+import { useAvatar } from '@/hooks/useAvatar';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSection = () => {
@@ -32,6 +34,7 @@ const ProfileSection = () => {
   const { userTitles } = useUserTitles();
   const { profile: publicProfile } = useProfile();
   const { uploadProfilePicture, uploading } = useProfilePicture();
+  const { avatarUrl, name, username } = useAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profileData, setProfileData] = useState({
@@ -57,8 +60,8 @@ const ProfileSection = () => {
           }
 
           setProfileData({
-            name: profilesData?.full_name || user.user_metadata?.full_name || '',
-            username: profilesData?.username || user.user_metadata?.user_name || '',
+            name: name,
+            username: username,
             email: user.email || '',
             bio: userProfile?.bio || '',
             activeTitle: userProfile?.active_title || 'Beginner Developer',
@@ -66,8 +69,8 @@ const ProfileSection = () => {
         } catch (err) {
           console.error('Error in fetchUserProfile:', err);
           setProfileData({
-            name: user.user_metadata?.full_name || '',
-            username: user.user_metadata?.user_name || '',
+            name: name,
+            username: username,
             email: user.email || '',
             bio: userProfile?.bio || '',
             activeTitle: userProfile?.active_title || 'Beginner Developer',
@@ -77,7 +80,7 @@ const ProfileSection = () => {
 
       fetchUserProfile();
     }
-  }, [user, userProfile]);
+  }, [user, userProfile, name, username]);
 
   const handleProfileUpdate = async () => {
     if (!user) return;
@@ -153,7 +156,7 @@ const ProfileSection = () => {
   return (
     <Card className="bg-slate-800 border-slate-700">
       <CardHeader>
-        <CardTitle className="text-white">Profile Information</CardTitle>
+        <CardTitle className="text-white font-pixel">Profile Information</CardTitle>
         <CardDescription className="text-slate-400">
           Update your profile details and public information
         </CardDescription>
@@ -161,9 +164,9 @@ const ProfileSection = () => {
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center space-y-4 mb-6">
           <Avatar className="w-24 h-24 border-4 border-cyan-500">
-            <AvatarImage src={publicProfile?.profile_picture_url || user?.user_metadata?.avatar_url || "/placeholder.svg"} />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback className="bg-slate-700 text-xl">
-              {(profileData.name || profileData.username || user?.email || 'U').charAt(0).toUpperCase()}
+              {name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <input
@@ -245,7 +248,7 @@ const ProfileSection = () => {
                     value={title}
                     className="text-slate-200 focus:bg-slate-600 focus:text-white"
                   >
-                    {title}
+                    {title.length > 30 ? `${title.substring(0, 30)}...` : title}
                   </SelectItem>
                 ))}
               </SelectContent>

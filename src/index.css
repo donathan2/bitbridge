@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +99,9 @@
 @layer components {
   .shadow-glow {
     box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+  }
+  
+  .pixel-font {
+    font-family: 'Press Start 2P', cursive;
   }
 }
