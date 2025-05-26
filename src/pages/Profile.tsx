@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,7 +11,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSocialConnections } from '@/hooks/useSocialConnections';
 import { supabase } from '@/integrations/supabase/client';
-import { getProgressToNextLevel } from '@/utils/xpUtils';
+import { calculateLevel } from '@/utils/xpUtils';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -62,8 +63,7 @@ const Profile = () => {
       const { data, error } = await supabase
         .from('friendships')
         .select('id')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .eq('status', 'accepted');
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
       if (error) {
         console.error('Error fetching friends count:', error);
@@ -92,7 +92,7 @@ const Profile = () => {
   const avatarUrl = profile?.profile_picture_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "/placeholder.svg";
 
   const xp = userProfile?.experience_points || 0;
-  const levelData = getProgressToNextLevel(xp);
+  const levelData = calculateLevel(xp);
   const activeTitle = userProfile?.active_title || 'Beginner Developer';
 
   const completedProjects = projects.filter(p => p.projects?.status === 'completed');
