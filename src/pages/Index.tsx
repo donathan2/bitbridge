@@ -86,9 +86,9 @@ const Index = () => {
           <div className="flex justify-center gap-8 flex-wrap">
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-cyan-400" />
+                <Trophy className="w-8 h-8 text-yellow-400" />
                 <div className="text-left">
-                  <p className="text-cyan-400 font-bold text-xl">Experience Points</p>
+                  <p className="text-yellow-400 font-bold text-xl">Experience Points</p>
                   <p className="text-slate-300 text-sm">Level up your developer profile</p>
                 </div>
               </div>
@@ -96,10 +96,10 @@ const Index = () => {
             
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
-                <Bitcoin className="w-8 h-8 text-yellow-400" />
+                <Bitcoin className="w-8 h-8 text-blue-400" />
                 <div className="text-left">
-                  <p className="text-yellow-400 font-bold text-xl">Bits Currency</p>
-                  <p className="text-slate-300 text-sm">Earn by completing projects</p>
+                  <p className="text-blue-400 font-bold text-xl">Bits Currency</p>
+                  <p className="text-slate-300 text-sm">Earn and spend on upgrades</p>
                 </div>
               </div>
             </div>
@@ -109,7 +109,7 @@ const Index = () => {
                 <DollarSign className="w-8 h-8 text-purple-400" />
                 <div className="text-left">
                   <p className="text-purple-400 font-bold text-xl">Bytes Premium</p>
-                  <p className="text-slate-300 text-sm">Unlock exclusive titles & features</p>
+                  <p className="text-slate-300 text-sm">Unlock exclusive features</p>
                 </div>
               </div>
             </div>

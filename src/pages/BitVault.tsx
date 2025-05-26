@@ -89,10 +89,10 @@ const BitVault = () => {
             {orderedTitles.map((title) => (
               <Card key={title.id} className="bg-slate-800 border-slate-700 hover:border-cyan-500 transition-colors">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-white">
-                    <div className="flex items-center space-x-2">
-                      <Crown className="w-5 h-5 text-cyan-400" />
-                      <span className="text-lg truncate" title={title.name}>
+                  <CardTitle className="flex items-start justify-between text-white">
+                    <div className="flex items-center space-x-2 flex-1">
+                      <Crown className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                      <span className="text-lg break-words" title={title.name}>
                         {title.name}
                       </span>
                     </div>

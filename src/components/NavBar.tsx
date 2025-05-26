@@ -1,191 +1,116 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useProfile } from '@/hooks/useProfile';
 import { useAvatar } from '@/hooks/useAvatar';
-import { getProgressToNextLevel } from '@/utils/xpUtils';
-import { supabase } from '@/integrations/supabase/client';
+import { 
+  Search, 
+  Code2, 
+  Users, 
+  Settings, 
+  Vault,
+  LogOut,
+  User
+} from 'lucide-react';
 
 const NavBar = () => {
-  const location = useLocation();
-  const { user, loading } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
-  const { profile: publicProfile } = useProfile();
+  const { user, signOut } = useAuth();
   const { avatarUrl, name } = useAvatar();
-  
-  // Set up real-time subscription for profile updates
-  useEffect(() => {
-    if (!user) return;
+  const location = useLocation();
 
-    const channel = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_profiles',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          // Trigger a re-fetch of profile data
-          window.location.reload();
-        }
-      )
-      .subscribe();
+  const isActive = (path: string) => location.pathname === path;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-  
-  // Use profile data or fallback to defaults
-  const displayProfile = profile || {
-    experience_level: 1,
-    experience_points: 0,
-    bits_currency: 100,
-    bytes_currency: 5
-  };
-  
-  // Calculate experience progress using the new scaling system
-  const xpProgress = getProgressToNextLevel(displayProfile.experience_points);
-  
+  const navItems = [
+    { path: '/find-project', icon: Search, label: 'Find Projects' },
+    { path: '/bitvault', icon: Vault, label: 'BitVault' },
+    { path: '/friends', icon: Users, label: 'Friends' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
+  ];
+
   return (
-    <nav className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo and name */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <div className="h-14 w-14 mr-3">
-                <img src="/lovable-uploads/d809f725-76cd-4f33-bc68-0c1316f64d94.png" alt="BitBridge" className="h-full w-full object-contain" />
-              </div>
-              <span className="text-cyan-400 text-xl font-pixel">BitBridge</span>
-            </Link>
+    <nav className="bg-slate-900 border-b border-slate-700 px-6 py-4 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Logo and Brand */}
+        <Link 
+          to="/" 
+          className="flex items-center space-x-3 group"
+        >
+          <div className="relative">
+            <Code2 className="w-10 h-10 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
           </div>
+          <span className="text-xl font-pixel text-cyan-400 group-hover:text-cyan-300 transition-colors">
+            BitBridge
+          </span>
+        </Link>
 
-          {/* XP and Currency Display - show for authenticated users with fallback values */}
-          {user && (
-            <div className="hidden lg:flex items-center space-x-4 bg-slate-700 px-4 py-2 rounded-lg">
-              {/* User Avatar */}
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={avatarUrl} />
-                <AvatarFallback className="bg-slate-600 text-sm">
-                  {name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              
-              {/* Level Badge */}
-              <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                {xpProgress.currentLevel}
-              </div>
-              
-              {/* XP Bar */}
-              <div className="flex items-center space-x-2">
-                <div className="w-24">
-                  <Progress value={xpProgress.progressPercentage} className="h-2 bg-slate-600" />
-                </div>
-                <span className="text-xs text-slate-300">
-                  {displayProfile.experience_points}/{xpProgress.nextLevelXP}
-                  {profileLoading && !profile && <span className="opacity-50"> (loading...)</span>}
+        {/* Navigation Items */}
+        <div className="hidden md:flex items-center space-x-1">
+          {navItems.map(({ path, icon: Icon, label }) => (
+            <Link key={path} to={path}>
+              <Button
+                variant="ghost"
+                className={`relative px-4 py-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 transition-all duration-200 ${
+                  isActive(path) 
+                    ? 'text-cyan-400 bg-slate-800 border-b-2 border-cyan-400' 
+                    : ''
+                }`}
+              >
+                <Icon className="w-4 h-4 mr-2" />
+                {label}
+              </Button>
+            </Link>
+          ))}
+        </div>
+
+        {/* User Section */}
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <div className="flex items-center space-x-3">
+              <Link 
+                to="/profile" 
+                className="flex items-center space-x-2 hover:bg-slate-800 rounded-lg px-3 py-2 transition-colors"
+              >
+                <Avatar className="h-8 w-8 border-2 border-slate-700">
+                  <AvatarImage src={avatarUrl} alt={name} />
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+                    {name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-slate-300 hover:text-cyan-400 transition-colors hidden sm:block">
+                  {name}
                 </span>
-              </div>
+              </Link>
               
-              {/* Currency */}
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="flex items-center space-x-1">
-                  <Bitcoin className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-400 font-medium">{displayProfile.bits_currency?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <DollarSign className="w-4 h-4 text-purple-400" />
-                  <span className="text-purple-400 font-medium">{displayProfile.bytes_currency || 0}</span>
-                </div>
-              </div>
+              <Button
+                onClick={signOut}
+                variant="ghost"
+                size="sm"
+                className="text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Link to="/auth">
+                <Button 
+                  variant="outline" 
+                  className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+                  Sign Up
+                </Button>
+              </Link>
             </div>
           )}
-          
-          {/* Navigation tabs */}
-          <div className="flex items-center space-x-1">
-            {user ? (
-              <>
-                <Link 
-                  to="/profile" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                    location.pathname === '/profile' 
-                      ? 'bg-slate-700 text-cyan-400' 
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-                  }`}
-                >
-                  <Home className="h-4 w-4 mr-1" />
-                  <span>Home</span>
-                </Link>
-                <Link 
-                  to="/find-project" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                    location.pathname === '/find-project' 
-                      ? 'bg-slate-700 text-cyan-400' 
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-                  }`}
-                >
-                  <Compass className="h-4 w-4 mr-1" />
-                  <span>Explore</span>
-                </Link>
-                <Link 
-                  to="/bitvault" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                    location.pathname === '/bitvault' 
-                      ? 'bg-slate-700 text-cyan-400' 
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-                  }`}
-                >
-                  <Vault className="h-4 w-4 mr-1" />
-                  <span>BitVault</span>
-                </Link>
-                <Link 
-                  to="/friends" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                    location.pathname === '/friends' 
-                      ? 'bg-slate-700 text-cyan-400' 
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-                  }`}
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  <span>Friends</span>
-                </Link>
-                <Link 
-                  to="/settings" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
-                    location.pathname === '/settings' 
-                      ? 'bg-slate-700 text-cyan-400' 
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
-                  }`}
-                >
-                  <Settings className="h-4 w-4 mr-1" />
-                  <span>Settings</span>
-                </Link>
-              </>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link to="/auth">
-                  <Button variant="ghost" className="text-slate-300 hover:text-cyan-400">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </nav>
