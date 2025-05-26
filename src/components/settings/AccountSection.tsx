@@ -10,8 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Key, LogOut } from 'lucide-react';
-import { toast } from "@/components/ui/use-toast";
+import { Key, LogOut, Eye, EyeOff } from 'lucide-react';
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,7 +24,34 @@ const AccountSection = () => {
     confirmPassword: '',
   });
 
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const handlePasswordUpdate = async () => {
+    // Validation checks
+    if (!passwordData.currentPassword.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your current password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a new password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         title: "Error",
@@ -43,26 +70,30 @@ const AccountSection = () => {
       return;
     }
 
-    if (!passwordData.currentPassword) {
+    if (passwordData.currentPassword === passwordData.newPassword) {
       toast({
         title: "Error",
-        description: "Please enter your current password.",
+        description: "New password must be different from current password.",
         variant: "destructive",
       });
       return;
     }
+
+    setIsUpdating(true);
 
     try {
       if (!user?.email) {
         throw new Error('No email found for current user');
       }
 
+      // First verify the current password by attempting a sign-in
       const { error: verifyError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: passwordData.currentPassword,
       });
 
       if (verifyError) {
+        console.error('Password verification failed:', verifyError);
         toast({
           title: "Error",
           description: "Current password is incorrect.",
@@ -71,12 +102,17 @@ const AccountSection = () => {
         return;
       }
 
+      // If verification successful, update the password
       const { error: updateError } = await supabase.auth.updateUser({
         password: passwordData.newPassword
       });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Password update failed:', updateError);
+        throw updateError;
+      }
 
+      // Clear the form
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -88,13 +124,15 @@ const AccountSection = () => {
         description: "Your password has been changed successfully. You may need to sign in again on other devices.",
         variant: "default",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating password:', error);
       toast({
         title: "Error",
-        description: "Failed to update password. Please try again.",
+        description: error.message || "Failed to update password. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -116,6 +154,13 @@ const AccountSection = () => {
     }
   };
 
+  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
   return (
     <Card className="bg-slate-800 border-slate-700">
       <CardHeader>
@@ -134,12 +179,20 @@ const AccountSection = () => {
               <Key className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 id="currentPassword"
-                type="password"
+                type={showPasswords.current ? "text" : "password"}
                 value={passwordData.currentPassword}
                 onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                className="pl-8 pr-10 bg-slate-700 border-slate-600 text-slate-200"
                 placeholder="Enter current password"
+                disabled={isUpdating}
               />
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility('current')}
+                className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-200"
+              >
+                {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
             <p className="text-sm text-slate-400">Required to verify your identity</p>
           </div>
@@ -150,13 +203,22 @@ const AccountSection = () => {
               <Key className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 id="newPassword"
-                type="password"
+                type={showPasswords.new ? "text" : "password"}
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                className="pl-8 pr-10 bg-slate-700 border-slate-600 text-slate-200"
                 placeholder="Enter new password"
+                disabled={isUpdating}
               />
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility('new')}
+                className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-200"
+              >
+                {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
+            <p className="text-sm text-slate-400">Must be at least 6 characters long</p>
           </div>
           
           <div className="space-y-2">
@@ -165,21 +227,33 @@ const AccountSection = () => {
               <Key className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 id="confirmPassword"
-                type="password"
+                type={showPasswords.confirm ? "text" : "password"}
                 value={passwordData.confirmPassword}
                 onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                className="pl-8 pr-10 bg-slate-700 border-slate-600 text-slate-200"
                 placeholder="Confirm new password"
+                disabled={isUpdating}
               />
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility('confirm')}
+                className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-200"
+              >
+                {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
+            {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+              <p className="text-sm text-red-400">Passwords do not match</p>
+            )}
           </div>
           
           <div className="flex justify-end">
             <Button 
               onClick={handlePasswordUpdate}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+              disabled={isUpdating || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50"
             >
-              Update Password
+              {isUpdating ? "Updating..." : "Update Password"}
             </Button>
           </div>
         </div>
