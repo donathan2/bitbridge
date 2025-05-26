@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -111,15 +110,15 @@ const Profile = () => {
       bytes: userProfile?.bytes_currency || 5
     },
     stats: {
-      totalProjects: projects.length,
-      completedProjects: projects.filter(p => p.status === 'completed').length,
-      ongoingProjects: projects.filter(p => p.status === 'ongoing').length,
+      totalProjects: projects?.length || 0,
+      completedProjects: projects?.filter(p => p.status === 'completed').length || 0,
+      ongoingProjects: projects?.filter(p => p.status === 'ongoing').length || 0,
       totalXP: userProfile?.experience_points || 0,
       friends: friendsCountLoading ? 0 : friendsCount
     }
   };
 
-  const completedProjects = projects.filter(p => p.status === 'completed').map(project => ({
+  const completedProjects = (projects || []).filter(p => p.status === 'completed').map(project => ({
     id: project.id,
     title: project.title,
     description: project.description,
@@ -133,7 +132,7 @@ const Profile = () => {
     teamMembers: project.members
   }));
 
-  const ongoingProjects = projects.filter(p => p.status === 'ongoing').map(project => ({
+  const ongoingProjects = (projects || []).filter(p => p.status === 'ongoing').map(project => ({
     id: project.id,
     title: project.title,
     description: project.description,
@@ -433,7 +432,7 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Team Members</h3>
                   <div className="grid md:grid-cols-2 gap-3">
-                    {selectedProject.teamMembers.map((member: any, index: number) => (
+                    {selectedProject.teamMembers?.map((member: any, index: number) => (
                       <TeamMemberAvatar key={index} member={member} />
                     ))}
                   </div>
