@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProfile } from '@/hooks/useProfile';
 import { useAvatar } from '@/hooks/useAvatar';
+import { useFriendsCount } from '@/hooks/useFriendsCount';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
 import ProjectRewards from '@/components/ProjectRewards';
 
@@ -45,6 +46,7 @@ const Profile = () => {
   const { profile: userProfile, projects, loading: profileLoading, error } = useUserProfile();
   const { profile: profileData, loading: profileDataLoading } = useProfile();
   const { avatarUrl, name, username } = useAvatar();
+  const { friendsCount, loading: friendsCountLoading } = useFriendsCount();
   
   // Handle loading state
   if (authLoading || profileLoading || profileDataLoading) {
@@ -113,7 +115,7 @@ const Profile = () => {
       completedProjects: projects.filter(p => p.status === 'completed').length,
       ongoingProjects: projects.filter(p => p.status === 'ongoing').length,
       totalXP: userProfile?.experience_points || 0,
-      friends: 12 // Placeholder for friends count
+      friends: friendsCountLoading ? 0 : friendsCount
     }
   };
 
@@ -136,7 +138,6 @@ const Profile = () => {
     title: project.title,
     description: project.description,
     tech: project.technologies,
-    progress: project.progress || 0,
     startDate: project.started_date || new Date().toISOString(),
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
@@ -319,7 +320,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Ongoing Projects */}
+          {/* Ongoing Projects - Progress bars removed */}
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
               <CardTitle className="flex items-center gap-2 font-pixel text-sm">
@@ -356,13 +357,6 @@ const Profile = () => {
                           </Badge>
                         ))}
                       </div>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm font-medium text-slate-300">
-                          <span>Progress</span>
-                          <span>{project.progress}%</span>
-                        </div>
-                        <Progress value={project.progress} className="h-2 bg-slate-700" />
-                      </div>
                       <div className="flex items-center gap-1 text-sm text-slate-400">
                         <Clock className="w-4 h-4" />
                         Started {new Date(project.startDate).toLocaleDateString()}
@@ -375,7 +369,7 @@ const Profile = () => {
           </Card>
         </div>
 
-        {/* Project Details Dialog */}
+        {/* Project Details Dialog - Progress bars removed */}
         <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
           <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
             <DialogHeader>
@@ -396,7 +390,7 @@ const Profile = () => {
                   <div className="bg-slate-700 p-4 rounded-lg">
                     <p className="text-slate-300 font-semibold mb-1">Status</p>
                     <p className="text-white">
-                      {selectedProject.progress !== undefined ? `In Progress (${selectedProject.progress}%)` : 'Completed'}
+                      {selectedProject.completedDate ? 'Completed' : 'In Progress'}
                     </p>
                   </div>
                   <div className="bg-slate-700 p-4 rounded-lg">
@@ -462,7 +456,7 @@ const Profile = () => {
                 )}
                 
                 {/* Project workspace button - replacing the chat button */}
-                {selectedProject.progress !== undefined && (
+                {!selectedProject.completedDate && (
                   <div className="mt-4">
                     <Button 
                       className="w-full bg-cyan-600 hover:bg-cyan-700 text-white flex items-center justify-center gap-2"
