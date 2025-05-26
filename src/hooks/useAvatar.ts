@@ -16,26 +16,39 @@ export const useAvatar = (userId?: string) => {
       setLoading(true);
       const fetchOtherUserProfile = async () => {
         try {
-          // First try to get from profiles table
-          const { data: profileData } = await supabase
+          console.log('🔍 Fetching profile for user:', userId);
+          
+          // Fetch from profiles table first
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
           
-          // Also try to get from user_profiles for additional data
-          const { data: userProfileData } = await supabase
+          if (profileError) {
+            console.error('❌ Error fetching profile:', profileError);
+          }
+          
+          // Also fetch from user_profiles for additional data
+          const { data: userProfileData, error: userProfileError } = await supabase
             .from('user_profiles')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
+          
+          if (userProfileError) {
+            console.error('❌ Error fetching user profile:', userProfileError);
+          }
+          
+          console.log('📋 Profile data:', profileData);
+          console.log('📋 User profile data:', userProfileData);
           
           setOtherUserProfile({ 
             ...profileData, 
             user_profile: userProfileData 
           });
         } catch (error) {
-          console.error('Error fetching other user profile:', error);
+          console.error('💥 Error fetching other user profile:', error);
           setOtherUserProfile(null);
         } finally {
           setLoading(false);
@@ -60,12 +73,24 @@ export const useAvatar = (userId?: string) => {
     }
     
     if (otherUserProfile) {
+      // Multiple fallback sources for avatar
+      const avatarUrl = otherUserProfile.profile_picture_url || 
+                       otherUserProfile.avatar_url || 
+                       "/placeholder.svg";
+      
+      const name = otherUserProfile.full_name || 
+                  otherUserProfile.username || 
+                  'User';
+      
+      const username = otherUserProfile.username || 
+                      'user';
+      
+      console.log('👤 Other user avatar URL:', avatarUrl);
+      
       return {
-        avatarUrl: otherUserProfile.profile_picture_url || 
-                  otherUserProfile.avatar_url || 
-                  "/placeholder.svg",
-        name: otherUserProfile.full_name || 'User',
-        username: otherUserProfile.username || 'user',
+        avatarUrl,
+        name,
+        username,
         loading: false
       };
     }
@@ -99,6 +124,8 @@ export const useAvatar = (userId?: string) => {
                     user?.user_metadata?.preferred_username ||
                     user?.email?.split('@')[0] || 
                     'user';
+    
+    console.log('👤 Current user avatar URL:', avatarUrl);
     
     return {
       avatarUrl,

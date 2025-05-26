@@ -27,8 +27,9 @@ export const getProgressToNextLevel = (xp: number): {
   const currentLevelXP = getExperienceForLevel(currentLevel);
   const nextLevelXP = getExperienceForLevel(currentLevel + 1);
   const progressInCurrentLevel = xp - currentLevelXP;
-  const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
-  const progressPercentage = (progressInCurrentLevel / xpNeededForNextLevel) * 100;
+  const xpNeededForNextLevel = nextLevelXP - xp; // Fixed: this should be total needed minus current XP
+  const totalXpForCurrentLevel = nextLevelXP - currentLevelXP;
+  const progressPercentage = (progressInCurrentLevel / totalXpForCurrentLevel) * 100;
 
   return {
     currentLevel,
