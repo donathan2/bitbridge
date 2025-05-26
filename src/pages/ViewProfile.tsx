@@ -3,13 +3,12 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, FolderOpen, Clock } from 'lucide-react';
 import { useViewProfile } from '@/hooks/useViewProfile';
 import { useAvatar } from '@/hooks/useAvatar';
-import { getProgressToNextLevel } from '@/utils/xpUtils';
+import { getLevelFromExperience } from '@/utils/xpUtils';
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -46,7 +45,7 @@ const ViewProfile = () => {
     );
   }
 
-  const xpProgress = getProgressToNextLevel(profile.experience_points || 0);
+  const currentLevel = getLevelFromExperience(profile.experience_points || 0);
 
   return (
     <div className="p-6">
@@ -88,12 +87,8 @@ const ViewProfile = () => {
               {/* Level Display */}
               <div className="flex-1 ml-auto">
                 <div className="bg-slate-700 rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold text-cyan-400 mb-1">{xpProgress.currentLevel}</div>
-                  <div className="text-sm text-slate-300 mb-4">Level</div>
-                  <div className="text-sm text-slate-400 mb-2">
-                    {profile.experience_points || 0} / {xpProgress.nextLevelXP} XP
-                  </div>
-                  <Progress value={xpProgress.progressPercentage} className="h-3 bg-slate-600" />
+                  <div className="text-3xl font-bold text-cyan-400 mb-1">{currentLevel}</div>
+                  <div className="text-sm text-slate-300">Level</div>
                 </div>
               </div>
             </div>
@@ -136,9 +131,23 @@ const ViewProfile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400 text-center py-4">
-                Project history coming soon!
-              </p>
+              {profile.projects?.completed && profile.projects.completed.length > 0 ? (
+                <div className="space-y-3">
+                  {profile.projects.completed.map((project: any) => (
+                    <div key={project.id} className="bg-slate-700 rounded-lg p-3">
+                      <h4 className="font-medium text-white mb-1">{project.title}</h4>
+                      <p className="text-sm text-slate-300 mb-2">{project.description}</p>
+                      <Badge className="bg-green-600 text-white text-xs">
+                        {project.difficulty}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-400 text-center py-4">
+                  No completed projects yet
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -150,9 +159,23 @@ const ViewProfile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400 text-center py-4">
-                Current projects coming soon!
-              </p>
+              {profile.projects?.ongoing && profile.projects.ongoing.length > 0 ? (
+                <div className="space-y-3">
+                  {profile.projects.ongoing.map((project: any) => (
+                    <div key={project.id} className="bg-slate-700 rounded-lg p-3">
+                      <h4 className="font-medium text-white mb-1">{project.title}</h4>
+                      <p className="text-sm text-slate-300 mb-2">{project.description}</p>
+                      <Badge className="bg-blue-600 text-white text-xs">
+                        {project.difficulty}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-400 text-center py-4">
+                  No ongoing projects
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

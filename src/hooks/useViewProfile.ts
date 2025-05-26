@@ -16,6 +16,10 @@ export interface ViewProfileData {
   active_title: string | null;
   created_at: string;
   updated_at: string;
+  projects?: {
+    completed: any[];
+    ongoing: any[];
+  };
 }
 
 export const useViewProfile = (userId?: string) => {
@@ -56,6 +60,28 @@ export const useViewProfile = (userId?: string) => {
           console.error('User profile fetch error:', userProfileError);
         }
 
+        // Fetch user's projects
+        const { data: projectMemberships, error: membershipError } = await supabase
+          .from('project_members')
+          .select('project_id, role, joined_at')
+          .eq('user_id', userId);
+
+        let projects = { completed: [], ongoing: [] };
+        
+        if (!membershipError && projectMemberships && projectMemberships.length > 0) {
+          const projectIds = projectMemberships.map(m => m.project_id);
+          
+          const { data: projectsData, error: projectsError } = await supabase
+            .from('projects')
+            .select('*')
+            .in('id', projectIds);
+
+          if (!projectsError && projectsData) {
+            projects.completed = projectsData.filter(p => p.status === 'completed');
+            projects.ongoing = projectsData.filter(p => p.status !== 'completed');
+          }
+        }
+
         if (profileData) {
           const combinedProfile: ViewProfileData = {
             ...profileData,
@@ -65,6 +91,7 @@ export const useViewProfile = (userId?: string) => {
             bits_currency: userProfileData?.bits_currency || 0,
             bytes_currency: userProfileData?.bytes_currency || 0,
             active_title: userProfileData?.active_title || null,
+            projects
           };
           
           console.log('Combined profile data:', combinedProfile);
