@@ -51,25 +51,41 @@ const ensureUserProfile = async (user: User) => {
       // Profile doesn't exist, create one
       console.log('Creating profile for existing OAuth user:', user.email);
       
-      // Extract name from user metadata or email
-      const oauthName = user.user_metadata?.full_name || 
+      // Extract name from user metadata with better fallbacks
+      let displayName = user.user_metadata?.full_name || 
                        user.user_metadata?.name || 
-                       user.user_metadata?.display_name ||
-                       user.email?.split('@')[0];
+                       user.user_metadata?.display_name;
+      
+      // If no name found, create a default based on email or provider
+      if (!displayName) {
+        const emailPrefix = user.email?.split('@')[0] || 'User';
+        // Capitalize first letter and make it more readable
+        displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+      }
+      
+      // Generate username with fallbacks
+      let username = user.user_metadata?.user_name || 
+                    user.user_metadata?.preferred_username ||
+                    user.email?.split('@')[0];
+      
+      // If still no username, generate one
+      if (!username) {
+        username = `user${Math.floor(Math.random() * 10000)}`;
+      }
       
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
           id: user.id,
-          full_name: oauthName,
+          full_name: displayName,
           avatar_url: user.user_metadata?.avatar_url,
-          username: user.user_metadata?.user_name || `user${Math.floor(Math.random() * 10000)}`
+          username: username
         });
       
       if (insertError) {
         console.error('Error creating profile for OAuth user:', insertError);
       } else {
-        console.log('Successfully created profile for OAuth user');
+        console.log('Successfully created profile for OAuth user with name:', displayName);
       }
     }
   } catch (error) {
