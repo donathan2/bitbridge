@@ -15,6 +15,7 @@ import { useProjectTasks } from '@/hooks/useProjectTasks';
 import { useProjectMessages } from '@/hooks/useProjectMessages';
 import { useProjectCompletion } from '@/hooks/useProjectCompletion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAvatar } from '@/hooks/useAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import TaskDialog from '@/components/TaskDialog';
@@ -462,30 +463,33 @@ const ProjectWorkspace = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {members.map((member) => (
-                  <Card key={member.id} className="bg-slate-700 border-slate-600">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={member.user?.avatar_url || ''} alt={member.user?.username || ''} />
-                          <AvatarFallback className="bg-cyan-600 text-white text-xl">
-                            {(member.user?.full_name || member.user?.username || 'U').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="text-lg font-medium text-white">{member.user?.username || member.user?.full_name || 'Unknown'}</h3>
-                          <p className="text-cyan-400">{member.role}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Button size="sm" variant="outline" className="h-8 px-3 py-1">
-                              <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                              Message
-                            </Button>
+                {members.map((member) => {
+                  const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
+                  return (
+                    <Card key={member.id} className="bg-slate-700 border-slate-600">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={memberAvatarUrl} />
+                            <AvatarFallback className="bg-cyan-600 text-white text-xl">
+                              {(member.user?.full_name || member.user?.username || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="text-lg font-medium text-white">{member.user?.username || member.user?.full_name || 'Unknown'}</h3>
+                            <p className="text-cyan-400">{member.role}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Button size="sm" variant="outline" className="h-8 px-3 py-1">
+                                <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                                Message
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -506,27 +510,30 @@ const ProjectWorkspace = () => {
                       <p>No messages yet. Start the conversation!</p>
                     </div>
                   ) : (
-                    messages.map((message) => (
-                      <div key={message.id} className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={message.user?.avatar_url || ''} alt={message.user?.username || ''} />
-                          <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                            {(message.user?.username || message.user?.full_name || 'U').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-cyan-400">
-                              {message.user?.username || message.user?.full_name || 'Unknown User'}
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              {new Date(message.created_at).toLocaleString()}
-                            </p>
+                    messages.map((message) => {
+                      const { avatarUrl: messageUserAvatarUrl } = useAvatar(message.user_id);
+                      return (
+                        <div key={message.id} className="flex gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={messageUserAvatarUrl} />
+                            <AvatarFallback className="bg-cyan-600 text-white text-xs">
+                              {(message.user?.username || message.user?.full_name || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-cyan-400">
+                                {message.user?.username || message.user?.full_name || 'Unknown User'}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {new Date(message.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <p className="text-white mt-1">{message.message}</p>
                           </div>
-                          <p className="text-white mt-1">{message.message}</p>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
                 <form onSubmit={handleAddMessage} className="flex gap-2 mt-auto">

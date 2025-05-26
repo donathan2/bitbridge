@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import { useAvatar } from '@/hooks/useAvatar';
 import ProjectRewards from './ProjectRewards';
 
 interface Project {
@@ -58,6 +59,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const { members } = useProjectMembers(project.id);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [showAllRoles, setShowAllRoles] = useState(false);
+  
+  // Use useAvatar hook for creator profile picture
+  const { avatarUrl: creatorAvatarUrl } = useAvatar(project.creatorId);
 
   const getMembersForRole = (role: string) => {
     return members.filter(member => member.role === role);
@@ -154,19 +158,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   
                   {roleMembers.length > 0 ? (
                     <div className="flex items-center gap-1 overflow-hidden">
-                      {roleMembers.slice(0, 2).map((member) => (
-                        <div key={member.id} className="flex items-center gap-1 bg-slate-600 rounded px-1.5 py-0.5 min-w-0">
-                          <Avatar className="h-3 w-3 flex-shrink-0">
-                            <AvatarImage src={member.user.avatar_url || ''} />
-                            <AvatarFallback className="bg-cyan-600 text-white text-[8px]">
-                              {(member.user.full_name || member.user.username || 'U').charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-slate-300 text-xs truncate">
-                            {member.user.username || member.user.full_name || 'Unknown'}
-                          </span>
-                        </div>
-                      ))}
+                      {roleMembers.slice(0, 2).map((member) => {
+                        const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
+                        return (
+                          <div key={member.id} className="flex items-center gap-1 bg-slate-600 rounded px-1.5 py-0.5 min-w-0">
+                            <Avatar className="h-3 w-3 flex-shrink-0">
+                              <AvatarImage src={memberAvatarUrl} />
+                              <AvatarFallback className="bg-cyan-600 text-white text-[8px]">
+                                {(member.user.full_name || member.user.username || 'U').charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-slate-300 text-xs truncate">
+                              {member.user.username || member.user.full_name || 'Unknown'}
+                            </span>
+                          </div>
+                        );
+                      })}
                       {roleMembers.length > 2 && (
                         <span className="text-slate-400 text-xs">+{roleMembers.length - 2}</span>
                       )}
@@ -182,7 +189,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           {/* Creator Info */}
           <div className="flex items-center gap-2">
             <Avatar className="h-5 w-5">
-              <AvatarImage src={project.creator.avatar} />
+              <AvatarImage src={creatorAvatarUrl} />
               <AvatarFallback className="bg-cyan-600 text-white text-xs">
                 {project.creator.name.charAt(0)}
               </AvatarFallback>

@@ -89,7 +89,7 @@ const BitVault = () => {
             {orderedTitles.map((title) => (
               <Card key={title.id} className="bg-slate-800 border-slate-700 hover:border-cyan-500 transition-colors">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-white">
+                  <CardTitle className="flex items-start justify-between text-white">
                     <div className="flex items-center space-x-2">
                       <Crown className="w-5 h-5 text-cyan-400" />
                       <span className="text-lg truncate" title={title.name}>
@@ -97,10 +97,12 @@ const BitVault = () => {
                       </span>
                     </div>
                     {title.owned && (
-                      <Badge variant="outline" className="border-green-500 text-green-400">
-                        <Check className="w-3 h-3 mr-1" />
-                        Owned
-                      </Badge>
+                      <div className="flex flex-col items-end">
+                        <Badge variant="outline" className="border-green-500 text-green-400">
+                          <Check className="w-3 h-3 mr-1" />
+                          Owned
+                        </Badge>
+                      </div>
                     )}
                   </CardTitle>
                 </CardHeader>
