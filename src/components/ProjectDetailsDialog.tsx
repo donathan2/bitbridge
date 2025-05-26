@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Github, ExternalLink, Users } from 'lucide-react';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import { useAvatar } from '@/hooks/useAvatar';
 import ProjectRewards from './ProjectRewards';
 
 interface Project {
@@ -72,6 +73,32 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
     }
   };
 
+  // Component for displaying member avatar
+  const MemberAvatar = ({ member }: { member: any }) => {
+    const { avatarUrl } = useAvatar(member.user.id);
+    return (
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={avatarUrl} />
+        <AvatarFallback className="bg-cyan-600 text-white text-xs">
+          {(member.user.full_name || member.user.username || 'U').charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
+  // Component for displaying creator avatar
+  const CreatorAvatar = () => {
+    const { avatarUrl } = useAvatar(project.creatorId);
+    return (
+      <Avatar className="h-6 w-6">
+        <AvatarImage src={avatarUrl} />
+        <AvatarFallback className="bg-cyan-600 text-white text-xs">
+          {project.creator.name.charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -104,12 +131,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
             <div className="bg-slate-700 p-4 rounded-lg">
               <p className="text-slate-300 font-semibold mb-1">Creator</p>
               <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={project.creator.avatar} />
-                  <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                    {project.creator.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+                <CreatorAvatar />
                 <span className="text-cyan-300">@{project.creator.username}</span>
               </div>
             </div>
@@ -147,12 +169,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
                       {roleMembers.length > 0 ? (
                         roleMembers.map((member) => (
                           <div key={member.id} className="flex items-center gap-3 bg-slate-600 rounded-md p-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={member.user.avatar_url || ''} />
-                              <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                                {(member.user.full_name || member.user.username || 'U').charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <MemberAvatar member={member} />
                             <div>
                               <p className="text-white font-medium">
                                 {member.user.full_name || member.user.username || 'Unknown User'}
