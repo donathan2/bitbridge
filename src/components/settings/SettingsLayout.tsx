@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tabs";
 import ProfileSection from './ProfileSection';
 import AccountSection from './AccountSection';
+import PreferencesSection from './PreferencesSection';
 
 const SettingsLayout = () => {
   return (
@@ -21,9 +22,10 @@ const SettingsLayout = () => {
         </div>
         
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid grid-cols-2 bg-slate-800">
+          <TabsList className="grid grid-cols-3 bg-slate-800">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile">
@@ -32,6 +34,10 @@ const SettingsLayout = () => {
           
           <TabsContent value="account">
             <AccountSection />
+          </TabsContent>
+          
+          <TabsContent value="preferences">
+            <PreferencesSection />
           </TabsContent>
         </Tabs>
       </div>

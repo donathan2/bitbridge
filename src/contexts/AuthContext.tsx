@@ -1,6 +1,7 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -98,6 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Set up auth state listener
@@ -154,12 +156,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       
-      // Use React Router navigation instead of window.location.href
-      navigate('/auth', { replace: true });
+      // Safe navigation - check if we're already on auth page
+      if (location.pathname !== '/auth') {
+        navigate('/auth', { replace: true });
+      }
     } catch (error) {
       console.error('Error during sign out process:', error);
-      // Even if there's an error, navigate to auth page
-      navigate('/auth', { replace: true });
+      // Even if there's an error, navigate to auth page safely
+      if (location.pathname !== '/auth') {
+        navigate('/auth', { replace: true });
+      }
     } finally {
       setLoading(false);
     }
