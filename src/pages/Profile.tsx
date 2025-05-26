@@ -419,20 +419,23 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Team Members</h3>
                   <div className="grid md:grid-cols-2 gap-3">
-                    {selectedProject.teamMembers.map((member: any, index: number) => (
-                      <div key={index} className="flex items-center gap-3 bg-slate-700 p-3 rounded-lg">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={member.avatar_url || "/placeholder.svg"} />
-                          <AvatarFallback className="bg-cyan-600 text-white">
-                            {(member.full_name || member.username || 'U').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-cyan-300">@{member.username}</p>
-                          <p className="text-xs text-slate-300">{member.role}</p>
+                    {selectedProject.teamMembers.map((member: any, index: number) => {
+                      const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
+                      return (
+                        <div key={index} className="flex items-center gap-3 bg-slate-700 p-3 rounded-lg">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={memberAvatarUrl} />
+                            <AvatarFallback className="bg-cyan-600 text-white">
+                              {(member.full_name || member.username || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-cyan-300">@{member.username}</p>
+                            <p className="text-xs text-slate-300">{member.role}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
                 

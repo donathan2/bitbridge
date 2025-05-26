@@ -83,11 +83,7 @@ const Friends = () => {
     try {
       const { data, error } = await supabase
         .from('friendships')
-        .select(`
-          *,
-          user1:profiles!friendships_user1_id_fkey(id, full_name, username, avatar_url),
-          user2:profiles!friendships_user2_id_fkey(id, full_name, username, avatar_url)
-        `)
+        .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
       if (error) {
@@ -95,17 +91,35 @@ const Friends = () => {
         return;
       }
 
-      const friendsList = data?.map(friendship => {
-        const friend = friendship.user1_id === user.id ? friendship.user2 : friendship.user1;
-        return {
-          id: friend.id,
-          name: friend.full_name || 'Unknown User',
-          username: friend.username || 'unknown',
-          avatar: friend.avatar_url || '/placeholder.svg',
-          status: 'Online',
-          lastActive: 'Now'
-        };
-      }) || [];
+      if (!data || data.length === 0) {
+        setFriends([]);
+        return;
+      }
+
+      // Get friend user IDs
+      const friendIds = data.map(friendship => 
+        friendship.user1_id === user.id ? friendship.user2_id : friendship.user1_id
+      );
+
+      // Fetch friend profiles separately
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url, profile_picture_url')
+        .in('id', friendIds);
+
+      if (profilesError) {
+        console.error('Error fetching friend profiles:', profilesError);
+        return;
+      }
+
+      const friendsList = profiles?.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || 'Unknown User',
+        username: profile.username || 'unknown',
+        avatar: profile.profile_picture_url || profile.avatar_url || '/placeholder.svg',
+        status: 'Online',
+        lastActive: 'Now'
+      })) || [];
 
       setFriends(friendsList);
     } catch (error) {
@@ -119,10 +133,7 @@ const Friends = () => {
     try {
       const { data, error } = await supabase
         .from('friend_requests')
-        .select(`
-          *,
-          sender:profiles!friend_requests_sender_id_fkey(id, full_name, username, avatar_url)
-        `)
+        .select('*')
         .eq('receiver_id', user.id)
         .eq('status', 'pending');
 
@@ -131,13 +142,35 @@ const Friends = () => {
         return;
       }
 
-      const requestsList = data?.map(request => ({
-        id: request.id,
-        name: request.sender.full_name || 'Unknown User',
-        username: request.sender.username || 'unknown',
-        avatar: request.sender.avatar_url || '/placeholder.svg',
-        sender_id: request.sender_id
-      })) || [];
+      if (!data || data.length === 0) {
+        setFriendRequests([]);
+        return;
+      }
+
+      // Get sender IDs
+      const senderIds = data.map(request => request.sender_id);
+
+      // Fetch sender profiles separately
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url, profile_picture_url')
+        .in('id', senderIds);
+
+      if (profilesError) {
+        console.error('Error fetching sender profiles:', profilesError);
+        return;
+      }
+
+      const requestsList = data.map(request => {
+        const senderProfile = profiles?.find(p => p.id === request.sender_id);
+        return {
+          id: request.id,
+          name: senderProfile?.full_name || 'Unknown User',
+          username: senderProfile?.username || 'unknown',
+          avatar: senderProfile?.profile_picture_url || senderProfile?.avatar_url || '/placeholder.svg',
+          sender_id: request.sender_id
+        };
+      }) || [];
 
       setFriendRequests(requestsList);
     } catch (error) {

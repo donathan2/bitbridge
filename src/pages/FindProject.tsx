@@ -141,6 +141,7 @@ const FindProject = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
+        .eq('status', 'active') // Only fetch active projects
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -163,7 +164,7 @@ const FindProject = () => {
       const creatorIds = data.map(project => project.creator_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name, username, avatar_url')
+        .select('id, full_name, username, avatar_url, profile_picture_url')
         .in('id', creatorIds);
 
       if (profilesError) {
@@ -189,7 +190,7 @@ const FindProject = () => {
           creator: {
             name: creatorProfile?.full_name || 'Unknown User',
             username: creatorProfile?.username || 'unknown',
-            avatar: creatorProfile?.avatar_url || '/placeholder.svg'
+            avatar: creatorProfile?.profile_picture_url || creatorProfile?.avatar_url || '/placeholder.svg'
           }
         };
       });
