@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bitcoin, DollarSign, Trophy, Users, Star } from 'lucide-react';
+import { ArrowLeft, Star, FolderOpen, Clock } from 'lucide-react';
 import { useViewProfile } from '@/hooks/useViewProfile';
 import { useAvatar } from '@/hooks/useAvatar';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
@@ -85,38 +85,17 @@ const ViewProfile = () => {
                 </div>
               </div>
 
-              {/* Stats Grid */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 ml-auto">
-                <div className="bg-slate-700 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-cyan-400">{xpProgress.currentLevel}</div>
-                  <div className="text-sm text-slate-300">Level</div>
-                </div>
-                <div className="bg-slate-700 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-yellow-400 flex items-center justify-center gap-1">
-                    <Bitcoin className="w-5 h-5" />
-                    {profile.bits_currency?.toLocaleString() || 0}
+              {/* Level Display */}
+              <div className="flex-1 ml-auto">
+                <div className="bg-slate-700 rounded-lg p-6 text-center">
+                  <div className="text-3xl font-bold text-cyan-400 mb-1">{xpProgress.currentLevel}</div>
+                  <div className="text-sm text-slate-300 mb-4">Level</div>
+                  <div className="text-sm text-slate-400 mb-2">
+                    {profile.experience_points || 0} / {xpProgress.nextLevelXP} XP
                   </div>
-                  <div className="text-sm text-slate-300">Bits</div>
-                </div>
-                <div className="bg-slate-700 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-400 flex items-center justify-center gap-1">
-                    <DollarSign className="w-5 h-5" />
-                    {profile.bytes_currency || 0}
-                  </div>
-                  <div className="text-sm text-slate-300">Bytes</div>
+                  <Progress value={xpProgress.progressPercentage} className="h-3 bg-slate-600" />
                 </div>
               </div>
-            </div>
-
-            {/* XP Progress */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-300">Experience Progress</span>
-                <span className="text-sm text-slate-400">
-                  {profile.experience_points || 0} / {xpProgress.nextLevelXP} XP
-                </span>
-              </div>
-              <Progress value={xpProgress.progressPercentage} className="h-3 bg-slate-600" />
             </div>
           </CardContent>
         </Card>
@@ -147,18 +126,18 @@ const ViewProfile = () => {
           </Card>
         )}
 
-        {/* Additional Info Cards */}
+        {/* Projects Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader>
               <CardTitle className="text-cyan-400 flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
-                Achievements
+                <FolderOpen className="w-5 h-5" />
+                Completed Projects
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-slate-400 text-center py-4">
-                Achievement system coming soon!
+                Project history coming soon!
               </p>
             </CardContent>
           </Card>
@@ -166,13 +145,13 @@ const ViewProfile = () => {
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader>
               <CardTitle className="text-cyan-400 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Projects
+                <Clock className="w-5 h-5" />
+                Ongoing Projects
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-slate-400 text-center py-4">
-                Project history coming soon!
+                Current projects coming soon!
               </p>
             </CardContent>
           </Card>
