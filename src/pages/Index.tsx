@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Code, Users, Trophy, Zap, Bitcoin, DollarSign } from 'lucide-react';
+import { Code, Users, Trophy, Zap, Star, Bitcoin, DollarSign } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -86,20 +86,20 @@ const Index = () => {
           <div className="flex justify-center gap-8 flex-wrap">
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-yellow-400" />
+                <Star className="w-8 h-8 text-cyan-400" />
                 <div className="text-left">
-                  <p className="text-yellow-400 font-bold text-xl">Experience Points</p>
-                  <p className="text-slate-300 text-sm">Level up your developer profile</p>
+                  <p className="text-cyan-400 font-bold text-xl">Experience Points</p>
+                  <p className="text-slate-300 text-sm">Level up and unlock new features</p>
                 </div>
               </div>
             </div>
             
             <div className="bg-slate-800 px-6 py-4 rounded-lg border border-slate-700">
               <div className="flex items-center gap-3">
-                <Bitcoin className="w-8 h-8 text-blue-400" />
+                <Bitcoin className="w-8 h-8 text-yellow-400" />
                 <div className="text-left">
-                  <p className="text-blue-400 font-bold text-xl">Bits Currency</p>
-                  <p className="text-slate-300 text-sm">Earn and spend on upgrades</p>
+                  <p className="text-yellow-400 font-bold text-xl">Bits Currency</p>
+                  <p className="text-slate-300 text-sm">Buy boosts and profile upgrades</p>
                 </div>
               </div>
             </div>
@@ -109,7 +109,7 @@ const Index = () => {
                 <DollarSign className="w-8 h-8 text-purple-400" />
                 <div className="text-left">
                   <p className="text-purple-400 font-bold text-xl">Bytes Premium</p>
-                  <p className="text-slate-300 text-sm">Unlock exclusive features</p>
+                  <p className="text-slate-300 text-sm">Access premium features and titles</p>
                 </div>
               </div>
             </div>
