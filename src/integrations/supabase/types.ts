@@ -414,6 +414,10 @@ export type Database = {
           bytes_reward: number
         }[]
       }
+      generate_unique_username: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       project_difficulty: "Beginner" | "Intermediate" | "Advanced" | "Expert"
