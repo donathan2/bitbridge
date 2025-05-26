@@ -49,6 +49,25 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+// Separate component for member display to avoid hooks in loops
+const MemberDisplay: React.FC<{ userId: string; username: string; fullName: string }> = ({ userId, username, fullName }) => {
+  const { avatarUrl } = useAvatar(userId);
+  
+  return (
+    <div className="flex items-center gap-1 bg-slate-600 rounded px-1.5 py-0.5 min-w-0">
+      <Avatar className="h-3 w-3 flex-shrink-0">
+        <AvatarImage src={avatarUrl} />
+        <AvatarFallback className="bg-cyan-600 text-white text-[8px]">
+          {(fullName || username || 'U').charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+      <span className="text-slate-300 text-xs truncate">
+        {username || fullName || 'Unknown'}
+      </span>
+    </div>
+  );
+};
+
 const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   isUserMember,
@@ -158,22 +177,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   
                   {roleMembers.length > 0 ? (
                     <div className="flex items-center gap-1 overflow-hidden">
-                      {roleMembers.slice(0, 2).map((member) => {
-                        const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
-                        return (
-                          <div key={member.id} className="flex items-center gap-1 bg-slate-600 rounded px-1.5 py-0.5 min-w-0">
-                            <Avatar className="h-3 w-3 flex-shrink-0">
-                              <AvatarImage src={memberAvatarUrl} />
-                              <AvatarFallback className="bg-cyan-600 text-white text-[8px]">
-                                {(member.user.full_name || member.user.username || 'U').charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-slate-300 text-xs truncate">
-                              {member.user.username || member.user.full_name || 'Unknown'}
-                            </span>
-                          </div>
-                        );
-                      })}
+                      {roleMembers.slice(0, 2).map((member) => (
+                        <MemberDisplay
+                          key={member.id}
+                          userId={member.user_id}
+                          username={member.user.username}
+                          fullName={member.user.full_name}
+                        />
+                      ))}
                       {roleMembers.length > 2 && (
                         <span className="text-slate-400 text-xs">+{roleMembers.length - 2}</span>
                       )}
