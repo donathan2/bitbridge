@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getLevelFromExperience } from '@/utils/xpUtils';
 
 export interface ViewProfileData {
   id: string;
@@ -14,6 +15,7 @@ export interface ViewProfileData {
   bits_currency: number | null;
   bytes_currency: number | null;
   active_title: string | null;
+  level: number;
   created_at: string;
   updated_at: string;
   projects?: {
@@ -83,18 +85,25 @@ export const useViewProfile = (userId?: string) => {
         }
 
         if (profileData) {
+          const experiencePoints = userProfileData?.experience_points || 0;
+          const level = getLevelFromExperience(experiencePoints);
+          
           const combinedProfile: ViewProfileData = {
             ...profileData,
             bio: userProfileData?.bio || null,
             skill_level: userProfileData?.skill_level || null,
-            experience_points: userProfileData?.experience_points || 0,
+            experience_points: experiencePoints,
             bits_currency: userProfileData?.bits_currency || 0,
             bytes_currency: userProfileData?.bytes_currency || 0,
             active_title: userProfileData?.active_title || null,
+            level: level,
             projects
           };
           
           console.log('Combined profile data:', combinedProfile);
+          console.log('Experience points:', experiencePoints);
+          console.log('Calculated level:', level);
+          console.log('Active title:', userProfileData?.active_title);
           setProfile(combinedProfile);
         } else {
           setProfile(null);

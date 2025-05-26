@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, FolderOpen, Clock } from 'lucide-react';
 import { useViewProfile } from '@/hooks/useViewProfile';
 import { useAvatar } from '@/hooks/useAvatar';
-import { getLevelFromExperience } from '@/utils/xpUtils';
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -44,8 +43,6 @@ const ViewProfile = () => {
       </div>
     );
   }
-
-  const currentLevel = getLevelFromExperience(profile.experience_points || 0);
 
   return (
     <div className="p-6">
@@ -87,7 +84,7 @@ const ViewProfile = () => {
               {/* Level Display */}
               <div className="flex-1 ml-auto">
                 <div className="bg-slate-700 rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold text-cyan-400 mb-1">{currentLevel}</div>
+                  <div className="text-3xl font-bold text-cyan-400 mb-1">{profile.level}</div>
                   <div className="text-sm text-slate-300">Level</div>
                 </div>
               </div>
