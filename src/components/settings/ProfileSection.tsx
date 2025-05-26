@@ -47,6 +47,7 @@ const ProfileSection = () => {
 
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -155,6 +156,8 @@ const ProfileSection = () => {
       return;
     }
 
+    setIsUpdating(true);
+
     try {
       const { error: authError } = await supabase.auth.updateUser({
         data: {
@@ -207,8 +210,8 @@ const ProfileSection = () => {
         variant: "default",
       });
 
-      // Force a page reload to update all profile instances
-      window.location.reload();
+      // The real-time subscription in NavBar will handle the UI updates
+      // No need for a full page reload
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -216,6 +219,8 @@ const ProfileSection = () => {
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -277,6 +282,7 @@ const ProfileSection = () => {
                 value={profileData.name}
                 onChange={(e) => setProfileData({...profileData, name: e.target.value})}
                 className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                disabled={isUpdating}
               />
             </div>
           </div>
@@ -292,6 +298,7 @@ const ProfileSection = () => {
                 className={`pl-8 bg-slate-700 border-slate-600 text-slate-200 ${
                   usernameError ? 'border-red-500' : ''
                 }`}
+                disabled={isUpdating}
               />
               {isCheckingUsername && (
                 <div className="absolute right-2 top-2.5">
@@ -331,6 +338,7 @@ const ProfileSection = () => {
             <Select 
               value={profileData.activeTitle} 
               onValueChange={(value) => setProfileData({...profileData, activeTitle: value})}
+              disabled={isUpdating}
             >
               <SelectTrigger className="pl-8 bg-slate-700 border-slate-600 text-slate-200">
                 <SelectValue />
@@ -362,17 +370,18 @@ const ProfileSection = () => {
             rows={4}
             className="w-full rounded-md bg-slate-700 border-slate-600 text-slate-200 p-2"
             placeholder="Tell others about yourself..."
+            disabled={isUpdating}
           />
         </div>
         
         <div className="flex justify-end">
           <Button 
             onClick={handleProfileUpdate}
-            disabled={!!usernameError || isCheckingUsername}
+            disabled={!!usernameError || isCheckingUsername || isUpdating}
             className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50"
           >
             <Check className="mr-2 h-4 w-4" />
-            Save Changes
+            {isUpdating ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </CardContent>
