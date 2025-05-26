@@ -11,7 +11,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSocialConnections } from '@/hooks/useSocialConnections';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateLevel } from '@/utils/xpUtils';
+import { getProgressToNextLevel } from '@/utils/xpUtils';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -92,7 +92,7 @@ const Profile = () => {
   const avatarUrl = profile?.profile_picture_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "/placeholder.svg";
 
   const xp = userProfile?.experience_points || 0;
-  const levelData = calculateLevel(xp);
+  const levelData = getProgressToNextLevel(xp);
   const activeTitle = userProfile?.active_title || 'Beginner Developer';
 
   const completedProjects = projects.filter(p => p.projects?.status === 'completed');
