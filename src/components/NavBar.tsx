@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 const NavBar = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
-  const { profile, loading: profileLoading, refetch } = useUserProfile();
+  const { profile, loading: profileLoading } = useUserProfile();
   const { profile: publicProfile } = useProfile();
   const { avatarUrl, name } = useAvatar();
   
@@ -23,36 +23,27 @@ const NavBar = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log('Setting up real-time subscription for user:', user.id);
-
     const channel = supabase
-      .channel('navbar-profile-changes')
+      .channel('profile-changes')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'user_profiles',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('Profile updated in real-time:', payload);
+        () => {
           // Trigger a re-fetch of profile data
-          if (refetch) {
-            refetch();
-          } else {
-            // Fallback: force a page refresh if refetch is not available
-            window.location.reload();
-          }
+          window.location.reload();
         }
       )
       .subscribe();
 
     return () => {
-      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [user, refetch]);
+  }, [user]);
   
   // Use profile data or fallback to defaults
   const displayProfile = profile || {
