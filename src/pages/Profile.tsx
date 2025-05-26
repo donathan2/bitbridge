@@ -192,7 +192,7 @@ const Profile = () => {
                     </div>
                     <Progress value={xpProgress.progressPercentage} className="h-3 bg-slate-700" />
                     <p className="text-sm text-slate-400 font-light">
-                      {xpProgress.xpNeededForNextLevel - xpProgress.progressInCurrentLevel} XP to next level
+                      {xpProgress.xpNeededForNextLevel} XP to next level
                     </p>
                   </div>
                   

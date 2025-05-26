@@ -109,8 +109,18 @@
     font-family: 'Press Start 2P', cursive !important;
   }
   
-  /* Apply pixel font to all headers */
+  /* Apply pixel font to all headers and main page titles */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Press Start 2P', cursive;
+  }
+  
+  /* Specific targeting for page headers that might be missed */
+  .page-title, 
+  .main-heading, 
+  [class*="heading"],
+  [class*="title"] h1,
+  [class*="title"] h2,
+  [class*="title"] h3 {
+    font-family: 'Press Start 2P', cursive !important;
   }
 }
