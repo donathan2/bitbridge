@@ -14,7 +14,6 @@ export interface ViewProfileData {
   experience_points: number | null;
   bits_currency: number | null;
   bytes_currency: number | null;
-  active_title: string | null;
   level: number;
   created_at: string;
   updated_at: string;
@@ -95,7 +94,6 @@ export const useViewProfile = (userId?: string) => {
             experience_points: experiencePoints,
             bits_currency: userProfileData?.bits_currency || 0,
             bytes_currency: userProfileData?.bytes_currency || 0,
-            active_title: userProfileData?.active_title || null,
             level: level,
             projects
           };
@@ -103,7 +101,6 @@ export const useViewProfile = (userId?: string) => {
           console.log('Combined profile data:', combinedProfile);
           console.log('Experience points:', experiencePoints);
           console.log('Calculated level:', level);
-          console.log('Active title:', userProfileData?.active_title);
           setProfile(combinedProfile);
         } else {
           setProfile(null);

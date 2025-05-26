@@ -10,19 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, User, Mail, Crown, Upload } from 'lucide-react';
+import { Check, User, Mail, Upload } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useUserTitles } from '@/hooks/useUserTitles';
 import { useProfile } from '@/hooks/useProfile';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import { useAvatar } from '@/hooks/useAvatar';
@@ -30,8 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSection = () => {
   const { user } = useAuth();
-  const { profile: userProfile, updateActiveTitle } = useUserProfile();
-  const { userTitles } = useUserTitles();
+  const { profile: userProfile } = useUserProfile();
   const { profile: publicProfile } = useProfile();
   const { uploadProfilePicture, uploading } = useProfilePicture();
   const { avatarUrl, name, username } = useAvatar();
@@ -42,7 +33,6 @@ const ProfileSection = () => {
     username: '',
     email: '',
     bio: '',
-    activeTitle: '',
   });
 
   useEffect(() => {
@@ -64,7 +54,6 @@ const ProfileSection = () => {
             username: username,
             email: user.email || '',
             bio: userProfile?.bio || '',
-            activeTitle: userProfile?.active_title || 'Beginner Developer',
           });
         } catch (err) {
           console.error('Error in fetchUserProfile:', err);
@@ -73,7 +62,6 @@ const ProfileSection = () => {
             username: username,
             email: user.email || '',
             bio: userProfile?.bio || '',
-            activeTitle: userProfile?.active_title || 'Beginner Developer',
           });
         }
       };
@@ -100,7 +88,6 @@ const ProfileSection = () => {
           .from('user_profiles')
           .update({ 
             bio: profileData.bio,
-            active_title: profileData.activeTitle
           })
           .eq('user_id', user.id);
 
@@ -117,9 +104,6 @@ const ProfileSection = () => {
         });
 
       if (publicProfileError) throw publicProfileError;
-
-      // Update active title
-      await updateActiveTitle(profileData.activeTitle);
 
       toast({
         title: "Profile updated",
@@ -149,9 +133,6 @@ const ProfileSection = () => {
       }
     }
   };
-
-  // Available titles (owned titles + default title)
-  const availableTitles = ['Beginner Developer', ...userTitles];
 
   return (
     <Card className="bg-slate-800 border-slate-700">
@@ -228,35 +209,6 @@ const ProfileSection = () => {
             />
           </div>
           <p className="text-sm text-slate-400">Email cannot be changed here. Contact support if needed.</p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="activeTitle" className="text-white">Active Title</Label>
-          <div className="relative">
-            <Crown className="absolute left-2 top-2.5 h-4 w-4 text-slate-400 z-10" />
-            <Select 
-              value={profileData.activeTitle} 
-              onValueChange={(value) => setProfileData({...profileData, activeTitle: value})}
-            >
-              <SelectTrigger className="pl-8 bg-slate-700 border-slate-600 text-slate-200">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                {availableTitles.map((title) => (
-                  <SelectItem 
-                    key={title} 
-                    value={title}
-                    className="text-slate-200 focus:bg-slate-600 focus:text-white"
-                  >
-                    {title.length > 30 ? `${title.substring(0, 30)}...` : title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <p className="text-sm text-slate-400">
-            Purchase new titles in the BitVault to unlock more options.
-          </p>
         </div>
         
         <div className="space-y-2">
