@@ -62,7 +62,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-slate-300">
-                Gain XP, unlock achievements, and earn currency for completing projects
+                Gain XP and earn currency for completing projects
               </CardDescription>
             </CardContent>
           </Card>

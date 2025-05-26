@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
@@ -174,13 +173,8 @@ const NavBar = () => {
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/auth">
-                  <Button variant="ghost" className="text-slate-300 hover:text-cyan-400">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/auth">
                   <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
-                    Sign Up
+                    Sign In
                   </Button>
                 </Link>
               </div>
