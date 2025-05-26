@@ -17,7 +17,7 @@ const Index = () => {
             BitBridge
           </h1>
           <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            Connect with developers worldwide, collaborate on exciting projects, and earn rewards for your contributions.
+            Let's build bridges through code. Connect with developers, collaborate on projects, and level up together.
           </p>
           <div className="flex justify-center gap-4">
             <Button 
