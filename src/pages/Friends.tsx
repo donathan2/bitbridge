@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,21 +50,38 @@ const Friends = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('friends')
-        .select('friend_id(*)')
-        .eq('user_id', user.id);
+        .from('friendships')
+        .select(`
+          user1_id,
+          user2_id,
+          profiles_user1:user1_id(id, full_name, username, avatar_url),
+          profiles_user2:user2_id(id, full_name, username, avatar_url)
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
       if (error) {
         console.error('Error fetching friends:', error);
         return;
       }
 
-      const friendList = data?.map(item => ({
-        id: item.friend_id.id,
-        full_name: item.friend_id.full_name,
-        username: item.friend_id.username,
-        avatar_url: item.friend_id.avatar_url,
-      })) || [];
+      const friendList: Friend[] = [];
+      data?.forEach(friendship => {
+        if (friendship.user1_id === user.id && friendship.profiles_user2) {
+          friendList.push({
+            id: friendship.profiles_user2.id,
+            full_name: friendship.profiles_user2.full_name,
+            username: friendship.profiles_user2.username,
+            avatar_url: friendship.profiles_user2.avatar_url,
+          });
+        } else if (friendship.user2_id === user.id && friendship.profiles_user1) {
+          friendList.push({
+            id: friendship.profiles_user1.id,
+            full_name: friendship.profiles_user1.full_name,
+            username: friendship.profiles_user1.username,
+            avatar_url: friendship.profiles_user1.avatar_url,
+          });
+        }
+      });
       setFriends(friendList);
     } catch (error) {
       console.error('Error fetching friends:', error);
@@ -78,7 +96,14 @@ const Friends = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('friend_requests')
-        .select('*, sender_id(*)')
+        .select(`
+          id,
+          sender_id,
+          receiver_id,
+          status,
+          created_at,
+          profiles!friend_requests_sender_id_fkey(id, full_name, username, avatar_url)
+        `)
         .eq('receiver_id', user.id)
         .eq('status', 'pending');
 
@@ -87,17 +112,17 @@ const Friends = () => {
         return;
       }
 
-      const friendRequestList = data?.map(req => ({
+      const friendRequestList: FriendRequest[] = data?.map(req => ({
         id: req.id,
-        sender_id: req.sender_id.id,
+        sender_id: req.sender_id,
         receiver_id: req.receiver_id,
-        status: req.status,
+        status: req.status as 'pending' | 'accepted' | 'rejected',
         created_at: req.created_at,
         sender: {
-          id: req.sender_id.id,
-          full_name: req.sender_id.full_name,
-          username: req.sender_id.username,
-          avatar_url: req.sender_id.avatar_url,
+          id: req.profiles?.id || '',
+          full_name: req.profiles?.full_name || null,
+          username: req.profiles?.username || null,
+          avatar_url: req.profiles?.avatar_url || null,
         }
       })) || [];
       setFriendRequests(friendRequestList);

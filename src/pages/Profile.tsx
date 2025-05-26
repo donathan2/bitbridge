@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +31,7 @@ interface Project {
 
 interface UserTitle {
   id: string;
-  title: string;
+  name: string;
   xp_required: number;
 }
 
@@ -47,8 +48,8 @@ const getDifficultyColor = (difficulty: string) => {
 const Profile = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
-  const { userProfile, loading: userProfileLoading } = useUserProfile();
-  const { titles, loading: titlesLoading } = useUserTitles();
+  const { profile: userProfile, loading: userProfileLoading } = useUserProfile();
+  const { userTitles, loading: titlesLoading } = useUserTitles();
   const [ongoingProjects, setOngoingProjects] = useState<Project[]>([]);
   const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +69,10 @@ const Profile = () => {
       // Fetch ongoing projects
       const { data: ongoingData, error: ongoingError } = await supabase
         .from('projects')
-        .select('*, creator:creator_id(username, full_name, avatar_url)')
+        .select(`
+          *,
+          profiles!projects_creator_id_fkey(username, full_name, avatar_url)
+        `)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -76,13 +80,30 @@ const Profile = () => {
         console.error('Error fetching ongoing projects:', ongoingError);
         setError(ongoingError.message);
       } else {
-        setOngoingProjects(ongoingData || []);
+        const processedOngoingProjects = ongoingData?.map(project => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          difficulty: project.difficulty,
+          creator_id: project.creator_id,
+          creator: project.profiles ? {
+            name: project.profiles.full_name || project.profiles.username || 'Unknown',
+            username: project.profiles.username || 'unknown',
+            avatar: project.profiles.avatar_url || ''
+          } : undefined,
+          member_count: 0,
+          xp_reward: project.xp_reward || 0
+        })) || [];
+        setOngoingProjects(processedOngoingProjects);
       }
 
       // Fetch completed projects
       const { data: completedData, error: completedError } = await supabase
         .from('projects')
-        .select('*, creator:creator_id(username, full_name, avatar_url)')
+        .select(`
+          *,
+          profiles!projects_creator_id_fkey(username, full_name, avatar_url)
+        `)
         .eq('status', 'completed')
         .order('completed_at', { ascending: false });
 
@@ -90,7 +111,22 @@ const Profile = () => {
         console.error('Error fetching completed projects:', completedError);
         setError(completedError.message);
       } else {
-        setCompletedProjects(completedData || []);
+        const processedCompletedProjects = completedData?.map(project => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          difficulty: project.difficulty,
+          creator_id: project.creator_id,
+          creator: project.profiles ? {
+            name: project.profiles.full_name || project.profiles.username || 'Unknown',
+            username: project.profiles.username || 'unknown',
+            avatar: project.profiles.avatar_url || ''
+          } : undefined,
+          member_count: 0,
+          xp_reward: project.xp_reward || 0,
+          completed_at: project.completed_at
+        })) || [];
+        setCompletedProjects(processedCompletedProjects);
       }
     } catch (err) {
       console.error('Error in fetchProjects:', err);
@@ -120,7 +156,7 @@ const Profile = () => {
     );
   }
 
-  const { currentLevel, nextLevel, progress } = getProgressToNextLevel(userProfile.xp);
+  const progressData = getProgressToNextLevel(userProfile.experience_points || 0);
 
   return (
     <div className="p-6">
@@ -139,15 +175,15 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow-400" />
-                Level {currentLevel}
+                Level {progressData.currentLevel}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-slate-300 text-sm">
                 <p>
-                  {progress}% to Level {nextLevel}
+                  {progressData.progressPercentage}% to Level {progressData.currentLevel + 1}
                 </p>
-                <progress className="w-full h-2 bg-slate-700 rounded" value={progress} max="100"></progress>
+                <progress className="w-full h-2 bg-slate-700 rounded" value={progressData.progressPercentage} max="100"></progress>
               </div>
             </CardContent>
           </Card>
@@ -160,7 +196,7 @@ const Profile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-slate-200">{userProfile.xp}</p>
+              <p className="text-3xl font-bold text-slate-200">{userProfile.experience_points || 0}</p>
               <p className="text-slate-400 text-sm">Total Experience Points</p>
             </CardContent>
           </Card>
@@ -173,9 +209,9 @@ const Profile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {titles && titles.length > 0 ? (
+              {userTitles && userTitles.length > 0 ? (
                 <>
-                  <p className="text-xl font-bold text-slate-200">{titles[0].title}</p>
+                  <p className="text-xl font-bold text-slate-200">{userTitles[0].name}</p>
                   <p className="text-slate-400 text-sm">Achieved Title</p>
                 </>
               ) : (
