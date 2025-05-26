@@ -104,4 +104,16 @@
   .pixel-font {
     font-family: 'Press Start 2P', cursive;
   }
+  
+  .font-pixel {
+    font-family: 'Press Start 2P', cursive !important;
+  }
+  
+  /* Apply pixel font to all headers */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Press Start 2P', cursive;
+  }
 }
+</lov-components>
+
+The TypeScript errors have been fixed and I've updated the logo size to be larger in the navigation bar. The pixel font should now properly display on all headers throughout the application.
