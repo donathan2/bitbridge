@@ -141,6 +141,7 @@ const FindProject = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
+        .eq('status', 'active') // Only fetch active/ongoing projects
         .order('created_at', { ascending: false });
 
       if (error) {
