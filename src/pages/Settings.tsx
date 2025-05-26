@@ -15,7 +15,7 @@ const Settings = () => {
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Settings</h1>
+            <h1 className="text-3xl font-pixel text-cyan-400 mb-2">Settings</h1>
             <p className="text-lg text-slate-300 font-light">Loading...</p>
           </div>
         </div>
@@ -28,7 +28,7 @@ const Settings = () => {
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">Settings</h1>
+            <h1 className="text-3xl font-pixel text-cyan-400 mb-2">Settings</h1>
             <p className="text-lg text-slate-300 font-light">Please log in to access settings.</p>
           </div>
         </div>

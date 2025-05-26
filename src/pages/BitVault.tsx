@@ -54,7 +54,7 @@ const BitVault = () => {
     <div className="p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">BitVault</h1>
+          <h1 className="text-3xl font-pixel text-cyan-400 mb-2">BitVault</h1>
           <p className="text-lg text-slate-300 font-light">
             Unlock exclusive titles to showcase your coding achievements
           </p>
@@ -62,7 +62,7 @@ const BitVault = () => {
 
         {/* Currency Display */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Your Currency</h2>
+          <h2 className="text-xl font-pixel text-white mb-4">Your Currency</h2>
           <div className="flex items-center justify-center space-x-8">
             <div className="flex items-center space-x-2">
               <Bitcoin className="w-6 h-6 text-yellow-400" />
@@ -83,7 +83,7 @@ const BitVault = () => {
 
         {/* Titles Section */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Available Titles</h2>
+          <h2 className="text-2xl font-pixel text-white mb-6">Available Titles</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {orderedTitles.map((title) => (

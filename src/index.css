@@ -123,4 +123,18 @@
   [class*="title"] h3 {
     font-family: 'Press Start 2P', cursive !important;
   }
+  
+  /* Force pixel font on specific page headers */
+  .text-3xl.font-bold,
+  .text-2xl.font-bold,
+  .text-xl.font-bold {
+    font-family: 'Press Start 2P', cursive !important;
+  }
+  
+  /* Override any conflicting font families */
+  .font-sans h1,
+  .font-sans h2,
+  .font-sans h3 {
+    font-family: 'Press Start 2P', cursive !important;
+  }
 }
