@@ -7,13 +7,13 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Bitcoin, DollarSign, Trophy, Users, Star } from 'lucide-react';
-import { useProfile } from '@/hooks/useProfile';
+import { useViewProfile } from '@/hooks/useViewProfile';
 import { useAvatar } from '@/hooks/useAvatar';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
-  const { profile, loading, error } = useProfile(userId);
+  const { profile, loading, error } = useViewProfile(userId);
   const { avatarUrl, name } = useAvatar(userId);
 
   if (loading) {
