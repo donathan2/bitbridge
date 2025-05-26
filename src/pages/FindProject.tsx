@@ -138,11 +138,9 @@ const FindProject = () => {
       setLoading(true);
       console.log('Fetching projects from database...');
       
-      // Only fetch active projects (not completed ones)
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -155,7 +153,7 @@ const FindProject = () => {
       console.log('Raw projects data:', data);
 
       if (!data || data.length === 0) {
-        console.log('No active projects found in database');
+        console.log('No projects found in database');
         setProjects([]);
         setFilteredProjects([]);
         return;
