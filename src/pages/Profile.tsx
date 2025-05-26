@@ -13,15 +13,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useProfile } from '@/hooks/useProfile';
+import { useAvatar } from '@/hooks/useAvatar';
+import { useFriendsCount } from '@/hooks/useFriendsCount';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
 import ProjectRewards from '@/components/ProjectRewards';
 
 // Create a separate component for team member display to avoid hooks in map
 const TeamMemberAvatar = ({ member }: { member: any }) => {
+  const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
+  
   return (
     <div className="flex items-center gap-3 bg-slate-700 p-3 rounded-lg">
       <Avatar className="h-10 w-10">
-        <AvatarImage src={member.avatar_url} />
+        <AvatarImage src={memberAvatarUrl} />
         <AvatarFallback className="bg-cyan-600 text-white">
           {(member.full_name || member.username || 'U').charAt(0).toUpperCase()}
         </AvatarFallback>
@@ -39,9 +44,12 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { profile: userProfile, projects, loading: profileLoading, error } = useUserProfile();
+  const { profile: profileData, loading: profileDataLoading } = useProfile();
+  const { avatarUrl, name, username } = useAvatar();
+  const { friendsCount, loading: friendsCountLoading } = useFriendsCount();
   
   // Handle loading state
-  if (authLoading || profileLoading) {
+  if (authLoading || profileLoading || profileDataLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <div className="text-cyan-400 text-lg flex items-center gap-2">
@@ -86,12 +94,12 @@ const Profile = () => {
   // Calculate experience progress using the new scaling system
   const xpProgress = getProgressToNextLevel(userProfile?.experience_points || 0);
   
-  // Use profile data from userProfile hook which now includes all needed data
+  // Use real profile data or defaults with updated username
   const userProfileData = {
-    name: user.user_metadata?.full_name || 'Unknown User',
-    username: `@${user.user_metadata?.user_name || 'unknown'}`,
+    name: name,
+    username: `@${username}`,
     bio: userProfile?.bio || "Welcome to BitBridge! Update your bio to tell others about yourself.",
-    avatar: user.user_metadata?.avatar_url,
+    avatar: avatarUrl,
     skillLevel: userProfile?.active_title || "Beginner Developer",
     experience: {
       current: userProfile?.experience_points || 0,
@@ -107,7 +115,7 @@ const Profile = () => {
       completedProjects: projects.filter(p => p.status === 'completed').length,
       ongoingProjects: projects.filter(p => p.status === 'ongoing').length,
       totalXP: userProfile?.experience_points || 0,
-      friends: 0 // Simplified for now to improve performance
+      friends: friendsCountLoading ? 0 : friendsCount
     }
   };
 
@@ -134,7 +142,7 @@ const Profile = () => {
     difficulty: project.difficulty,
     githubUrl: project.github_url || "",
     teamMembers: project.members,
-    messages: []
+    messages: [] // No messages for now since we don't have a messages table
   }));
 
   const getDifficultyColor = (difficulty: string) => {
@@ -312,7 +320,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Ongoing Projects */}
+          {/* Ongoing Projects - Progress bars removed */}
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
               <CardTitle className="flex items-center gap-2 font-pixel text-sm">
@@ -361,7 +369,7 @@ const Profile = () => {
           </Card>
         </div>
 
-        {/* Project Details Dialog */}
+        {/* Project Details Dialog - Progress bars removed */}
         <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
           <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
             <DialogHeader>
@@ -421,7 +429,7 @@ const Profile = () => {
                   </div>
                 </div>
                 
-                {/* Team Members */}
+                {/* Team Members - Now using separate component to avoid hooks in map */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Team Members</h3>
                   <div className="grid md:grid-cols-2 gap-3">
@@ -447,7 +455,7 @@ const Profile = () => {
                   </div>
                 )}
                 
-                {/* Project workspace button */}
+                {/* Project workspace button - replacing the chat button */}
                 {!selectedProject.completedDate && (
                   <div className="mt-4">
                     <Button 

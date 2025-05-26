@@ -11,7 +11,6 @@ import Auth from "./pages/Auth";
 import FindProject from "./pages/FindProject";
 import Settings from "./pages/Settings";
 import Friends from "./pages/Friends";
-import ViewProfile from "./pages/ViewProfile";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ProjectWorkspace from "./pages/ProjectWorkspace";
@@ -36,7 +35,6 @@ const App = () => (
               <Route path="/bitvault" element={<BitVault />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/friends" element={<Friends />} />
-              <Route path="/profile/:userId" element={<ViewProfile />} />
               <Route path="/project/:projectId" element={<ProjectWorkspace />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

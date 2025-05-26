@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,10 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, UserPlus, X, Check, MessageSquare, Send, User } from 'lucide-react';
+import { Search, UserPlus, X, Check, MessageSquare, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 
 interface Friend {
@@ -46,7 +46,6 @@ interface SearchResult {
 
 const Friends = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -495,7 +494,8 @@ const Friends = () => {
                     friends.map((friend) => (
                       <Card 
                         key={friend.id} 
-                        className={`bg-slate-800 border-slate-700 hover:shadow-md hover:border-slate-600 transition-all ${selectedFriend?.id === friend.id ? 'border-l-4 border-l-cyan-500' : ''}`}
+                        className={`bg-slate-800 border-slate-700 hover:shadow-md hover:border-slate-600 transition-all cursor-pointer ${selectedFriend?.id === friend.id ? 'border-l-4 border-l-cyan-500' : ''}`}
+                        onClick={() => setSelectedFriend(friend)}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
@@ -511,25 +511,6 @@ const Friends = () => {
                             <div className="flex-1">
                               <h3 className="font-semibold text-white">{friend.name}</h3>
                               <p className="text-sm text-slate-400">{friend.username}</p>
-                              <div className="flex gap-2 mt-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-slate-600 hover:bg-slate-700 text-slate-300"
-                                  onClick={() => navigate(`/profile/${friend.id}`)}
-                                >
-                                  <User className="h-3 w-3 mr-1" />
-                                  View Profile
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                                  onClick={() => setSelectedFriend(friend)}
-                                >
-                                  <MessageSquare className="h-3 w-3 mr-1" />
-                                  Message
-                                </Button>
-                              </div>
                             </div>
                             <div className="text-right text-xs text-slate-500">
                               <p>{friend.lastActive}</p>
