@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,19 +11,6 @@ export interface UserProfile {
   bits_currency: number;
   bytes_currency: number;
   active_title: string | null;
-}
-
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  rarity: string;
-  xp_reward: number;
-  icon_name: string;
-  earned_at?: string;
-  progress?: number;
-  total?: number;
 }
 
 export interface ProjectMember {
@@ -53,7 +41,6 @@ export interface Project {
 export const useUserProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,59 +72,6 @@ export const useUserProfile = () => {
 
         console.log('Profile data:', profileData);
         setProfile(profileData);
-
-        // Fetch user achievements with achievement details
-        console.log('Fetching achievements...');
-        const { data: achievementsData, error: achievementsError } = await supabase
-          .from('user_achievements')
-          .select(`
-            earned_at,
-            progress,
-            total,
-            achievements (
-              id,
-              title,
-              description,
-              category,
-              rarity,
-              xp_reward,
-              icon_name
-            )
-          `)
-          .eq('user_id', user.id);
-
-        if (achievementsError) {
-          console.error('Achievements error:', achievementsError);
-          throw new Error(`Achievements fetch failed: ${achievementsError.message}`);
-        }
-
-        // Also fetch available achievements that user hasn't earned
-        console.log('Fetching all achievements...');
-        const { data: allAchievements, error: allAchievementsError } = await supabase
-          .from('achievements')
-          .select('*');
-
-        if (allAchievementsError) {
-          console.error('All achievements error:', allAchievementsError);
-          throw new Error(`All achievements fetch failed: ${allAchievementsError.message}`);
-        }
-
-        // Combine earned and unearned achievements
-        const earnedAchievementIds = achievementsData?.map(ua => ua.achievements?.id) || [];
-        const unearnedAchievements = allAchievements?.filter(a => !earnedAchievementIds.includes(a.id)) || [];
-
-        const combinedAchievements = [
-          ...(achievementsData?.map(ua => ({
-            ...ua.achievements,
-            earned_at: ua.earned_at,
-            progress: ua.progress,
-            total: ua.total
-          })) || []),
-          ...unearnedAchievements
-        ];
-
-        console.log('Combined achievements:', combinedAchievements);
-        setAchievements(combinedAchievements);
 
         // Fetch user's joined projects with actual member data
         console.log('Fetching project memberships...');
@@ -292,7 +226,6 @@ export const useUserProfile = () => {
 
   return {
     profile,
-    achievements,
     projects,
     loading,
     error,

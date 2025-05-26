@@ -165,7 +165,7 @@ const Profile = () => {
         {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-pixel text-cyan-400 mb-2">BitBridge Profile</h1>
-          <p className="text-lg text-slate-300 font-light">Track your coding journey and achievements</p>
+          <p className="text-lg text-slate-300 font-light">Track your coding journey</p>
         </div>
 
         {/* Profile Overview */}

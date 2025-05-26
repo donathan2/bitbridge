@@ -23,55 +23,30 @@ export const useSocialConnections = () => {
       return;
     }
 
-    const fetchConnections = async () => {
-      try {
-        console.log('Fetching social connections for user:', user.id);
-        
-        const { data, error } = await supabase
-          .from('user_social_connections')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Social connections error:', error);
-          throw error;
-        }
-
-        console.log('Social connections data:', data);
-        setConnections((data || []) as SocialConnection[]);
-      } catch (err) {
-        console.error('Error fetching social connections:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConnections();
+    // For now, just set empty connections since we don't have the table
+    setConnections([]);
+    setLoading(false);
   }, [user]);
 
   const addConnection = async (platform: 'github' | 'twitter' | 'website', url: string) => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_social_connections')
-        .upsert({
-          user_id: user.id,
-          platform,
-          url
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      // For now, just add to local state
+      const newConnection: SocialConnection = {
+        id: crypto.randomUUID(),
+        user_id: user.id,
+        platform,
+        url,
+        created_at: new Date().toISOString()
+      };
+      
       setConnections(prev => {
         const filtered = prev.filter(conn => conn.platform !== platform);
-        return [...filtered, data as SocialConnection];
+        return [...filtered, newConnection];
       });
       
-      return data;
+      return newConnection;
     } catch (err) {
       console.error('Error adding connection:', err);
       throw err;
@@ -82,14 +57,6 @@ export const useSocialConnections = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('user_social_connections')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('platform', platform);
-
-      if (error) throw error;
-
       setConnections(prev => prev.filter(conn => conn.platform !== platform));
     } catch (err) {
       console.error('Error removing connection:', err);

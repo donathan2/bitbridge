@@ -4,14 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface UserPreferences {
-  id: string;
-  user_id: string;
   theme: string;
   language: string;
   email_notifications: boolean;
   push_notifications: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 export const useUserPreferences = () => {
@@ -26,52 +22,23 @@ export const useUserPreferences = () => {
       return;
     }
 
-    const fetchPreferences = async () => {
-      try {
-        console.log('Fetching preferences for user:', user.id);
-        
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Preferences error:', error);
-          throw error;
-        }
-
-        console.log('Preferences data:', data);
-        setPreferences(data);
-      } catch (err) {
-        console.error('Error fetching preferences:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPreferences();
+    // For now, just set default preferences since we don't have the table
+    setPreferences({
+      theme: 'dark',
+      language: 'en',
+      email_notifications: true,
+      push_notifications: false
+    });
+    setLoading(false);
   }, [user]);
 
-  const updatePreferences = async (updates: Partial<Omit<UserPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
+  const updatePreferences = async (updates: Partial<UserPreferences>) => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setPreferences(data);
-      return data;
+      // For now, just update local state
+      setPreferences(prev => prev ? { ...prev, ...updates } : null);
+      return preferences;
     } catch (err) {
       console.error('Error updating preferences:', err);
       throw err;
