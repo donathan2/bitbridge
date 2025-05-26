@@ -99,7 +99,7 @@ const BitVault = () => {
                   </CardTitle>
                   {title.owned && (
                     <div className="mt-2">
-                      <Badge variant="outline" className="border-green-500 text-green-400">
+                      <Badge variant="outline" className="border-green-500 text-green-400 block w-fit">
                         <Check className="w-3 h-3 mr-1" />
                         Owned
                       </Badge>
