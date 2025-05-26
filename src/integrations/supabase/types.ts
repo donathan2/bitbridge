@@ -208,6 +208,7 @@ export type Database = {
         Row: {
           assigned_role: string | null
           assigned_user_id: string | null
+          assigned_user_ids: string[] | null
           created_at: string | null
           created_by: string
           description: string | null
@@ -221,6 +222,7 @@ export type Database = {
         Insert: {
           assigned_role?: string | null
           assigned_user_id?: string | null
+          assigned_user_ids?: string[] | null
           created_at?: string | null
           created_by: string
           description?: string | null
@@ -234,6 +236,7 @@ export type Database = {
         Update: {
           assigned_role?: string | null
           assigned_user_id?: string | null
+          assigned_user_ids?: string[] | null
           created_at?: string | null
           created_by?: string
           description?: string | null
