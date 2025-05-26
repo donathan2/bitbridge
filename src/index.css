@@ -114,6 +114,3 @@
     font-family: 'Press Start 2P', cursive;
   }
 }
-</lov-components>
-
-The TypeScript errors have been fixed and I've updated the logo size to be larger in the navigation bar. The pixel font should now properly display on all headers throughout the application.
