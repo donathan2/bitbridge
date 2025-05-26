@@ -98,28 +98,6 @@ const AccountSection = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await signOut();
-      toast({
-        title: "Account deletion requested",
-        description: "Please contact support to complete account deletion.",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete account. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSignOutEverywhere = async () => {
     try {
       await supabase.auth.signOut({ scope: 'global' });
@@ -207,36 +185,19 @@ const AccountSection = () => {
         </div>
         
         <div className="pt-6 border-t border-slate-700">
-          <h3 className="text-lg font-medium text-white mb-4">Danger Zone</h3>
-          <div className="space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4 rounded-md border border-red-900 bg-slate-800">
-              <div>
-                <h4 className="font-medium text-red-400">Delete Account</h4>
-                <p className="text-sm text-slate-400">Once deleted, your account cannot be recovered</p>
-              </div>
-              <Button 
-                variant="destructive" 
-                className="mt-2 md:mt-0"
-                onClick={handleDeleteAccount}
-              >
-                Delete Account
-              </Button>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4 rounded-md border border-slate-700 bg-slate-800">
+            <div>
+              <h4 className="font-medium text-slate-300">Sign Out Everywhere</h4>
+              <p className="text-sm text-slate-400">Log out from all devices</p>
             </div>
-            
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4 rounded-md border border-slate-700 bg-slate-800">
-              <div>
-                <h4 className="font-medium text-slate-300">Sign Out Everywhere</h4>
-                <p className="text-sm text-slate-400">Log out from all devices</p>
-              </div>
-              <Button 
-                variant="outline" 
-                className="mt-2 md:mt-0 border-slate-600 text-slate-300"
-                onClick={handleSignOutEverywhere}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              className="mt-2 md:mt-0 border-slate-600 text-slate-300"
+              onClick={handleSignOutEverywhere}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </CardContent>
