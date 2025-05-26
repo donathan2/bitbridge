@@ -57,10 +57,10 @@ const ViewProfile = () => {
           </Link>
         </div>
 
-        {/* Profile Header Card */}
+        {/* Profile Header Card with Bio */}
         <Card className="bg-slate-800 border-slate-700 shadow-lg">
           <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
               {/* Avatar and Basic Info */}
               <div className="flex items-center gap-4">
                 <Avatar className="w-24 h-24 border-4 border-slate-600">
@@ -73,7 +73,7 @@ const ViewProfile = () => {
                   <h1 className="text-3xl font-bold text-white mb-2">{name}</h1>
                   <p className="text-lg text-slate-300">@{profile.username || 'unknown'}</p>
                   {profile.active_title && (
-                    <Badge className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+                    <Badge variant="secondary" className="mt-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
                       <Star className="w-3 h-3 mr-1" />
                       {profile.active_title}
                     </Badge>
@@ -89,34 +89,16 @@ const ViewProfile = () => {
                 </div>
               </div>
             </div>
+
+            {/* Bio Section */}
+            {profile.bio && (
+              <div className="border-t border-slate-700 pt-6">
+                <h3 className="text-lg font-semibold text-cyan-400 mb-3">About</h3>
+                <p className="text-slate-300 leading-relaxed">{profile.bio}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Bio Section */}
-        {profile.bio && (
-          <Card className="bg-slate-800 border-slate-700 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-cyan-400">About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-300 leading-relaxed">{profile.bio}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Skill Level */}
-        {profile.skill_level && (
-          <Card className="bg-slate-800 border-slate-700 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-cyan-400">Skill Level</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-base px-4 py-2">
-                {profile.skill_level}
-              </Badge>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Projects Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
