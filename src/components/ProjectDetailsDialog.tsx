@@ -50,6 +50,33 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+// Separate component for member display to avoid hooks in loops
+const TeamMemberItem: React.FC<{ member: any }> = ({ member }) => {
+  const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
+  
+  return (
+    <div className="flex items-center gap-3 bg-slate-600 rounded-md p-2">
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={memberAvatarUrl} />
+        <AvatarFallback className="bg-cyan-600 text-white text-xs">
+          {(member.user.full_name || member.user.username || 'U').charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+      <div>
+        <p className="text-white font-medium">
+          {member.user.full_name || member.user.username || 'Unknown User'}
+        </p>
+        {member.user.username && member.user.full_name && (
+          <p className="text-slate-400 text-sm">@{member.user.username}</p>
+        )}
+      </div>
+      <div className="ml-auto text-xs text-slate-400">
+        Joined {new Date(member.joined_at).toLocaleDateString()}
+      </div>
+    </div>
+  );
+};
+
 const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   project,
   isOpen,
@@ -149,30 +176,9 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
                     </div>
                     <div className="space-y-2">
                       {roleMembers.length > 0 ? (
-                        roleMembers.map((member) => {
-                          const { avatarUrl: memberAvatarUrl } = useAvatar(member.user_id);
-                          return (
-                            <div key={member.id} className="flex items-center gap-3 bg-slate-600 rounded-md p-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={memberAvatarUrl} />
-                                <AvatarFallback className="bg-cyan-600 text-white text-xs">
-                                  {(member.user.full_name || member.user.username || 'U').charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-white font-medium">
-                                  {member.user.full_name || member.user.username || 'Unknown User'}
-                                </p>
-                                {member.user.username && member.user.full_name && (
-                                  <p className="text-slate-400 text-sm">@{member.user.username}</p>
-                                )}
-                              </div>
-                              <div className="ml-auto text-xs text-slate-400">
-                                Joined {new Date(member.joined_at).toLocaleDateString()}
-                              </div>
-                            </div>
-                          );
-                        })
+                        roleMembers.map((member) => (
+                          <TeamMemberItem key={member.id} member={member} />
+                        ))
                       ) : (
                         <p className="text-slate-500 italic">No members in this role yet</p>
                       )}
