@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Users, Star, Crown } from 'lucide-react';
-import { useAvatar } from '@/hooks/useAvatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useProjectMembers } from '@/hooks/useProjectMembers';
+import ProjectRewards from './ProjectRewards';
 
 interface Project {
   id: string;
@@ -36,6 +38,16 @@ interface ProjectCardProps {
   joinLoading: boolean;
 }
 
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case 'Beginner': return 'bg-teal-500';
+    case 'Intermediate': return 'bg-blue-500';
+    case 'Advanced': return 'bg-indigo-600';
+    case 'Expert': return 'bg-violet-700';
+    default: return 'bg-teal-500';
+  }
+};
+
 const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   isUserMember,
@@ -43,129 +55,181 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   onProjectClick,
   joinLoading
 }) => {
-  const { avatarUrl, name, username } = useAvatar(project.creatorId);
+  const { members } = useProjectMembers(project.id);
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [showAllRoles, setShowAllRoles] = useState(false);
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner':
-        return 'bg-green-500';
-      case 'Intermediate':
-        return 'bg-yellow-500';
-      case 'Advanced':
-        return 'bg-orange-500';
-      case 'Expert':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
+  const getMembersForRole = (role: string) => {
+    return members.filter(member => member.role === role);
   };
 
-  const handleJoinClick = (e: React.MouseEvent) => {
+  const handleJoinClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (project.rolesNeeded.length > 0) {
-      onJoinProject(project.id, project.rolesNeeded[0]);
+    console.log('🎯 ProjectCard handleJoinClick:', { selectedRole, projectId: project.id });
+    
+    if (selectedRole) {
+      try {
+        await onJoinProject(project.id, selectedRole);
+      } catch (error) {
+        console.error('❌ Error in handleJoinClick:', error);
+      }
+    } else {
+      console.log('⚠️ No role selected');
     }
   };
+
+  const visibleRoles = showAllRoles ? project.rolesNeeded : project.rolesNeeded.slice(0, 2);
+  const hiddenRolesCount = project.rolesNeeded.length - 2;
 
   return (
-    <Card 
-      className="bg-slate-800 border-slate-700 hover:border-cyan-500 transition-all duration-300 cursor-pointer group"
-      onClick={() => onProjectClick(project)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+    <Card className="bg-slate-800 border-slate-700 hover:shadow-lg hover:shadow-cyan-900/20 transition-all cursor-pointer group">
+      <CardHeader className="pb-4" onClick={() => onProjectClick(project)}>
+        <div className="flex justify-between items-start mb-2">
           <CardTitle className="text-lg text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
             {project.title}
           </CardTitle>
-          <Badge 
-            className={`${getDifficultyColor(project.difficulty)} text-white text-xs px-2 py-1 ml-2 flex-shrink-0`}
-          >
+          <Badge className={`${getDifficultyColor(project.difficulty)} text-white text-xs flex-shrink-0 ml-2`}>
             {project.difficulty}
           </Badge>
         </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <p className="text-slate-300 text-sm line-clamp-3 leading-relaxed">
+        <p className="text-slate-300 text-sm line-clamp-3 mb-4">
           {project.description}
         </p>
+      </CardHeader>
 
-        {/* Categories */}
-        <div className="flex flex-wrap gap-1">
-          {project.categories.slice(0, 3).map((category, index) => (
-            <Badge key={index} variant="outline" className="text-xs border-slate-600 text-slate-300">
-              {category}
-            </Badge>
-          ))}
-          {project.categories.length > 3 && (
-            <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
-              +{project.categories.length - 3}
-            </Badge>
-          )}
-        </div>
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          {/* Categories */}
+          <div className="flex flex-wrap gap-1">
+            {project.categories.slice(0, 3).map((category) => (
+              <Badge key={category} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                {category}
+              </Badge>
+            ))}
+            {project.categories.length > 3 && (
+              <Badge variant="outline" className="text-xs text-slate-400 border-slate-600">
+                +{project.categories.length - 3}
+              </Badge>
+            )}
+          </div>
 
-        {/* Creator Info */}
-        <div className="flex items-center space-x-2 text-sm text-slate-400">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={avatarUrl} alt={name} />
-            <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white text-xs">
-              {name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span>by @{username}</span>
-        </div>
+          {/* Rewards */}
+          <div>
+            <ProjectRewards 
+              difficulty={project.difficulty}
+              xpReward={project.xpReward}
+              bitsReward={project.bitsReward}
+              bytesReward={project.bytesReward}
+            />
+          </div>
 
-        {/* Roles needed */}
-        <div className="flex items-center space-x-2">
-          <Users className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-300 text-sm">
-            {project.rolesNeeded.length > 0 
-              ? project.rolesNeeded.slice(0, 2).join(', ')
-              : 'No specific roles'}
-            {project.rolesNeeded.length > 2 && ` +${project.rolesNeeded.length - 2}`}
-          </span>
-        </div>
-
-        {/* Rewards */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1">
-              <Star className="w-4 h-4 text-yellow-400" />
-              <span className="text-slate-300">{project.xpReward} XP</span>
+          {/* Compact Team Members */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium text-slate-300">Team:</h4>
+              {project.rolesNeeded.length > 2 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAllRoles(!showAllRoles);
+                  }}
+                  className="h-6 px-2 text-slate-400 hover:text-slate-300"
+                >
+                  {showAllRoles ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  {showAllRoles ? 'Less' : `+${hiddenRolesCount} more`}
+                </Button>
+              )}
             </div>
-            <div className="flex items-center space-x-1">
-              <Crown className="w-4 h-4 text-cyan-400" />
-              <span className="text-slate-300">{project.bitsReward}</span>
+            
+            {visibleRoles.map((role) => {
+              const roleMembers = getMembersForRole(role);
+              return (
+                <div key={role} className="text-xs bg-slate-700/50 rounded p-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-cyan-400 font-medium truncate">{role}</span>
+                    <span className="text-slate-400 text-xs">({roleMembers.length})</span>
+                  </div>
+                  
+                  {roleMembers.length > 0 ? (
+                    <div className="flex items-center gap-1 overflow-hidden">
+                      {roleMembers.slice(0, 2).map((member) => (
+                        <div key={member.id} className="flex items-center gap-1 bg-slate-600 rounded px-1.5 py-0.5 min-w-0">
+                          <Avatar className="h-3 w-3 flex-shrink-0">
+                            <AvatarImage src={member.user.avatar_url || ''} />
+                            <AvatarFallback className="bg-cyan-600 text-white text-[8px]">
+                              {(member.user.full_name || member.user.username || 'U').charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-slate-300 text-xs truncate">
+                            {member.user.username || member.user.full_name || 'Unknown'}
+                          </span>
+                        </div>
+                      ))}
+                      {roleMembers.length > 2 && (
+                        <span className="text-slate-400 text-xs">+{roleMembers.length - 2}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-500 italic text-xs">Open</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Creator Info */}
+          <div className="flex items-center gap-2">
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={project.creator.avatar} />
+              <AvatarFallback className="bg-cyan-600 text-white text-xs">
+                {project.creator.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-slate-400">by @{project.creator.username}</span>
+          </div>
+
+          {/* Created Date */}
+          <div className="flex justify-between items-center text-xs text-slate-400">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>{new Date(project.createdAt!).toLocaleDateString()}</span>
             </div>
           </div>
-        </div>
 
-        {/* End date */}
-        {project.endDate && (
-          <div className="flex items-center space-x-2 text-sm text-slate-400">
-            <Calendar className="w-4 h-4" />
-            <span>Due: {new Date(project.endDate).toLocaleDateString()}</span>
+          {/* Join Section */}
+          <div className="pt-2 space-y-2">
+            {isUserMember ? (
+              <Button disabled className="w-full bg-green-600 text-white">
+                <Users className="mr-2 h-4 w-4" />
+                Already Joined
+              </Button>
+            ) : (
+              <>
+                <Select onValueChange={setSelectedRole} value={selectedRole}>
+                  <SelectTrigger className="w-full bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-slate-200">
+                    {project.rolesNeeded.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  onClick={handleJoinClick}
+                  disabled={joinLoading || !selectedRole}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white disabled:opacity-50"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  {joinLoading ? 'Joining...' : `Join as ${selectedRole || 'Select Role'}`}
+                </Button>
+              </>
+            )}
           </div>
-        )}
-
-        {/* Action button */}
-        <div className="pt-2">
-          {isUserMember ? (
-            <Button 
-              disabled 
-              className="w-full bg-green-600 text-white"
-            >
-              ✓ Joined
-            </Button>
-          ) : (
-            <Button
-              onClick={handleJoinClick}
-              disabled={joinLoading || project.rolesNeeded.length === 0}
-              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white transition-all duration-300"
-            >
-              {joinLoading ? 'Joining...' : 'Join Project'}
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>
