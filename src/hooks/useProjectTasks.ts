@@ -10,6 +10,7 @@ export interface ProjectTask {
   description: string | null;
   assigned_role: string | null;
   assigned_user_id: string | null;
+  assigned_user_ids: string[] | null;
   status: string;
   due_date: string | null;
   created_by: string;
@@ -61,7 +62,7 @@ export const useProjectTasks = (projectId: string) => {
     title: string;
     description?: string;
     assigned_role?: string;
-    assigned_user_id?: string;
+    assigned_user_ids?: string[];
     due_date?: string;
   }) => {
     if (!user) return false;

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ProjectTask } from '@/hooks/useProjectTasks';
 import { ProjectMember } from '@/hooks/useProjectMembers';
 
@@ -29,7 +30,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    assigned_user_id: '',
+    assigned_user_ids: [] as string[],
     due_date: '',
     status: 'pending'
   });
@@ -40,7 +41,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setFormData({
         title: task.title,
         description: task.description || '',
-        assigned_user_id: task.assigned_user_id || '',
+        assigned_user_ids: task.assigned_user_ids || (task.assigned_user_id ? [task.assigned_user_id] : []),
         due_date: task.due_date || '',
         status: task.status
       });
@@ -48,7 +49,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setFormData({
         title: '',
         description: '',
-        assigned_user_id: '',
+        assigned_user_ids: [],
         due_date: '',
         status: 'pending'
       });
@@ -58,14 +59,8 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const handleSave = async () => {
     if (!formData.title.trim()) return;
 
-    // Convert placeholder values back to empty strings before saving
-    const dataToSave = {
-      ...formData,
-      assigned_user_id: formData.assigned_user_id === 'no-user-selected' ? '' : formData.assigned_user_id
-    };
-
     setSaving(true);
-    const success = await onSave(dataToSave);
+    const success = await onSave(formData);
     setSaving(false);
 
     if (success) {
@@ -73,9 +68,23 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
     }
   };
 
+  const handleUserAssignmentChange = (userId: string, checked: boolean) => {
+    if (checked) {
+      setFormData({
+        ...formData,
+        assigned_user_ids: [...formData.assigned_user_ids, userId]
+      });
+    } else {
+      setFormData({
+        ...formData,
+        assigned_user_ids: formData.assigned_user_ids.filter(id => id !== userId)
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl">
+      <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
         </DialogHeader>
@@ -103,24 +112,28 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="assigned_user" className="text-right">Assign to User</Label>
-            <Select 
-              value={formData.assigned_user_id || 'no-user-selected'}
-              onValueChange={(value) => setFormData({ ...formData, assigned_user_id: value === 'no-user-selected' ? '' : value })}
-            >
-              <SelectTrigger className="col-span-3 bg-slate-700 border-slate-600">
-                <SelectValue placeholder="Select a user (optional)" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="no-user-selected">No specific user</SelectItem>
-                {members.map((member) => (
-                  <SelectItem key={member.user_id} value={member.user_id}>
-                    {member.user?.username || member.user?.full_name || 'Unknown User'} ({member.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right mt-2">Assign to Users</Label>
+            <div className="col-span-3 space-y-2 max-h-40 overflow-y-auto bg-slate-700 p-3 rounded border border-slate-600">
+              {members.length === 0 ? (
+                <p className="text-slate-400 text-sm">No team members available</p>
+              ) : (
+                members.map((member) => (
+                  <div key={member.user_id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`user-${member.user_id}`}
+                      checked={formData.assigned_user_ids.includes(member.user_id)}
+                      onCheckedChange={(checked) => 
+                        handleUserAssignmentChange(member.user_id, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={`user-${member.user_id}`} className="text-sm cursor-pointer">
+                      {member.user?.full_name || member.user?.username || 'Unknown User'} ({member.role})
+                    </Label>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">

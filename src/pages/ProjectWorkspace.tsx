@@ -20,6 +20,7 @@ import { toast } from '@/components/ui/use-toast';
 import TaskDialog from '@/components/TaskDialog';
 import TeamMemberCard from '@/components/TeamMemberCard';
 import MessageUserAvatar from '@/components/MessageUserAvatar';
+import TaskAssigneeList from '@/components/TaskAssigneeList';
 
 const ProjectWorkspace = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -362,28 +363,34 @@ const ProjectWorkspace = () => {
                   {tasks.map((task) => (
                     <div 
                       key={task.id} 
-                      className="flex items-center justify-between p-4 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
+                      className="flex items-start justify-between p-4 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <Badge className={`${getStatusColor(task.status)} w-3 h-3 p-0 rounded-full`} />
+                      <div className="flex items-start gap-3 flex-1">
+                        <Badge className={`${getStatusColor(task.status)} w-3 h-3 p-0 rounded-full mt-1`} />
                         <div className="flex-1">
                           <p className="text-white font-medium">{task.title}</p>
                           {task.description && (
                             <p className="text-sm text-slate-400 mt-1">{task.description}</p>
                           )}
-                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
-                            {task.assigned_role && (
-                              <span>Role: {task.assigned_role}</span>
-                            )}
-                            {task.due_date && (
-                              <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
-                            )}
-                            <span className="capitalize">Status: {task.status}</span>
+                          <div className="flex items-start gap-6 mt-3">
+                            <div className="min-w-0">
+                              <p className="text-xs text-slate-500 mb-1">Assigned to:</p>
+                              <TaskAssigneeList 
+                                assignedUserIds={task.assigned_user_ids || (task.assigned_user_id ? [task.assigned_user_id] : [])}
+                                members={members}
+                              />
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-slate-400">
+                              {task.due_date && (
+                                <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
+                              )}
+                              <span className="capitalize">Status: {task.status}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                       {isProjectLead && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 ml-4">
                           <Button
                             size="sm"
                             variant="outline"
