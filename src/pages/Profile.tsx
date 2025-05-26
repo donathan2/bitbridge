@@ -59,17 +59,20 @@ const Profile = () => {
     );
   }
 
-  // Handle no user
+  // Handle no user - redirect to auth instead of showing error
   if (!user) {
+    console.log('No user found, redirecting to auth');
+    navigate('/auth');
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="text-slate-300 text-lg">Please log in to view your profile.</div>
+        <div className="text-slate-300 text-lg">Redirecting to login...</div>
       </div>
     );
   }
 
   // Handle error with more detailed information
   if (error) {
+    console.error('Profile error:', error);
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <Card className="bg-slate-800 border-red-500 max-w-md">
@@ -77,13 +80,22 @@ const Profile = () => {
             <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Profile Loading Error</h3>
             <p className="text-red-400 text-sm mb-4">{error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="bg-cyan-600 hover:bg-cyan-700"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/')}
+                className="border-slate-600 text-slate-300"
+              >
+                Go Home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -95,8 +107,8 @@ const Profile = () => {
   
   // Use real profile data or defaults with updated username
   const userProfileData = {
-    name: name,
-    username: `@${username}`,
+    name: name || 'Anonymous User',
+    username: `@${username || 'user'}`,
     bio: userProfile?.bio || "Welcome to BitBridge! Update your bio to tell others about yourself.",
     avatar: avatarUrl,
     skillLevel: userProfile?.active_title || "Beginner Developer",

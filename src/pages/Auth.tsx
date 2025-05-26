@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,8 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/profile');
+      console.log('User is logged in, redirecting to home');
+      navigate('/');
     }
   }, [user, navigate]);
 
@@ -43,11 +43,12 @@ const Auth = () => {
         if (error) throw error;
         
         if (data.user) {
+          console.log('Login successful:', data.user);
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-          navigate('/profile');
+          // Let the auth context handle the redirect
         }
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -63,11 +64,12 @@ const Auth = () => {
         if (error) throw error;
         
         if (data.user) {
+          console.log('Signup successful:', data.user);
           toast({
             title: "Account created!",
             description: "Welcome to BitBridge! You can start exploring now.",
           });
-          navigate('/profile');
+          // Let the auth context handle the redirect
         }
       }
     } catch (error: any) {
@@ -89,7 +91,7 @@ const Auth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/profile`,
+          redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
