@@ -96,13 +96,15 @@ const BitVault = () => {
                         {title.name}
                       </span>
                     </div>
-                    {title.owned && (
+                  </CardTitle>
+                  {title.owned && (
+                    <div className="mt-2">
                       <Badge variant="outline" className="border-green-500 text-green-400">
                         <Check className="w-3 h-3 mr-1" />
                         Owned
                       </Badge>
-                    )}
-                  </CardTitle>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-col space-y-2">

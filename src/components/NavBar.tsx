@@ -63,7 +63,7 @@ const NavBar = () => {
           {/* Logo and name */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <div className="h-12 w-12 mr-3">
+              <div className="h-14 w-14 mr-3">
                 <img src="/lovable-uploads/d809f725-76cd-4f33-bc68-0c1316f64d94.png" alt="BitBridge" className="h-full w-full object-contain" />
               </div>
               <span className="text-cyan-400 text-xl font-pixel">BitBridge</span>

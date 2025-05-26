@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Search, UserPlus, X, Check, MessageSquare, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAvatar } from '@/hooks/useAvatar';
 import { toast } from '@/components/ui/use-toast';
 
 interface Friend {
@@ -352,6 +353,32 @@ const Friends = () => {
     }
   };
 
+  // Component for displaying friend with avatar
+  const FriendAvatar = ({ friendId, name, fallbackSrc }: { friendId: string, name: string, fallbackSrc?: string }) => {
+    const { avatarUrl } = useAvatar(friendId);
+    return (
+      <Avatar className="h-12 w-12 border-2 border-slate-700">
+        <AvatarImage src={avatarUrl || fallbackSrc} alt={name} />
+        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+          {name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
+  // Component for displaying search result with avatar
+  const SearchResultAvatar = ({ userId, name, fallbackSrc }: { userId: string, name: string, fallbackSrc?: string }) => {
+    const { avatarUrl } = useAvatar(userId);
+    return (
+      <Avatar className="h-10 w-10">
+        <AvatarImage src={avatarUrl || fallbackSrc} alt={name} />
+        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+          {(name || 'U').charAt(0).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   if (!user) {
     return (
       <div className="p-6">
@@ -399,12 +426,11 @@ const Friends = () => {
                 {searchResults.map((result) => (
                   <div key={result.id} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={result.avatar_url || '/placeholder.svg'} alt={result.full_name || 'User'} />
-                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                          {(result.full_name || result.username || 'U').charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <SearchResultAvatar 
+                        userId={result.id} 
+                        name={result.full_name || result.username || 'User'} 
+                        fallbackSrc={result.avatar_url}
+                      />
                       <div>
                         <h3 className="font-medium text-white">{result.full_name || 'Unknown User'}</h3>
                         <p className="text-sm text-slate-400">@{result.username || 'unknown'}</p>
@@ -467,12 +493,7 @@ const Friends = () => {
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="relative">
-                              <Avatar className="h-12 w-12 border-2 border-slate-700">
-                                <AvatarImage src={friend.avatar} alt={friend.name} />
-                                <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                                  {friend.name.split(' ').map(n => n[0]).join('')}
-                                </AvatarFallback>
-                              </Avatar>
+                              <FriendAvatar friendId={friend.id} name={friend.name} fallbackSrc={friend.avatar} />
                               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-800 bg-green-500"></span>
                             </div>
                             <div className="flex-1">
@@ -504,12 +525,7 @@ const Friends = () => {
                       <Card key={request.id} className="bg-slate-800 border-slate-700 hover:shadow-md transition-all">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <Avatar className="h-12 w-12 border-2 border-slate-700">
-                              <AvatarImage src={request.avatar} alt={request.name} />
-                              <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                                {request.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
+                            <FriendAvatar friendId={request.sender_id} name={request.name} fallbackSrc={request.avatar} />
                             <div className="flex-1">
                               <h3 className="font-semibold text-lg text-white">{request.name}</h3>
                               <p className="text-sm text-slate-400">{request.username}</p>
@@ -552,7 +568,7 @@ const Friends = () => {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={selectedFriend.avatar} alt={selectedFriend.name} />
+                          <AvatarImage src={useAvatar(selectedFriend.id).avatarUrl} alt={selectedFriend.name} />
                           <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
                             {selectedFriend.name.split(' ').map((n: string) => n[0]).join('')}
                           </AvatarFallback>
@@ -582,7 +598,7 @@ const Friends = () => {
                       >
                         {message.sender !== "me" && (
                           <Avatar className="h-8 w-8 mr-2 mt-1">
-                            <AvatarImage src={selectedFriend.avatar} alt={selectedFriend.name} />
+                            <AvatarImage src={useAvatar(selectedFriend.id).avatarUrl} alt={selectedFriend.name} />
                             <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white text-xs">
                               {selectedFriend.name.split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
