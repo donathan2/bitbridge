@@ -150,7 +150,7 @@ const Profile = () => {
       <div className="max-w-7xl mx-auto space-y-10">
         {/* Header Section */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-sans">BitBridge Profile</h1>
+          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-mono">BitBridge Profile</h1>
           <p className="text-lg text-slate-300 font-light">Track your coding journey and projects</p>
         </div>
 
@@ -172,7 +172,7 @@ const Profile = () => {
               
               <div className="flex-1 text-center md:text-left space-y-5">
                 <div>
-                  <h2 className="text-3xl font-bold text-white mb-1 font-sans">{userProfileData.name}</h2>
+                  <h2 className="text-3xl font-bold text-white mb-1 font-mono">{userProfileData.name}</h2>
                   <p className="text-lg text-slate-300 mb-2 font-light">{userProfileData.username}</p>
                   <Badge className="mt-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-3 py-1 shadow-glow">
                     <span className="truncate max-w-[200px] block">{userProfileData.activeTitle}</span>
@@ -247,7 +247,7 @@ const Profile = () => {
           {/* Completed Projects */}
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
-              <CardTitle className="flex items-center gap-2 font-sans">
+              <CardTitle className="flex items-center gap-2 font-mono">
                 <Trophy className="w-6 h-6" />
                 Completed Projects ({completedProjects.length})
               </CardTitle>
@@ -305,7 +305,7 @@ const Profile = () => {
           {/* Ongoing Projects */}
           <Card className="bg-slate-800 border-slate-700 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
-              <CardTitle className="flex items-center gap-2 font-sans">
+              <CardTitle className="flex items-center gap-2 font-mono">
                 <Code className="w-6 h-6" />
                 Ongoing Projects ({ongoingProjects.length})
               </CardTitle>

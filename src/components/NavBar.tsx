@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
@@ -60,10 +61,13 @@ const NavBar = () => {
           {/* Logo and name */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <div className="h-8 w-8 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-md flex items-center justify-center text-white font-bold text-lg mr-2">
-                B
-              </div>
-              <span className="text-cyan-400 text-xl font-bold">BitBridge</span>
+              <img 
+                src="/lovable-uploads/572b35e6-62e6-44c1-b98f-e29a7482dec8.png" 
+                alt="BitBridge Logo" 
+                className="h-8 w-8 mr-2"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <span className="text-cyan-400 text-xl font-pixel">BitBridge</span>
             </Link>
           </div>
 
@@ -114,7 +118,7 @@ const NavBar = () => {
               <>
                 <Link 
                   to="/profile" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-2 rounded-md flex items-center text-sm font-pixel ${
                     location.pathname === '/profile' 
                       ? 'bg-slate-700 text-cyan-400' 
                       : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
@@ -125,7 +129,7 @@ const NavBar = () => {
                 </Link>
                 <Link 
                   to="/find-project" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-2 rounded-md flex items-center text-sm font-pixel ${
                     location.pathname === '/find-project' 
                       ? 'bg-slate-700 text-cyan-400' 
                       : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
@@ -136,7 +140,7 @@ const NavBar = () => {
                 </Link>
                 <Link 
                   to="/bitvault" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-2 rounded-md flex items-center text-sm font-pixel ${
                     location.pathname === '/bitvault' 
                       ? 'bg-slate-700 text-cyan-400' 
                       : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
@@ -147,7 +151,7 @@ const NavBar = () => {
                 </Link>
                 <Link 
                   to="/friends" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-2 rounded-md flex items-center text-sm font-pixel ${
                     location.pathname === '/friends' 
                       ? 'bg-slate-700 text-cyan-400' 
                       : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
@@ -158,7 +162,7 @@ const NavBar = () => {
                 </Link>
                 <Link 
                   to="/settings" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-2 rounded-md flex items-center text-sm font-pixel ${
                     location.pathname === '/settings' 
                       ? 'bg-slate-700 text-cyan-400' 
                       : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
@@ -171,12 +175,12 @@ const NavBar = () => {
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/auth">
-                  <Button variant="ghost" className="text-slate-300 hover:text-cyan-400">
+                  <Button variant="ghost" className="text-slate-300 hover:text-cyan-400 font-pixel">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/auth">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 font-pixel">
                     Sign Up
                   </Button>
                 </Link>
