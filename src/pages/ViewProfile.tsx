@@ -1,0 +1,185 @@
+
+import React from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Bitcoin, DollarSign, Trophy, Users, Star } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
+import { useAvatar } from '@/hooks/useAvatar';
+import { getProgressToNextLevel } from '@/utils/xpUtils';
+
+const ViewProfile = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const { profile, loading, error } = useProfile(userId);
+  const { avatarUrl, name } = useAvatar(userId);
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-slate-700 rounded w-1/4 mb-4"></div>
+            <div className="h-64 bg-slate-700 rounded mb-6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Profile Not Found</h1>
+          <p className="text-slate-300 mb-6">The user profile you're looking for doesn't exist or is not accessible.</p>
+          <Link to="/friends">
+            <Button className="bg-cyan-600 hover:bg-cyan-700">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Friends
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const xpProgress = getProgressToNextLevel(profile.experience_points || 0);
+
+  return (
+    <div className="p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header with back button */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link to="/friends">
+            <Button variant="ghost" className="text-slate-300 hover:text-cyan-400">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Friends
+            </Button>
+          </Link>
+        </div>
+
+        {/* Profile Header Card */}
+        <Card className="bg-slate-800 border-slate-700 shadow-lg">
+          <CardContent className="p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              {/* Avatar and Basic Info */}
+              <div className="flex items-center gap-4">
+                <Avatar className="w-24 h-24 border-4 border-slate-600">
+                  <AvatarImage src={avatarUrl} alt={name} />
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white text-2xl">
+                    {name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">{name}</h1>
+                  <p className="text-lg text-slate-300">@{profile.username || 'unknown'}</p>
+                  {profile.active_title && (
+                    <Badge className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+                      <Star className="w-3 h-3 mr-1" />
+                      {profile.active_title}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 ml-auto">
+                <div className="bg-slate-700 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-400">{xpProgress.currentLevel}</div>
+                  <div className="text-sm text-slate-300">Level</div>
+                </div>
+                <div className="bg-slate-700 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-yellow-400 flex items-center justify-center gap-1">
+                    <Bitcoin className="w-5 h-5" />
+                    {profile.bits_currency?.toLocaleString() || 0}
+                  </div>
+                  <div className="text-sm text-slate-300">Bits</div>
+                </div>
+                <div className="bg-slate-700 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-400 flex items-center justify-center gap-1">
+                    <DollarSign className="w-5 h-5" />
+                    {profile.bytes_currency || 0}
+                  </div>
+                  <div className="text-sm text-slate-300">Bytes</div>
+                </div>
+              </div>
+            </div>
+
+            {/* XP Progress */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-300">Experience Progress</span>
+                <span className="text-sm text-slate-400">
+                  {profile.experience_points || 0} / {xpProgress.nextLevelXP} XP
+                </span>
+              </div>
+              <Progress value={xpProgress.progressPercentage} className="h-3 bg-slate-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bio Section */}
+        {profile.bio && (
+          <Card className="bg-slate-800 border-slate-700 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-cyan-400">About</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-300 leading-relaxed">{profile.bio}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Skill Level */}
+        {profile.skill_level && (
+          <Card className="bg-slate-800 border-slate-700 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-cyan-400">Skill Level</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-base px-4 py-2">
+                {profile.skill_level}
+              </Badge>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Additional Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-slate-800 border-slate-700 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-cyan-400 flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                Achievements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-400 text-center py-4">
+                Achievement system coming soon!
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-cyan-400 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Projects
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-400 text-center py-4">
+                Project history coming soon!
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ViewProfile;

@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ProjectWorkspace from "./pages/ProjectWorkspace";
 import BitVault from "./pages/BitVault";
+import ViewProfile from "./pages/ViewProfile";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/:userId" element={<ViewProfile />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/find-project" element={<FindProject />} />
               <Route path="/bitvault" element={<BitVault />} />

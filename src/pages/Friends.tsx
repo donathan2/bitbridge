@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, UserPlus, X, Check, MessageSquare, Send } from 'lucide-react';
+import { Search, UserPlus, X, Check, MessageSquare, Send, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
@@ -494,8 +495,7 @@ const Friends = () => {
                     friends.map((friend) => (
                       <Card 
                         key={friend.id} 
-                        className={`bg-slate-800 border-slate-700 hover:shadow-md hover:border-slate-600 transition-all cursor-pointer ${selectedFriend?.id === friend.id ? 'border-l-4 border-l-cyan-500' : ''}`}
-                        onClick={() => setSelectedFriend(friend)}
+                        className={`bg-slate-800 border-slate-700 hover:shadow-md hover:border-slate-600 transition-all ${selectedFriend?.id === friend.id ? 'border-l-4 border-l-cyan-500' : ''}`}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
@@ -511,6 +511,27 @@ const Friends = () => {
                             <div className="flex-1">
                               <h3 className="font-semibold text-white">{friend.name}</h3>
                               <p className="text-sm text-slate-400">{friend.username}</p>
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-cyan-400 hover:text-cyan-300 hover:bg-slate-700 p-1 h-auto"
+                                  onClick={() => setSelectedFriend(friend)}
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Chat
+                                </Button>
+                                <Link to={`/profile/${friend.id}`}>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-slate-300 hover:text-cyan-400 hover:bg-slate-700 p-1 h-auto"
+                                  >
+                                    <User className="h-4 w-4 mr-1" />
+                                    View Profile
+                                  </Button>
+                                </Link>
+                              </div>
                             </div>
                             <div className="text-right text-xs text-slate-500">
                               <p>{friend.lastActive}</p>
@@ -597,6 +618,12 @@ const Friends = () => {
                         <p className="text-xs text-slate-400">{selectedFriend.status} · {selectedFriend.lastActive}</p>
                       </div>
                     </div>
+                    <Link to={`/profile/${selectedFriend.id}`}>
+                      <Button size="sm" variant="ghost" className="text-slate-300 hover:text-cyan-400">
+                        <User className="h-4 w-4 mr-1" />
+                        View Profile
+                      </Button>
+                    </Link>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow p-4 overflow-auto flex flex-col space-y-4 max-h-[calc(75vh-8rem)]">
