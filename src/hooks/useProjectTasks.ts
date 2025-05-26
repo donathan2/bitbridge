@@ -46,8 +46,14 @@ export const useProjectTasks = (projectId: string) => {
         throw tasksError;
       }
 
-      console.log('✅ Successfully fetched tasks:', data);
-      setTasks(data || []);
+      // Transform the data to ensure assigned_user_ids is always present
+      const transformedTasks = (data || []).map(task => ({
+        ...task,
+        assigned_user_ids: task.assigned_user_ids || (task.assigned_user_id ? [task.assigned_user_id] : null)
+      }));
+
+      console.log('✅ Successfully fetched tasks:', transformedTasks);
+      setTasks(transformedTasks);
       setError(null);
     } catch (err) {
       console.error('💥 Error in fetchTasks:', err);
@@ -96,9 +102,27 @@ export const useProjectTasks = (projectId: string) => {
     try {
       console.log('🔄 Updating task:', taskId, updates);
 
+      // Clean up the updates object to only include fields that exist in the database
+      const cleanUpdates = {
+        title: updates.title,
+        description: updates.description,
+        assigned_role: updates.assigned_role,
+        assigned_user_ids: updates.assigned_user_ids,
+        status: updates.status,
+        due_date: updates.due_date,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined values
+      Object.keys(cleanUpdates).forEach(key => {
+        if (cleanUpdates[key as keyof typeof cleanUpdates] === undefined) {
+          delete cleanUpdates[key as keyof typeof cleanUpdates];
+        }
+      });
+
       const { error } = await supabase
         .from('project_tasks')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(cleanUpdates)
         .eq('id', taskId);
 
       if (error) {
