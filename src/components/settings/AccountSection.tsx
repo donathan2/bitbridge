@@ -100,7 +100,7 @@ const AccountSection = () => {
 
   const handleSignOutEverywhere = async () => {
     try {
-      await supabase.auth.signOut({ scope: 'global' });
+      await signOut();
       toast({
         title: "Signed out",
         description: "You have been signed out from all devices.",

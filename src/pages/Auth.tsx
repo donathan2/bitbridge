@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,21 @@ import { Github, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Cleanup function to remove all auth-related storage
+const cleanupAuthState = () => {
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+};
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -34,6 +50,17 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Clean up existing state first
+      cleanupAuthState();
+      
+      // Attempt global sign out to clear any existing sessions
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Pre-auth cleanup sign out error:', err);
+      }
+
       if (isLogin) {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -48,7 +75,8 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-          // Let the auth context handle the redirect
+          // Force page reload to ensure clean state
+          window.location.href = '/';
         }
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -69,7 +97,8 @@ const Auth = () => {
             title: "Account created!",
             description: "Welcome to BitBridge! You can start exploring now.",
           });
-          // Let the auth context handle the redirect
+          // Force page reload to ensure clean state
+          window.location.href = '/';
         }
       }
     } catch (error: any) {
@@ -87,6 +116,9 @@ const Auth = () => {
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     try {
       console.log(`Attempting ${provider} login...`);
+      
+      // Clean up existing state first
+      cleanupAuthState();
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
