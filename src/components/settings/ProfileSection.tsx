@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, User, Mail, Crown, Upload } from 'lucide-react';
+import { Check, User, Mail, Crown, Upload, AlertCircle } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -44,6 +44,9 @@ const ProfileSection = () => {
     bio: '',
     activeTitle: '',
   });
+
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -82,8 +85,75 @@ const ProfileSection = () => {
     }
   }, [user, userProfile, name, username]);
 
+  const validateUsername = async (newUsername: string) => {
+    if (!newUsername.trim()) {
+      setUsernameError('Username is required');
+      return false;
+    }
+
+    if (newUsername === username) {
+      setUsernameError(null);
+      return true;
+    }
+
+    setIsCheckingUsername(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', newUsername.trim())
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking username:', error);
+        setUsernameError('Error checking username availability');
+        return false;
+      }
+
+      if (data) {
+        setUsernameError('Username is already taken');
+        return false;
+      }
+
+      setUsernameError(null);
+      return true;
+    } catch (error) {
+      console.error('Error validating username:', error);
+      setUsernameError('Error checking username availability');
+      return false;
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  const handleUsernameChange = (newUsername: string) => {
+    setProfileData({...profileData, username: newUsername});
+    
+    // Clear previous error immediately
+    setUsernameError(null);
+    
+    // Debounce validation
+    const timeoutId = setTimeout(() => {
+      validateUsername(newUsername);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
   const handleProfileUpdate = async () => {
     if (!user) return;
+
+    // Validate username before updating
+    const isUsernameValid = await validateUsername(profileData.username);
+    if (!isUsernameValid) {
+      toast({
+        title: "Invalid Username",
+        description: usernameError || "Please choose a different username.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const { error: authError } = await supabase.auth.updateUser({
@@ -116,7 +186,17 @@ const ProfileSection = () => {
           updated_at: new Date().toISOString()
         });
 
-      if (publicProfileError) throw publicProfileError;
+      if (publicProfileError) {
+        if (publicProfileError.code === '23505') {
+          toast({
+            title: "Username Taken",
+            description: "This username is already in use. Please choose a different one.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw publicProfileError;
+      }
 
       // Update active title
       await updateActiveTitle(profileData.activeTitle);
@@ -208,10 +288,24 @@ const ProfileSection = () => {
               <Input
                 id="username"
                 value={profileData.username}
-                onChange={(e) => setProfileData({...profileData, username: e.target.value})}
-                className="pl-8 bg-slate-700 border-slate-600 text-slate-200"
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                className={`pl-8 bg-slate-700 border-slate-600 text-slate-200 ${
+                  usernameError ? 'border-red-500' : ''
+                }`}
               />
+              {isCheckingUsername && (
+                <div className="absolute right-2 top-2.5">
+                  <div className="animate-spin h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full"></div>
+                </div>
+              )}
             </div>
+            {usernameError && (
+              <div className="flex items-center space-x-1 text-red-400 text-sm">
+                <AlertCircle className="h-3 w-3" />
+                <span>{usernameError}</span>
+              </div>
+            )}
+            <p className="text-sm text-slate-400">Choose a unique username that others will see.</p>
           </div>
         </div>
         
@@ -274,7 +368,8 @@ const ProfileSection = () => {
         <div className="flex justify-end">
           <Button 
             onClick={handleProfileUpdate}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+            disabled={!!usernameError || isCheckingUsername}
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50"
           >
             <Check className="mr-2 h-4 w-4" />
             Save Changes
