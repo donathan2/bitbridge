@@ -37,6 +37,46 @@ const cleanupAuthState = () => {
   });
 };
 
+// Function to ensure user has a profile entry
+const ensureUserProfile = async (user: User) => {
+  try {
+    // Check if profile exists
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (fetchError && fetchError.code === 'PGRST116') {
+      // Profile doesn't exist, create one
+      console.log('Creating profile for existing OAuth user:', user.email);
+      
+      // Extract name from user metadata or email
+      const oauthName = user.user_metadata?.full_name || 
+                       user.user_metadata?.name || 
+                       user.user_metadata?.display_name ||
+                       user.email?.split('@')[0];
+      
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          full_name: oauthName,
+          avatar_url: user.user_metadata?.avatar_url,
+          username: user.user_metadata?.user_name || `user${Math.floor(Math.random() * 10000)}`
+        });
+      
+      if (insertError) {
+        console.error('Error creating profile for OAuth user:', insertError);
+      } else {
+        console.log('Successfully created profile for OAuth user');
+      }
+    }
+  } catch (error) {
+    console.error('Error ensuring user profile:', error);
+  }
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -50,6 +90,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Ensure profile exists for OAuth users
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(() => {
+            ensureUserProfile(session.user);
+          }, 0);
+        }
       }
     );
 
@@ -59,6 +106,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Ensure profile exists for existing OAuth users
+      if (session?.user) {
+        setTimeout(() => {
+          ensureUserProfile(session.user);
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
