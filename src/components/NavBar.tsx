@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
@@ -33,8 +34,8 @@ const NavBar = () => {
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          // Trigger a re-fetch of profile data
-          window.location.reload();
+          // Let React Query handle the re-fetching instead of forcing a reload
+          console.log('Profile updated, React Query will handle the refresh');
         }
       )
       .subscribe();
