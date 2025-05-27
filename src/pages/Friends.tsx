@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -43,6 +42,7 @@ interface SearchResult {
   full_name: string;
   username: string;
   avatar_url: string;
+  profile_picture_url: string;
 }
 
 const Friends = () => {
@@ -215,7 +215,7 @@ const Friends = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, username, avatar_url')
+        .select('id, full_name, username, avatar_url, profile_picture_url')
         .or(`full_name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
         .neq('id', user?.id)
         .limit(10);
@@ -434,7 +434,7 @@ const Friends = () => {
                   <div key={result.id} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={result.avatar_url || '/placeholder.svg'} alt={result.full_name || 'User'} />
+                        <AvatarImage src={result.profile_picture_url || result.avatar_url || '/placeholder.svg'} alt={result.full_name || 'User'} />
                         <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
                           {(result.full_name || result.username || 'U').charAt(0).toUpperCase()}
                         </AvatarFallback>
