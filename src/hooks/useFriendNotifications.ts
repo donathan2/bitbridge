@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useFriendNotifications = () => {
   const { user } = useAuth();
   const [notificationCount, setNotificationCount] = useState(0);
-  const [hasCheckedRecently, setHasCheckedRecently] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -28,15 +27,18 @@ export const useFriendNotifications = () => {
           return;
         }
 
-        // Check for unread messages (we'll consider all messages as potentially unread for simplicity)
-        // In a real app, you'd track read/unread status
+        // Check for unread messages
         const lastCheckedKey = `friends_last_checked_${user.id}`;
         const lastChecked = localStorage.getItem(lastCheckedKey);
-        const lastCheckedTime = lastChecked ? new Date(lastChecked) : new Date(0);
+        
+        // If no lastChecked time exists, set it to 24 hours ago to catch recent messages
+        const lastCheckedTime = lastChecked ? new Date(lastChecked) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        console.log('Checking for messages after:', lastCheckedTime.toISOString());
 
         const { data: messages, error: messagesError } = await supabase
           .from('friend_messages')
-          .select('id')
+          .select('id, created_at, sender_id')
           .eq('receiver_id', user.id)
           .gt('created_at', lastCheckedTime.toISOString());
 
@@ -44,6 +46,9 @@ export const useFriendNotifications = () => {
           console.error('Error fetching friend messages:', messagesError);
           return;
         }
+
+        console.log('Found unread messages:', messages?.length || 0);
+        console.log('Found pending requests:', requests?.length || 0);
 
         const totalNotifications = (requests?.length || 0) + (messages?.length || 0);
         setNotificationCount(totalNotifications);
@@ -65,7 +70,8 @@ export const useFriendNotifications = () => {
           table: 'friend_requests',
           filter: `receiver_id=eq.${user.id}`
         },
-        () => {
+        (payload) => {
+          console.log('Friend request change detected:', payload);
           fetchNotificationCount();
         }
       )
@@ -82,7 +88,8 @@ export const useFriendNotifications = () => {
           table: 'friend_messages',
           filter: `receiver_id=eq.${user.id}`
         },
-        () => {
+        (payload) => {
+          console.log('New message received:', payload);
           fetchNotificationCount();
         }
       )
@@ -97,7 +104,9 @@ export const useFriendNotifications = () => {
   const clearNotifications = () => {
     if (user) {
       const lastCheckedKey = `friends_last_checked_${user.id}`;
-      localStorage.setItem(lastCheckedKey, new Date().toISOString());
+      const currentTime = new Date().toISOString();
+      localStorage.setItem(lastCheckedKey, currentTime);
+      console.log('Cleared notifications at:', currentTime);
       setNotificationCount(0);
     }
   };
