@@ -371,11 +371,6 @@ const Friends = () => {
 
       setNewMessage("");
       await fetchMessages(selectedFriend.id);
-      
-      toast({
-        title: "Message sent!",
-        description: "Your message has been sent.",
-      });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
