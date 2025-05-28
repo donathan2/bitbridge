@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign, Award, Target, Users, GitBranch, Lightbulb, Shield, AlertCircle, RefreshCw, UserPlus } from 'lucide-react';
+import { Trophy, Star, Code, Zap, Calendar, Clock, Github, MessageSquare, ExternalLink, Bitcoin, DollarSign, Award, Target, Users, GitBranch, Lightbulb, Shield, AlertCircle, RefreshCw, UserPlus, Gift } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProfile } from '@/hooks/useProfile';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useFriendsCount } from '@/hooks/useFriendsCount';
+import { useDailyFreebie } from '@/hooks/useDailyFreebie';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
 import ProjectRewards from '@/components/ProjectRewards';
 
@@ -46,6 +47,27 @@ const Profile = () => {
   const { profile: profileData, loading: profileDataLoading } = useProfile();
   const { avatarUrl, name, username } = useAvatar();
   const { friendsCount, loading: friendsCountLoading } = useFriendsCount();
+  const { claimFreebie, canClaimFreebie, claiming } = useDailyFreebie();
+  const [canClaim, setCanClaim] = useState(false);
+  
+  // Check if user can claim freebie on component mount
+  useEffect(() => {
+    const checkFreebieStatus = async () => {
+      const eligible = await canClaimFreebie();
+      setCanClaim(eligible);
+    };
+
+    if (user) {
+      checkFreebieStatus();
+    }
+  }, [user, canClaimFreebie]);
+
+  const handleClaimFreebie = async () => {
+    await claimFreebie();
+    // Recheck eligibility after claiming
+    const eligible = await canClaimFreebie();
+    setCanClaim(eligible);
+  };
   
   // Handle loading state
   if (authLoading || profileLoading || profileDataLoading) {
@@ -228,8 +250,8 @@ const Profile = () => {
                     </p>
                   </div>
                   
-                  {/* Compact Currency Display */}
-                  <div className="flex gap-4 justify-center md:justify-start">
+                  {/* Compact Currency Display with Freebie Button */}
+                  <div className="flex gap-4 justify-center md:justify-start items-center">
                     <div className="bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
                       <Bitcoin className="w-5 h-5 text-yellow-400" />
                       <span className="text-yellow-400 font-bold">{userProfileData.currency.bits.toLocaleString()}</span>
@@ -240,6 +262,14 @@ const Profile = () => {
                       <span className="text-purple-400 font-bold">{userProfileData.currency.bytes}</span>
                       <span className="text-slate-300 text-sm">Bytes</span>
                     </div>
+                    <Button
+                      onClick={handleClaimFreebie}
+                      disabled={!canClaim || claiming}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Gift className="w-4 h-4 mr-1" />
+                      {claiming ? 'Claiming...' : 'Freebie!'}
+                    </Button>
                   </div>
                 </div>
               </div>
