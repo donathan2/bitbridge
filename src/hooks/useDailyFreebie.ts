@@ -14,7 +14,7 @@ export const useDailyFreebie = () => {
     try {
       const { data: profile, error } = await supabase
         .from('user_profiles')
-        .select('last_freebie_claimed')
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
@@ -23,13 +23,16 @@ export const useDailyFreebie = () => {
         return false;
       }
 
-      if (!profile?.last_freebie_claimed) {
+      // Check if last_freebie_claimed exists and has a value
+      const lastClaimed = (profile as any)?.last_freebie_claimed;
+      
+      if (!lastClaimed) {
         return true;
       }
 
-      const lastClaimed = new Date(profile.last_freebie_claimed);
+      const lastClaimedDate = new Date(lastClaimed);
       const now = new Date();
-      const timeDiff = now.getTime() - lastClaimed.getTime();
+      const timeDiff = now.getTime() - lastClaimedDate.getTime();
       const hoursDiff = timeDiff / (1000 * 3600);
 
       return hoursDiff >= 24;
@@ -59,14 +62,24 @@ export const useDailyFreebie = () => {
       const bitsReward = Math.floor(Math.random() * 201) + 100; // 100-300 bits
       const bytesReward = Math.floor(Math.random() * 16) + 5; // 5-20 bytes
 
+      // Get current values first
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('user_profiles')
+        .select('bits_currency, bytes_currency')
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update with new values
       const { error } = await supabase
         .from('user_profiles')
         .update({
-          bits_currency: supabase.raw(`bits_currency + ${bitsReward}`),
-          bytes_currency: supabase.raw(`bytes_currency + ${bytesReward}`),
+          bits_currency: (currentProfile.bits_currency || 0) + bitsReward,
+          bytes_currency: (currentProfile.bytes_currency || 0) + bytesReward,
           last_freebie_claimed: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('user_id', user.id);
 
       if (error) throw error;
