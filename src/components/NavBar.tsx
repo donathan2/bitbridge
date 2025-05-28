@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
@@ -9,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProfile } from '@/hooks/useProfile';
 import { useAvatar } from '@/hooks/useAvatar';
+import { useFriendNotifications } from '@/hooks/useFriendNotifications';
 import { getProgressToNextLevel } from '@/utils/xpUtils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +18,14 @@ const NavBar = () => {
   const { profile, loading: profileLoading } = useUserProfile();
   const { profile: publicProfile } = useProfile();
   const { avatarUrl, name } = useAvatar();
+  const { notificationCount, clearNotifications } = useFriendNotifications();
+  
+  // Clear notifications when user visits friends page
+  useEffect(() => {
+    if (location.pathname === '/friends' && notificationCount > 0) {
+      clearNotifications();
+    }
+  }, [location.pathname, notificationCount, clearNotifications]);
   
   // Set up real-time subscription for profile updates
   useEffect(() => {
@@ -150,7 +158,7 @@ const NavBar = () => {
                 </Link>
                 <Link 
                   to="/friends" 
-                  className={`px-3 py-2 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-2 rounded-md flex items-center text-sm relative ${
                     location.pathname === '/friends' 
                       ? 'bg-slate-700 text-cyan-400' 
                       : 'text-slate-300 hover:bg-slate-700 hover:text-cyan-400'
@@ -158,6 +166,11 @@ const NavBar = () => {
                 >
                   <Users className="h-4 w-4 mr-1" />
                   <span>Friends</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </span>
+                  )}
                 </Link>
                 <Link 
                   to="/settings" 
