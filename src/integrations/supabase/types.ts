@@ -340,6 +340,7 @@ export type Database = {
           experience_level: number | null
           experience_points: number | null
           id: string
+          last_freebie_claimed: string | null
           skill_level: string | null
           updated_at: string | null
           user_id: string
@@ -353,6 +354,7 @@ export type Database = {
           experience_level?: number | null
           experience_points?: number | null
           id?: string
+          last_freebie_claimed?: string | null
           skill_level?: string | null
           updated_at?: string | null
           user_id: string
@@ -366,6 +368,7 @@ export type Database = {
           experience_level?: number | null
           experience_points?: number | null
           id?: string
+          last_freebie_claimed?: string | null
           skill_level?: string | null
           updated_at?: string | null
           user_id?: string

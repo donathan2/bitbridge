@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -265,7 +266,7 @@ const Profile = () => {
                     <Button
                       onClick={handleClaimFreebie}
                       disabled={!canClaim || claiming}
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Gift className="w-4 h-4 mr-1" />
                       {claiming ? 'Claiming...' : 'Freebie!'}
