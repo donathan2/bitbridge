@@ -140,14 +140,15 @@ export const useFriendNotifications = () => {
       localStorage.setItem(friendLastCheckedKey, currentTime);
       console.log('Cleared notifications for friend:', friendId, 'at:', currentTime);
       
+      // Find the friend notification before removing it
+      const friendNotif = friendNotifications.find(notif => notif.friendId === friendId);
+      const messageCountToSubtract = friendNotif?.messageCount || 0;
+      
       // Remove this friend from notifications
       setFriendNotifications(prev => prev.filter(notif => notif.friendId !== friendId));
       
-      // Update total count
-      const friendNotif = friendNotifications.find(notif => notif.friendId === friendId);
-      if (friendNotif) {
-        setNotificationCount(prev => prev - friendNotif.messageCount);
-      }
+      // Update total count by subtracting the friend's message count
+      setNotificationCount(prev => prev - messageCountToSubtract);
     }
   };
 
