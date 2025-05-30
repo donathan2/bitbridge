@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
@@ -18,14 +19,7 @@ const NavBar = () => {
   const { profile, loading: profileLoading } = useUserProfile();
   const { profile: publicProfile } = useProfile();
   const { avatarUrl, name } = useAvatar();
-  const { notificationCount, clearNotifications } = useFriendNotifications();
-  
-  // Clear notifications when user visits friends page
-  useEffect(() => {
-    if (location.pathname === '/friends' && notificationCount > 0) {
-      clearNotifications();
-    }
-  }, [location.pathname, notificationCount, clearNotifications]);
+  const { notificationCount } = useFriendNotifications();
   
   // Set up real-time subscription for profile updates
   useEffect(() => {

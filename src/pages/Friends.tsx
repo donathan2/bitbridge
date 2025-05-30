@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
+import { useFriendNotifications } from '@/hooks/useFriendNotifications';
 
 interface Friend {
   id: string;
@@ -47,6 +48,7 @@ interface SearchResult {
 
 const Friends = () => {
   const { user } = useAuth();
+  const { getFriendNotificationCount, clearFriendNotifications, clearRequestNotifications, refetchNotifications } = useFriendNotifications();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -75,6 +77,8 @@ const Friends = () => {
   useEffect(() => {
     if (selectedFriend) {
       fetchMessages(selectedFriend.id);
+      // Clear notifications for this specific friend when starting to chat
+      clearFriendNotifications(selectedFriend.id);
     }
   }, [selectedFriend]);
 
@@ -305,6 +309,9 @@ const Friends = () => {
         description: "You are now friends.",
       });
       
+      // Clear request notifications when handling a request
+      clearRequestNotifications();
+      
       await fetchFriends();
       await fetchFriendRequests();
     } catch (error) {
@@ -333,6 +340,9 @@ const Friends = () => {
         title: "Friend request declined",
         description: "The friend request has been declined.",
       });
+      
+      // Clear request notifications when handling a request
+      clearRequestNotifications();
       
       await fetchFriendRequests();
     } catch (error) {
@@ -371,6 +381,9 @@ const Friends = () => {
 
       setNewMessage("");
       await fetchMessages(selectedFriend.id);
+      
+      // Trigger notification refetch after sending message
+      refetchNotifications();
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -487,54 +500,62 @@ const Friends = () => {
                       <p className="text-slate-500">Search for users above to add friends!</p>
                     </div>
                   ) : (
-                    friends.map((friend) => (
-                      <Card 
-                        key={friend.id} 
-                        className={`bg-slate-800 border-slate-700 hover:shadow-md hover:border-slate-600 transition-all ${selectedFriend?.id === friend.id ? 'border-l-4 border-l-cyan-500' : ''}`}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <Avatar className="h-12 w-12 border-2 border-slate-700">
-                                <AvatarImage src={friend.avatar} alt={friend.name} />
-                                <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-                                  {friend.name.split(' ').map(n => n[0]).join('')}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-800 bg-green-500"></span>
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-white">{friend.name}</h3>
-                              <p className="text-sm text-slate-400">{friend.username}</p>
-                              <div className="flex gap-2 mt-2">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-cyan-400 hover:text-cyan-300 hover:bg-slate-700 p-1 h-auto"
-                                  onClick={() => setSelectedFriend(friend)}
-                                >
-                                  <MessageSquare className="h-4 w-4 mr-1" />
-                                  Chat
-                                </Button>
-                                <Link to={`/profile/${friend.id}`}>
+                    friends.map((friend) => {
+                      const notificationCount = getFriendNotificationCount(friend.id);
+                      return (
+                        <Card 
+                          key={friend.id} 
+                          className={`bg-slate-800 border-slate-700 hover:shadow-md hover:border-slate-600 transition-all ${selectedFriend?.id === friend.id ? 'border-l-4 border-l-cyan-500' : ''}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <Avatar className="h-12 w-12 border-2 border-slate-700">
+                                  <AvatarImage src={friend.avatar} alt={friend.name} />
+                                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+                                    {friend.name.split(' ').map(n => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-800 bg-green-500"></span>
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-white">{friend.name}</h3>
+                                <p className="text-sm text-slate-400">{friend.username}</p>
+                                <div className="flex gap-2 mt-2">
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="text-slate-300 hover:text-cyan-400 hover:bg-slate-700 p-1 h-auto"
+                                    className="text-cyan-400 hover:text-cyan-300 hover:bg-slate-700 p-1 h-auto relative"
+                                    onClick={() => setSelectedFriend(friend)}
                                   >
-                                    <User className="h-4 w-4 mr-1" />
-                                    View Profile
+                                    <MessageSquare className="h-4 w-4 mr-1" />
+                                    Chat
+                                    {notificationCount > 0 && (
+                                      <Badge className="ml-1 bg-blue-500 text-white text-xs px-1 py-0 h-4 min-w-[16px]">
+                                        {notificationCount}
+                                      </Badge>
+                                    )}
                                   </Button>
-                                </Link>
+                                  <Link to={`/profile/${friend.id}`}>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-slate-300 hover:text-cyan-400 hover:bg-slate-700 p-1 h-auto"
+                                    >
+                                      <User className="h-4 w-4 mr-1" />
+                                      View Profile
+                                    </Button>
+                                  </Link>
+                                </div>
+                              </div>
+                              <div className="text-right text-xs text-slate-500">
+                                <p>{friend.lastActive}</p>
                               </div>
                             </div>
-                            <div className="text-right text-xs text-slate-500">
-                              <p>{friend.lastActive}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                          </CardContent>
+                        </Card>
+                      );
+                    })
                   )}
                 </div>
               </TabsContent>
