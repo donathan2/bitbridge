@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -49,7 +48,7 @@ interface SearchResult {
 
 const Friends = () => {
   const { user } = useAuth();
-  const { getFriendNotificationCount, clearFriendNotifications, clearRequestNotifications } = useFriendNotifications();
+  const { getFriendNotificationCount, clearFriendNotifications, clearRequestNotifications, refetchNotifications } = useFriendNotifications();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -382,6 +381,9 @@ const Friends = () => {
 
       setNewMessage("");
       await fetchMessages(selectedFriend.id);
+      
+      // Trigger notification refetch after sending message
+      refetchNotifications();
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
