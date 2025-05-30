@@ -166,35 +166,28 @@ export const useFriendNotifications = () => {
   const clearFriendNotifications = (friendId: string) => {
     if (!user) return;
     
-    console.log('Clearing notifications for friend:', friendId);
-    
-    // Get the current notification count for this friend BEFORE updating state
-    const friendNotif = friendNotifications.find(notif => notif.friendId === friendId);
-    const messageCountToSubtract = friendNotif?.messageCount || 0;
-    
-    console.log('Messages to subtract from total count:', messageCountToSubtract);
-    
     // Store per-friend last checked time
     const friendLastCheckedKey = `friend_last_checked_${user.id}_${friendId}`;
     const currentTime = new Date().toISOString();
     localStorage.setItem(friendLastCheckedKey, currentTime);
-    console.log('Set last checked time for friend:', friendId, 'to:', currentTime);
+    console.log('Cleared notifications for friend:', friendId, 'at:', currentTime);
     
-    // Update both states immediately and synchronously
-    if (messageCountToSubtract > 0) {
-      // First update the total notification count
-      setNotificationCount(prevCount => {
-        const newCount = Math.max(0, prevCount - messageCountToSubtract);
-        console.log('Updated total notification count:', prevCount, '-', messageCountToSubtract, '=', newCount);
-        return newCount;
-      });
-    }
-    
-    // Then remove this friend from notifications
+    // Update state immediately for better UX
     setFriendNotifications(prev => {
-      const newNotifications = prev.filter(notif => notif.friendId !== friendId);
-      console.log('Updated friend notifications, removed friend:', friendId);
-      return newNotifications;
+      const friendNotif = prev.find(notif => notif.friendId === friendId);
+      const messageCountToSubtract = friendNotif?.messageCount || 0;
+      
+      if (messageCountToSubtract > 0) {
+        // Update total count immediately
+        setNotificationCount(prevCount => {
+          const newCount = Math.max(0, prevCount - messageCountToSubtract);
+          console.log('Updated notification count:', prevCount, '-', messageCountToSubtract, '=', newCount);
+          return newCount;
+        });
+      }
+      
+      // Remove this friend from notifications
+      return prev.filter(notif => notif.friendId !== friendId);
     });
   };
 
