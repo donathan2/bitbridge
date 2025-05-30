@@ -131,7 +131,7 @@ export const useFriendNotifications = () => {
       )
       .subscribe();
 
-    // Set up real-time subscriptions for friend messages (both sent and received)
+    // Set up real-time subscriptions for friend messages
     const messagesChannel = supabase
       .channel('friend-messages-notifications')
       .on(
@@ -143,8 +143,16 @@ export const useFriendNotifications = () => {
         },
         (payload) => {
           console.log('Message change detected:', payload);
-          // Refetch notifications for any message change (sent or received)
-          fetchNotificationCount();
+          const newMessage = payload.new as any;
+          
+          // Only refetch if this is a message TO the current user (not from them)
+          if (newMessage.receiver_id === user.id) {
+            console.log('Received new message, updating notifications');
+            fetchNotificationCount();
+          } else if (newMessage.sender_id === user.id) {
+            // If current user sent a message, don't add to notifications
+            console.log('User sent message, no notification update needed');
+          }
         }
       )
       .subscribe();
@@ -169,15 +177,18 @@ export const useFriendNotifications = () => {
       const friendNotif = prev.find(notif => notif.friendId === friendId);
       const messageCountToSubtract = friendNotif?.messageCount || 0;
       
-      // Update total count immediately
-      setNotificationCount(prevCount => Math.max(0, prevCount - messageCountToSubtract));
+      if (messageCountToSubtract > 0) {
+        // Update total count immediately
+        setNotificationCount(prevCount => {
+          const newCount = Math.max(0, prevCount - messageCountToSubtract);
+          console.log('Updated notification count:', prevCount, '-', messageCountToSubtract, '=', newCount);
+          return newCount;
+        });
+      }
       
       // Remove this friend from notifications
       return prev.filter(notif => notif.friendId !== friendId);
     });
-    
-    // Also trigger a refetch to ensure consistency
-    setTimeout(() => fetchNotificationCount(), 100);
   };
 
   const clearRequestNotifications = () => {
