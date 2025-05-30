@@ -3,13 +3,23 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface FriendNotification {
+  friendId: string;
+  messageCount: number;
+  hasUnreadMessages: boolean;
+}
+
 export const useFriendNotifications = () => {
   const { user } = useAuth();
   const [notificationCount, setNotificationCount] = useState(0);
+  const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   useEffect(() => {
     if (!user) {
       setNotificationCount(0);
+      setFriendNotifications([]);
+      setPendingRequestsCount(0);
       return;
     }
 
@@ -27,7 +37,10 @@ export const useFriendNotifications = () => {
           return;
         }
 
-        // Check for unread messages
+        const requestsCount = requests?.length || 0;
+        setPendingRequestsCount(requestsCount);
+
+        // Check for unread messages per friend
         const lastCheckedKey = `friends_last_checked_${user.id}`;
         const lastChecked = localStorage.getItem(lastCheckedKey);
         
@@ -47,10 +60,28 @@ export const useFriendNotifications = () => {
           return;
         }
 
-        console.log('Found unread messages:', messages?.length || 0);
-        console.log('Found pending requests:', requests?.length || 0);
+        // Group messages by sender to get per-friend notification counts
+        const messageCountsBySender: { [key: string]: number } = {};
+        messages?.forEach(message => {
+          const senderId = message.sender_id;
+          messageCountsBySender[senderId] = (messageCountsBySender[senderId] || 0) + 1;
+        });
 
-        const totalNotifications = (requests?.length || 0) + (messages?.length || 0);
+        // Convert to friend notifications array
+        const friendNotifs: FriendNotification[] = Object.entries(messageCountsBySender).map(([friendId, count]) => ({
+          friendId,
+          messageCount: count,
+          hasUnreadMessages: count > 0
+        }));
+
+        setFriendNotifications(friendNotifs);
+
+        const totalMessagesCount = messages?.length || 0;
+        console.log('Found unread messages:', totalMessagesCount);
+        console.log('Found pending requests:', requestsCount);
+        console.log('Friend notifications:', friendNotifs);
+
+        const totalNotifications = requestsCount + totalMessagesCount;
         setNotificationCount(totalNotifications);
       } catch (error) {
         console.error('Error fetching notification count:', error);
@@ -101,18 +132,42 @@ export const useFriendNotifications = () => {
     };
   }, [user]);
 
-  const clearNotifications = () => {
+  const clearFriendNotifications = (friendId: string) => {
     if (user) {
-      const lastCheckedKey = `friends_last_checked_${user.id}`;
+      // Store per-friend last checked time
+      const friendLastCheckedKey = `friend_last_checked_${user.id}_${friendId}`;
       const currentTime = new Date().toISOString();
-      localStorage.setItem(lastCheckedKey, currentTime);
-      console.log('Cleared notifications at:', currentTime);
-      setNotificationCount(0);
+      localStorage.setItem(friendLastCheckedKey, currentTime);
+      console.log('Cleared notifications for friend:', friendId, 'at:', currentTime);
+      
+      // Remove this friend from notifications
+      setFriendNotifications(prev => prev.filter(notif => notif.friendId !== friendId));
+      
+      // Update total count
+      const friendNotif = friendNotifications.find(notif => notif.friendId === friendId);
+      if (friendNotif) {
+        setNotificationCount(prev => prev - friendNotif.messageCount);
+      }
     }
+  };
+
+  const clearRequestNotifications = () => {
+    // This can be called when requests are handled
+    setPendingRequestsCount(0);
+    setNotificationCount(prev => prev - pendingRequestsCount);
+  };
+
+  const getFriendNotificationCount = (friendId: string): number => {
+    const friendNotif = friendNotifications.find(notif => notif.friendId === friendId);
+    return friendNotif?.messageCount || 0;
   };
 
   return {
     notificationCount,
-    clearNotifications
+    friendNotifications,
+    pendingRequestsCount,
+    clearFriendNotifications,
+    clearRequestNotifications,
+    getFriendNotificationCount
   };
 };
