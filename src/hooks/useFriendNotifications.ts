@@ -40,48 +40,63 @@ export const useFriendNotifications = () => {
         const requestsCount = requests?.length || 0;
         setPendingRequestsCount(requestsCount);
 
-        // Check for unread messages per friend
-        const lastCheckedKey = `friends_last_checked_${user.id}`;
-        const lastChecked = localStorage.getItem(lastCheckedKey);
-        
-        // If no lastChecked time exists, set it to 24 hours ago to catch recent messages
-        const lastCheckedTime = lastChecked ? new Date(lastChecked) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+        // Get all friends first
+        const { data: friendships, error: friendshipsError } = await supabase
+          .from('friendships')
+          .select('*')
+          .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
-        console.log('Checking for messages after:', lastCheckedTime.toISOString());
-
-        const { data: messages, error: messagesError } = await supabase
-          .from('friend_messages')
-          .select('id, created_at, sender_id')
-          .eq('receiver_id', user.id)
-          .gt('created_at', lastCheckedTime.toISOString());
-
-        if (messagesError) {
-          console.error('Error fetching friend messages:', messagesError);
+        if (friendshipsError) {
+          console.error('Error fetching friendships:', friendshipsError);
           return;
         }
 
-        // Group messages by sender to get per-friend notification counts
-        const messageCountsBySender: { [key: string]: number } = {};
-        messages?.forEach(message => {
-          const senderId = message.sender_id;
-          messageCountsBySender[senderId] = (messageCountsBySender[senderId] || 0) + 1;
-        });
+        // Get friend IDs
+        const friendIds = friendships?.map(friendship => 
+          friendship.user1_id === user.id ? friendship.user2_id : friendship.user1_id
+        ) || [];
 
-        // Convert to friend notifications array
-        const friendNotifs: FriendNotification[] = Object.entries(messageCountsBySender).map(([friendId, count]) => ({
-          friendId,
-          messageCount: count,
-          hasUnreadMessages: count > 0
-        }));
+        // Check for unread messages per friend
+        const friendNotifs: FriendNotification[] = [];
+        let totalUnreadMessages = 0;
+
+        for (const friendId of friendIds) {
+          const friendLastCheckedKey = `friend_last_checked_${user.id}_${friendId}`;
+          const lastChecked = localStorage.getItem(friendLastCheckedKey);
+          
+          // If no lastChecked time exists for this friend, set it to 24 hours ago
+          const lastCheckedTime = lastChecked ? new Date(lastChecked) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+          const { data: messages, error: messagesError } = await supabase
+            .from('friend_messages')
+            .select('id, created_at, sender_id')
+            .eq('receiver_id', user.id)
+            .eq('sender_id', friendId)
+            .gt('created_at', lastCheckedTime.toISOString());
+
+          if (messagesError) {
+            console.error('Error fetching friend messages:', messagesError);
+            continue;
+          }
+
+          const messageCount = messages?.length || 0;
+          if (messageCount > 0) {
+            friendNotifs.push({
+              friendId,
+              messageCount,
+              hasUnreadMessages: true
+            });
+            totalUnreadMessages += messageCount;
+          }
+        }
 
         setFriendNotifications(friendNotifs);
 
-        const totalMessagesCount = messages?.length || 0;
-        console.log('Found unread messages:', totalMessagesCount);
+        console.log('Found unread messages:', totalUnreadMessages);
         console.log('Found pending requests:', requestsCount);
         console.log('Friend notifications:', friendNotifs);
 
-        const totalNotifications = requestsCount + totalMessagesCount;
+        const totalNotifications = requestsCount + totalUnreadMessages;
         setNotificationCount(totalNotifications);
       } catch (error) {
         console.error('Error fetching notification count:', error);
@@ -148,14 +163,14 @@ export const useFriendNotifications = () => {
       setFriendNotifications(prev => prev.filter(notif => notif.friendId !== friendId));
       
       // Update total count by subtracting the friend's message count
-      setNotificationCount(prev => prev - messageCountToSubtract);
+      setNotificationCount(prev => Math.max(0, prev - messageCountToSubtract));
     }
   };
 
   const clearRequestNotifications = () => {
     // This can be called when requests are handled
+    setNotificationCount(prev => Math.max(0, prev - pendingRequestsCount));
     setPendingRequestsCount(0);
-    setNotificationCount(prev => prev - pendingRequestsCount);
   };
 
   const getFriendNotificationCount = (friendId: string): number => {
