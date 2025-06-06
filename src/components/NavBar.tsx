@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass } from 'lucide-react';
+import { Home, User, Settings, Users, Bitcoin, DollarSign, Vault, Compass, LogOut } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const NavBar = () => {
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
   const { profile: publicProfile } = useProfile();
   const { avatarUrl, name } = useAvatar();
@@ -177,6 +177,15 @@ const NavBar = () => {
                   <Settings className="h-4 w-4 mr-1" />
                   <span>Settings</span>
                 </Link>
+                <Button
+                  onClick={signOut}
+                  variant="ghost"
+                  size="sm"
+                  className="px-3 py-2 text-slate-300 hover:bg-slate-700 hover:text-cyan-400"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  <span>Sign Out</span>
+                </Button>
               </>
             ) : (
               <div className="flex items-center space-x-2">
