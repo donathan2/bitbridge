@@ -26,7 +26,7 @@ const BitVault = () => {
     'Godmode Engineer',
     'AI Whisperer',
     'The Compiler',
-    'Ideal Interpreter',
+    'The Interpreter',
     'ML Maniac'
   ];
 
