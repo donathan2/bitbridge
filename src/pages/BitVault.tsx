@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,9 @@ const BitVault = () => {
     'Byte Baron',
     'Godmode Engineer',
     'AI Whisperer',
-    'The Compiler'
+    'The Compiler',
+    'The Interpreter',
+    'ML Maniac'
   ];
 
   const orderedTitles = titleOrder
