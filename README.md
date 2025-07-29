@@ -1,6 +1,6 @@
 <h1 style="font-size: 18px;">BitBridge 🚀✨</h1> 
 <p>Connect through Code! Bitbridge is a web application that helps users find coding projects to work on and the supportive community to bolster their growth!</p>
-<a href = "bitbridgeai.netlify.app">🔗 Check Bitbridge out here! </a>
+<a href = "https://bitbridgeai.netlify.app">🔗 Check Bitbridge out here! </a>
 
 <h2>About Bitbridge 🧠</h2>
 <P>Bitbridge was built during the 2025 Startery x Antler launchpad series, aiming to bridge the gap between aspiring and thriving programmer! This application lets users create coding projects, join others projects, and work on them in a designated project area. Bitbridge is also gamified, allowing users to collect currency from completed projects and daily logins to incentivize consistent use. </P>
